@@ -55,33 +55,33 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginBottom="16dp"
                 android:background="@drawable/card_background"
-                android:padding="16dp"
-                android:layout_marginBottom="16dp">
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="First Name"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
                     android:layout_marginBottom="8dp"
-                    android:letterSpacing="0.02" />
+                    android:letterSpacing="0.02"
+                    android:text="First Name"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <EditText
-                    android:id="@+id/etFullName"
+                    android:id="@+id/etFirstName"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:inputType="text"
+                    android:background="@drawable/input_background"
                     android:hint="Enter your first name"
-                    android:textSize="14sp"
-                    android:textColor="#1A1A2E"
-                    android:textColorHint="#9CA3AF"
+                    android:inputType="text"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="12dp"
-                    android:background="@drawable/input_background" />
+                    android:textColor="#1A1A2E"
+                    android:textColorHint="#9CA3AF"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
