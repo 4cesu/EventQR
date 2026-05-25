@@ -50,7 +50,7 @@
             android:name=".Registration"
             android:exported="false" />
         <activity
-            android:name=".Landing"
+            android:name=".SplashScreen"
             android:exported="true"
             android:theme="@style/Theme.App.Starting">
             <intent-filter>

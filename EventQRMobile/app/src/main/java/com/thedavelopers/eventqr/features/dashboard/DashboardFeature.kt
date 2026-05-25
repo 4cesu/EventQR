@@ -237,7 +237,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     private fun performLogout() {
         sessionManager.clearSession()
-        startActivity(Intent(this, com.thedavelopers.eventqr.Landing::class.java))
+        startActivity(Intent(this, com.thedavelopers.eventqr.SplashScreen::class.java))
         finish()
     }
 }
