@@ -10,4 +10,17 @@
     <color name="splash_gradient_start">#5B21B6</color>
     <color name="splash_gradient_center">#312E81</color>
     <color name="splash_gradient_end">#0F172A</color>
+
+    <color name="eventqr_navy">#121735</color>
+    <color name="eventqr_indigo">#2D2A7C</color>
+    <color name="eventqr_purple">#5B25C9</color>
+    <color name="eventqr_bg">#F7F7FA</color>
+    <color name="eventqr_card">#FFFFFF</color>
+    <color name="eventqr_text">#111111</color>
+    <color name="eventqr_muted">#6B7280</color>
+    <color name="eventqr_border">#E5E7EB</color>
+    <color name="eventqr_input">#F1F2F6</color>
+    <color name="eventqr_success">#16A34A</color>
+    <color name="eventqr_warning">#F59E0B</color>
+    <color name="eventqr_error">#EF4444</color>
 </resources>

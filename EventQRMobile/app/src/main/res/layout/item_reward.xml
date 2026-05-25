@@ -1,45 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="14dp"
-    android:elevation="4dp"
-    app:cardCornerRadius="20dp">
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_card"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <View
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_chip" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="18dp">
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/txtRewardTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/black"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/txtRewardTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/eventqr_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtRewardStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_chip"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:textColor="@color/eventqr_indigo"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/txtRewardDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textColor="#4B5563"
+            android:textColor="@color/eventqr_muted"
             android:textSize="13sp" />
-
-        <TextView
-            android:id="@+id/txtRewardStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/transparent_alt"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            android:textColor="#312E81"
-            android:textSize="12sp"
-            android:textStyle="bold" />
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</LinearLayout>

@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/eventqr_bg"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="220dp"
-        android:background="@drawable/background_gradient"
+        android:background="@drawable/bg_eventqr_gradient"
         android:gravity="center"
         android:orientation="vertical"
-        android:paddingHorizontal="32dp"
-        android:paddingVertical="20dp">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="22dp"
+        android:paddingBottom="18dp">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="100dp"
-            android:src="@drawable/white_logo_no_bg"/>
+            android:layout_width="86dp"
+            android:layout_height="86dp"
+            android:contentDescription="EventQR logo"
+            android:src="@drawable/white_logo" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Create Account"
-            android:textColor="@color/white"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.01"
-            android:layout_marginBottom="8dp" />
+            android:textColor="@color/eventqr_card"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create your account and simplify event check-ins"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:letterSpacing="0.01" />
-
+            android:layout_marginTop="6dp"
+            android:text="Set up your EventQR attendee profile"
+            android:textColor="#E5E7EB"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <ScrollView
@@ -49,235 +49,221 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="28dp"
-            >
-
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Firstname"
-                android:textStyle="bold"
-                android:id="@+id/txtFirstName"
-                android:paddingBottom="10dp"
-                android:textColor="@color/black"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Lastname"
-                android:textStyle="bold"
-                android:id="@+id/txtLastName"
-                android:layout_marginStart="122dp"
-                android:paddingBottom="10dp"
-                android:textColor="@color/black"/>
-
-
-        </LinearLayout>
+            android:paddingHorizontal="24dp"
+            android:paddingTop="22dp"
+            android:paddingBottom="24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="20dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/edtFirstName"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="55dp"
-                android:drawablePadding="10dp"
-                android:drawableTint="#808080"
-                android:hint="Darell"
-                android:inputType="text"
-                android:padding="15dp"
-                android:textSize="15sp"
-                android:background="@drawable/edittext_bg"
-                android:textColor="#656565"
-                android:paddingBottom="10dp"
-                />
+                        <TextView
+                            android:id="@+id/txtFirstName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="First name"
+                            android:textColor="@color/eventqr_text"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <EditText
+                            android:id="@+id/edtFirstName"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_input"
+                            android:hint="First name"
+                            android:inputType="textPersonName"
+                            android:paddingHorizontal="16dp"
+                            android:textColor="@color/eventqr_text"
+                            android:textColorHint="@color/eventqr_muted" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/txtLastName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Last name"
+                            android:textColor="@color/eventqr_text"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <EditText
+                            android:id="@+id/edtLastName"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_input"
+                            android:hint="Last name"
+                            android:inputType="textPersonName"
+                            android:paddingHorizontal="16dp"
+                            android:textColor="@color/eventqr_text"
+                            android:textColorHint="@color/eventqr_muted" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Email"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <EditText
-                    android:id="@+id/edtLastName"
-                    android:layout_width="0dp"
-                    android:layout_height="55dp"
-                    android:layout_weight="1"
-                    android:drawablePadding="10dp"
-                    android:drawableTint="#808080"
-                    android:hint="Melliza"
-                    android:inputType="textPersonName"
-                    android:padding="15dp"
-                    android:textSize="15sp"
-                    android:background="@drawable/edittext_bg"
-                    android:textColor="#656565"
-                    android:layout_marginStart="5dp"/>
+                    android:id="@+id/edtEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Enter email"
+                    android:inputType="textEmailAddress"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="@color/eventqr_text"
+                    android:textColorHint="@color/eventqr_muted" />
 
+                <TextView
+                    android:id="@+id/txtPhoneNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Phone number"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/edtPhoneNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Enter phone number"
+                    android:inputType="phone"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="@color/eventqr_text"
+                    android:textColorHint="@color/eventqr_muted" />
+
+                <TextView
+                    android:id="@+id/txtPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Password"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/edtPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Create password"
+                    android:inputType="textPassword"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="@color/eventqr_text"
+                    android:textColorHint="@color/eventqr_muted" />
+
+                <TextView
+                    android:id="@+id/txtConfirmPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Confirm password"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/edtConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input"
+                    android:hint="Confirm password"
+                    android:inputType="textPassword"
+                    android:paddingHorizontal="16dp"
+                    android:textColor="@color/eventqr_text"
+                    android:textColorHint="@color/eventqr_muted" />
             </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Email Address"
-                android:textStyle="bold"
-                android:id="@+id/txtEmail"
-                android:paddingBottom="10dp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"/>
-
-            <EditText
-                android:id="@+id/edtEmail"
-                android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:drawableStart="@drawable/email_icon"
-                android:drawablePadding="10dp"
-                android:drawableTint="#808080"
-                android:hint=" darelldave@gmail.com"
-                android:inputType="textEmailAddress"
-                android:padding="15dp"
-                android:textSize="15sp"
-                android:background="@drawable/edittext_bg"
-                android:textColor="#656565"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Phone Number"
-                android:textStyle="bold"
-                android:id="@+id/txtPhoneNumber"
-                android:paddingBottom="5dp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"/>
-
-            <EditText
-                android:id="@+id/edtPhoneNumber"
-                android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:drawableStart="@drawable/phone_icon"
-                android:drawablePadding="10dp"
-                android:drawableTint="#808080"
-                android:hint=" +63 123 456 897"
-                android:inputType="phone"
-                android:padding="15dp"
-                android:textSize="15sp"
-                android:background="@drawable/edittext_bg"
-                android:textColor="#656565"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Password"
-                android:textStyle="bold"
-                android:id="@+id/txtPassword"
-                android:paddingBottom="5dp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"/>
-
-            <EditText
-                android:id="@+id/edtPassword"
-                android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:drawableStart="@drawable/password_icon"
-                android:drawablePadding="10dp"
-                android:drawableTint="#808080"
-                android:hint="**********"
-                android:inputType="textPassword"
-                android:padding="15dp"
-                android:textSize="15sp"
-                android:background="@drawable/edittext_bg"
-                android:textColor="#656565"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Confirm Password"
-                android:textStyle="bold"
-                android:id="@+id/txtConfirmPassword"
-                android:paddingBottom="5dp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"/>
-
-            <EditText
-                android:id="@+id/edtConfirmPassword"
-                android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:drawableStart="@drawable/password_icon"
-                android:drawablePadding="10dp"
-                android:drawableTint="#808080"
-                android:hint="**********"
-                android:inputType="textPassword"
-                android:padding="15dp"
-                android:textSize="15sp"
-                android:background="@drawable/edittext_bg"
-                android:textColor="#656565"
-                />
-
 
             <Button
                 android:id="@+id/btnRegister"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_primary_button"
                 android:text="Create Account"
                 android:textAllCaps="false"
+                android:textColor="@color/eventqr_card"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:background="@drawable/button_rounded"
-                android:elevation="6dp"
-                android:layout_marginVertical="20dp"/>
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginTop="18dp"
                 android:gravity="center"
-                android:layout_marginVertical="16dp">
+                android:orientation="horizontal">
 
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#E5E7EB" />
+                    android:background="@color/eventqr_border" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
                     android:text="Already have an account?"
-                    android:textSize="13sp"
-                    android:textColor="#6B7280"
-                    android:paddingHorizontal="12dp" />
+                    android:textColor="@color/eventqr_muted"
+                    android:textSize="13sp" />
 
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#E5E7EB" />
-
+                    android:background="@color/eventqr_border" />
             </LinearLayout>
 
             <Button
                 android:id="@+id/btnSignIn"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_outline_button"
                 android:text="Sign In"
                 android:textAllCaps="false"
+                android:textColor="@color/eventqr_indigo"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#28286a"
-                android:background="@drawable/transparent_alt"
-                android:elevation="2dp"
-                android:layout_marginTop="5dp"/>
-
-
-
+                android:textStyle="bold" />
         </LinearLayout>
-
     </ScrollView>
 
 </LinearLayout>
