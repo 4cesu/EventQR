@@ -10,4 +10,6 @@ import com.thedavelopers.eventqr.features.rewards.model.entity.PointTransaction;
 public interface PointTransactionRepository extends JpaRepository<PointTransaction, UUID> {
 
     List<PointTransaction> findByEventId(UUID eventId);
+
+    List<PointTransaction> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
 }

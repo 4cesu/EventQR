@@ -13,4 +13,6 @@ public interface RewardRedemptionRepository extends JpaRepository<RewardRedempti
     Optional<RewardRedemption> findByEventIdAndAttendeeUserIdAndRewardId(UUID eventId, UUID attendeeUserId, UUID rewardId);
 
     List<RewardRedemption> findByEventId(UUID eventId);
+
+    List<RewardRedemption> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
 }
