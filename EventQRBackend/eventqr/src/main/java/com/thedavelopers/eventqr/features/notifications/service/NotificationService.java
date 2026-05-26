@@ -40,6 +40,12 @@ public class NotificationService {
         return notificationRepository.findByRecipientUserId(recipientUserId).stream().map(this::toResponse).toList();
     }
 
+    public NotificationResponse findOne(UUID notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+        return toResponse(notification);
+    }
+
     public List<NotificationResponse> findByEvent(UUID eventId) {
         return notificationRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
     }
@@ -50,6 +56,20 @@ public class NotificationService {
         notification.setStatus(NotificationStatus.READ);
         notification.setReadAt(Instant.now());
         return toResponse(notificationRepository.save(notification));
+    }
+
+    public void markAllRead(UUID recipientUserId) {
+        notificationRepository.findByRecipientUserId(recipientUserId).forEach(notification -> {
+            notification.setStatus(NotificationStatus.READ);
+            notification.setReadAt(Instant.now());
+            notificationRepository.save(notification);
+        });
+    }
+
+    public void delete(UUID notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+        notificationRepository.delete(notification);
     }
 
     @EventListener

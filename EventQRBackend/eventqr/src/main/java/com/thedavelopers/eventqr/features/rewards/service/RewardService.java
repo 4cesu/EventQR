@@ -67,6 +67,28 @@ public class RewardService {
         return request;
     }
 
+    public PointRuleRequest updatePointRule(UUID eventId, UUID ruleId, PointRuleRequest request) {
+        PointRule rule = pointRuleRepository.findById(ruleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Point rule not found"));
+        if (!rule.getEventId().equals(eventId)) {
+            throw new ResourceNotFoundException("Point rule not found for event");
+        }
+        rule.setScanPurposeId(request.scanPurposeId());
+        rule.setPoints(request.points());
+        rule.setActive(request.active());
+        pointRuleRepository.save(rule);
+        return request;
+    }
+
+    public void deletePointRule(UUID eventId, UUID ruleId) {
+        PointRule rule = pointRuleRepository.findById(ruleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Point rule not found"));
+        if (!rule.getEventId().equals(eventId)) {
+            throw new ResourceNotFoundException("Point rule not found for event");
+        }
+        pointRuleRepository.delete(rule);
+    }
+
     public RewardResponse saveReward(RewardRequest request) {
         Reward reward = new Reward();
         reward.setEventId(request.eventId());
@@ -77,8 +99,79 @@ public class RewardService {
         return toResponse(rewardRepository.save(reward));
     }
 
+    public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
+        if (!reward.getEventId().equals(eventId)) {
+            throw new ResourceNotFoundException("Reward not found for event");
+        }
+        reward.setName(request.name());
+        reward.setPointsRequired(request.pointsRequired());
+        reward.setStockQuantity(request.stockQuantity());
+        return toResponse(rewardRepository.save(reward));
+    }
+
+    public void deleteReward(UUID eventId, UUID rewardId) {
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
+        if (!reward.getEventId().equals(eventId)) {
+            throw new ResourceNotFoundException("Reward not found for event");
+        }
+        rewardRepository.delete(reward);
+    }
+
+    public RewardResponse findReward(UUID eventId, UUID rewardId) {
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
+        if (!reward.getEventId().equals(eventId)) {
+            throw new ResourceNotFoundException("Reward not found for event");
+        }
+        return toResponse(reward);
+    }
+
     public PointBalanceResponse getBalance(UUID eventId, UUID attendeeUserId) {
         AttendeePointBalance balance = balanceFor(eventId, attendeeUserId);
+        return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
+    }
+
+    public PointBalanceResponse assignPoints(UUID eventId, UUID attendeeUserId, int points, String reason) {
+        if (points < 0) {
+            throw new ConflictException("Points must be non-negative");
+        }
+        AttendeePointBalance balance = balanceFor(eventId, attendeeUserId);
+        balance.setPointsBalance(balance.getPointsBalance() + points);
+        attendeePointBalanceRepository.save(balance);
+
+        PointTransaction transaction = new PointTransaction();
+        transaction.setEventId(eventId);
+        transaction.setAttendeeUserId(attendeeUserId);
+        transaction.setSourceTransactionId(UUID.randomUUID());
+        transaction.setPointsChanged(points);
+        transaction.setOccurredAt(Instant.now());
+        transaction.setReason(reason == null || reason.isBlank() ? "Manual point assignment" : reason);
+        pointTransactionRepository.save(transaction);
+        return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
+    }
+
+    public PointBalanceResponse deductPoints(UUID eventId, UUID attendeeUserId, int points, String reason) {
+        if (points < 0) {
+            throw new ConflictException("Points must be non-negative");
+        }
+        AttendeePointBalance balance = balanceFor(eventId, attendeeUserId);
+        if (balance.getPointsBalance() < points) {
+            throw new ConflictException("Not enough points to deduct");
+        }
+        balance.setPointsBalance(balance.getPointsBalance() - points);
+        attendeePointBalanceRepository.save(balance);
+
+        PointTransaction transaction = new PointTransaction();
+        transaction.setEventId(eventId);
+        transaction.setAttendeeUserId(attendeeUserId);
+        transaction.setSourceTransactionId(UUID.randomUUID());
+        transaction.setPointsChanged(-points);
+        transaction.setOccurredAt(Instant.now());
+        transaction.setReason(reason == null || reason.isBlank() ? "Manual point deduction" : reason);
+        pointTransactionRepository.save(transaction);
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
 
@@ -136,6 +229,20 @@ public class RewardService {
         return rewardRedemptionRepository.findByEventId(eventId).stream().map(redemption -> new RewardRedemptionResponse(
                 redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(), redemption.getRewardId(),
                 redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(), redemption.getReason())).toList();
+    }
+
+    public List<RewardRedemptionResponse> findRedemptions(UUID eventId, UUID attendeeUserId) {
+        return rewardRedemptionRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId).stream().map(redemption -> new RewardRedemptionResponse(
+                redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(), redemption.getRewardId(),
+                redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(), redemption.getReason())).toList();
+    }
+
+    public List<PointTransaction> findPointTransactions(UUID eventId) {
+        return pointTransactionRepository.findByEventId(eventId);
+    }
+
+    public List<PointTransaction> findPointTransactions(UUID eventId, UUID attendeeUserId) {
+        return pointTransactionRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId);
     }
 
     @EventListener
