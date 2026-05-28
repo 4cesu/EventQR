@@ -5,8 +5,10 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.attendee.AttendeeRepository
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -30,9 +32,15 @@ class DashboardPresenter(
     fun loadDashboard() {
         view?.updateHeader(sessionManager.getUserRole(), sessionManager.getFullName())
         view?.showLoading(true)
+        view?.showTransactionHistoryLoading(true)
         dashboardJob = MainScope().launch {
-            val summaryResult = repository.getSummary()
-            val eventsResult = attendeeRepository.getEvents()
+            val summaryDeferred = async { repository.getSummary() }
+            val eventsDeferred = async { attendeeRepository.getEvents() }
+            val transactionsDeferred = async { attendeeRepository.getMyTransactions() }
+
+            val summaryResult = summaryDeferred.await()
+            val eventsResult = eventsDeferred.await()
+            val transactionsResult = transactionsDeferred.await()
 
             view?.showLoading(false)
 
@@ -71,6 +79,17 @@ class DashboardPresenter(
                 }
             } else if (summaryResult is NetworkResult.Error) {
                 view?.showError(summaryResult.message)
+            }
+
+            when (transactionsResult) {
+                is NetworkResult.Success -> {
+                    val recentTransactions = transactionsResult.data
+                        .sortedByDescending { it.scannedAt ?: Instant.EPOCH }
+                        .take(3)
+                    view?.showTransactionHistory(recentTransactions)
+                }
+                is NetworkResult.Error -> view?.showTransactionHistoryError(transactionsResult.message)
+                NetworkResult.Loading -> Unit
             }
         }
     }

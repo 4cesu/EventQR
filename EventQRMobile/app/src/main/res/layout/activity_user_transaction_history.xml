@@ -175,6 +175,16 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/txtTransactionsError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="Unable to load transactions."
+                android:textColor="#B91C1C"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/txtTransactionsLoading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

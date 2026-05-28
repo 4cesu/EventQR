@@ -1,9 +1,11 @@
 package com.thedavelopers.eventqr.features.dashboard
 
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -30,6 +32,7 @@ import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_START
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_STATUS
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.attendee.configureAttendeeBottomNav
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 
 open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var presenter: DashboardPresenter
@@ -53,6 +56,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var upcomingEventsLayout: LinearLayout
     private lateinit var recentActivityLayout: LinearLayout
     private lateinit var upcomingEventsViewAll: TextView
+    private lateinit var transactionHistoryViewAll: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,11 +91,15 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         upcomingEventsLayout = findViewById(R.id.layoutUpcomingEvents)
         recentActivityLayout = findViewById(R.id.layoutRecentActivity)
         upcomingEventsViewAll = findViewById(R.id.txtUpcomingEventsViewAll)
+        transactionHistoryViewAll = findViewById(R.id.txtTransactionHistoryViewAll)
         notificationBell.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java))
         }
         upcomingEventsViewAll.setOnClickListener {
-            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity::class.java))
+            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEventsActivity::class.java))
+        }
+        transactionHistoryViewAll.setOnClickListener {
+            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeTransactionsActivity::class.java))
         }
 
         configureActions(sessionManager.getUserRole())
@@ -120,14 +128,35 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         summaryRewards.text = summary.totalRewards.toString()
         summaryNotifications.text = summary.totalNotifications.toString()
         renderUpcomingEvents(summary.upcomingEvents.orEmpty())
-        renderRecentActivity(emptyList())
+    }
+
+    override fun showTransactionHistoryLoading(isLoading: Boolean) {
+        renderRecentActivityState(if (isLoading) "Loading transactions..." else null, 0xFF6B7280.toInt())
+    }
+
+    override fun showTransactionHistory(items: List<TransactionResponse>) {
+        while (recentActivityLayout.childCount > 1) {
+            recentActivityLayout.removeViewAt(1)
+        }
+
+        if (items.isEmpty()) {
+            renderRecentActivityState("No transactions yet.", 0xFF6B7280.toInt())
+            return
+        }
+
+        items.forEach { item ->
+            recentActivityLayout.addView(createTransactionPreviewRow(item))
+        }
+    }
+
+    override fun showTransactionHistoryError(message: String) {
+        renderRecentActivityState(message.ifBlank { "Unable to load transaction history." }, 0xFFB91C1C.toInt())
     }
 
     override fun showError(message: String) {
         loadingText.text = message
         loadingText.visibility = View.VISIBLE
         renderUpcomingEvents(emptyList())
-        renderRecentActivity(emptyList())
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
@@ -264,6 +293,59 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             recentActivityLayout.addView(createRecentActivityEmptyState())
             return
         }
+    }
+
+    private fun renderRecentActivityState(text: String?, textColor: Int) {
+        while (recentActivityLayout.childCount > 1) {
+            recentActivityLayout.removeViewAt(1)
+        }
+        if (text.isNullOrBlank()) {
+            return
+        }
+
+        recentActivityLayout.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                topMargin = dp(18)
+            }
+            gravity = Gravity.CENTER
+            setTextColor(textColor)
+            textSize = 13f
+            setPadding(dp(12), dp(18), dp(12), dp(18))
+            this.text = text
+        })
+    }
+
+    private fun createTransactionPreviewRow(item: TransactionResponse): View {
+        val row = LayoutInflater.from(this).inflate(R.layout.item_transaction, recentActivityLayout, false)
+        val titleView = row.findViewById<TextView>(R.id.txtTransactionTitle)
+        val eventView = row.findViewById<TextView>(R.id.txtTransactionEvent)
+        val timeView = row.findViewById<TextView>(R.id.txtTransactionTime)
+        val pointsView = row.findViewById<TextView>(R.id.txtTransactionPoints)
+        val tagView = row.findViewById<TextView>(R.id.txtTransactionTag)
+        val iconLayout = row.findViewById<View>(R.id.layoutTransactionIcon)
+        val trendIcon = row.findViewById<ImageView>(R.id.imgTransactionTrend)
+
+        val isEarned = item.pointsDelta >= 0
+        val isApproved = item.transactionResult.name == "APPROVED"
+
+        titleView.text = item.reason ?: (if (isEarned) "Points Earned" else "Points Redeemed")
+        eventView.text = item.eventTitle ?: "Attendee transaction"
+        timeView.text = DateFormatters.formatInstant(item.scannedAt)
+
+        val deltaPrefix = if (isEarned) "+" else ""
+        pointsView.text = "$deltaPrefix${item.pointsDelta}"
+        pointsView.setTextColor(Color.parseColor(if (isEarned) "#10B981" else "#EF4444"))
+
+        tagView.text = if (isApproved) "Success" else "Failed"
+        tagView.setBackgroundResource(if (isApproved) R.drawable.bg_green_pill else R.drawable.bg_red_warning)
+        tagView.setTextColor(Color.parseColor(if (isApproved) "#059669" else "#DC2626"))
+
+        iconLayout.setBackgroundResource(if (isEarned) R.drawable.bg_transaction_earned_icon else R.drawable.bg_transaction_redeemed_icon)
+        trendIcon.setImageResource(if (isEarned) R.drawable.ic_trend_up else R.drawable.ic_trend_down)
+        return row
     }
 
     private fun createRecentActivityEmptyState(): View {

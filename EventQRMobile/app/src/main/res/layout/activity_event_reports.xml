@@ -236,20 +236,20 @@
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:layout_marginTop="16dp"
-                        android:background="@drawable/bg_soft_gray_pill"
+                        android:background="@drawable/button_rounded"
                         android:text="Export Attendance Report"
                         android:textAllCaps="false"
-                        android:textColor="#374151"
+                        android:textColor="@color/white"
                         android:textSize="13sp" />
 
                     <Button
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_soft_gray_pill"
+                        android:background="@drawable/button_rounded"
                         android:text="Export Transaction Log"
                         android:textAllCaps="false"
-                        android:textColor="#374151"
+                        android:textColor="@color/white"
                         android:textSize="13sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

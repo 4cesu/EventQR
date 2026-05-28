@@ -16,6 +16,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private lateinit var adapter: TransactionAdapter
     private lateinit var loadingText: TextView
     private lateinit var emptyText: TextView
+    private lateinit var errorText: TextView
     private lateinit var eventTitleText: TextView
     private lateinit var totalEarnedText: TextView
     private lateinit var totalRedeemedText: TextView
@@ -29,6 +30,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
         loadingText = findViewById(R.id.txtTransactionsLoading)
         emptyText = findViewById(R.id.txtTransactionsEmpty)
+        errorText = findViewById(R.id.txtTransactionsError)
         eventTitleText = findViewById(R.id.txtHistoryEventTitle)
         totalEarnedText = findViewById(R.id.txtHistoryTotalEarned)
         totalRedeemedText = findViewById(R.id.txtHistoryTotalRedeemed)
@@ -60,14 +62,30 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun showLoading(isLoading: Boolean) {
         loadingText.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (isLoading) {
+            errorText.visibility = View.GONE
+            emptyText.visibility = View.GONE
+            findViewById<RecyclerView>(R.id.recyclerTransactions).visibility = View.GONE
+        }
     }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    override fun showError(message: String) {
+        loadingText.visibility = View.GONE
+        errorText.text = message.ifBlank { "Unable to load transactions." }
+        errorText.visibility = View.VISIBLE
+        emptyText.visibility = View.GONE
+        findViewById<RecyclerView>(R.id.recyclerTransactions).visibility = View.GONE
+    }
+
     override fun renderTransactions(items: List<TransactionResponse>) {
+        loadingText.visibility = View.GONE
+        errorText.visibility = View.GONE
         emptyText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        findViewById<RecyclerView>(R.id.recyclerTransactions).visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
         emptyText.text = if (items.isEmpty()) "No transactions found yet." else emptyText.text
         adapter.submitItems(items)
 
