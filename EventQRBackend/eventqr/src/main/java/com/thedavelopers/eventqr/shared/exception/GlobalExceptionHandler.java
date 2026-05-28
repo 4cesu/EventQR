@@ -5,12 +5,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.persistence.PersistenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.orm.jpa.JpaSystemException;
+import org.springframework.transaction.TransactionSystemException;
 
 import com.thedavelopers.eventqr.shared.response.ErrorResponse;
 
@@ -26,6 +30,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException exception, HttpServletRequest request) {
         HttpStatus status = exception instanceof ConflictException ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
         return build(status, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler({DataIntegrityViolationException.class, PersistenceException.class, JpaSystemException.class, TransactionSystemException.class})
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(RuntimeException exception, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Registration failed. Please try again.", request);
     }
 
     @ExceptionHandler(ForbiddenException.class)
@@ -57,7 +66,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception exception, HttpServletRequest request) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage(), request);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again.", request);
     }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request) {
