@@ -9,18 +9,32 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerReportResponse;
+import com.thedavelopers.eventqr.features.organizer.service.OrganizerService;
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSnapshot;
 import com.thedavelopers.eventqr.features.reports.service.ReportService;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
+import com.thedavelopers.eventqr.shared.security.JwtService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/v1/organizer/events/{eventId}/reports")
 public class OrganizerReportController {
 
     private final ReportService reportService;
+    private final OrganizerService organizerService;
+    private final JwtService jwtService;
 
-    public OrganizerReportController(ReportService reportService) {
+    public OrganizerReportController(ReportService reportService, OrganizerService organizerService, JwtService jwtService) {
         this.reportService = reportService;
+        this.organizerService = organizerService;
+        this.jwtService = jwtService;
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<ApiResponse<OrganizerReportResponse>> summary(HttpServletRequest request, @PathVariable UUID eventId) {
+        return ResponseEntity.ok(ApiResponse.success(organizerService.report(currentUserId(request), eventId)));
     }
 
 
@@ -62,5 +76,9 @@ public class OrganizerReportController {
     @PostMapping("/export")
     public ResponseEntity<ApiResponse<EventReportSnapshot>> export(@PathVariable UUID eventId) {
         return ResponseEntity.ok(ApiResponse.success("Export prepared", reportService.generate(eventId)));
+    }
+
+    private UUID currentUserId(HttpServletRequest request) {
+        return jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
     }
 }

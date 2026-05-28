@@ -13,11 +13,26 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.thedavelopers.eventqr.features.events.model.entity.Event;
-import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
+import com.thedavelopers.eventqr.features.events.model.entity.Event;
+import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.*;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerAttendeeResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerDashboardResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerEventResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerOverallEventReportRow;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerOverallReportResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerReportResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerScanPurposeRequest;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerScanPurposeResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerStaffResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerTransactionResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerTransactionRuleResponse;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.ReportRow;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentRequest;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentUpdateRequest;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.UserSearchResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.RewardSettingsRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest;
 import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
@@ -28,11 +43,11 @@ import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRep
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.scanning.model.entity.ScanPurpose;
 import com.thedavelopers.eventqr.features.scanning.repository.ScanPurposeRepository;
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionRule;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionRuleRepository;
-import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
@@ -208,7 +223,7 @@ public class OrganizerService {
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
         List<ScanPurpose> purposes = scanPurposeRepository.findByEventId(eventId);
         List<EventStaffAssignment> staffAssignments = staffAssignmentRepository.findByEventId(eventId);
-        return transactionLogRepository.findByEventId(eventId).stream()
+        return transactionLogRepository.findByEventIdOrderByScannedAtDesc(eventId).stream()
                 .map(log -> toTransaction(event, log, registrations, purposes, staffAssignments))
                 .toList();
     }
@@ -229,7 +244,7 @@ public class OrganizerService {
     public OrganizerReportResponse report(UUID organizerUserId, UUID eventId) {
         requireOrganizerEvent(organizerUserId, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
-        List<TransactionLog> transactions = transactionLogRepository.findByEventId(eventId);
+        List<TransactionLog> transactions = transactionLogRepository.findByEventIdOrderByScannedAtDesc(eventId);
         long registered = registrations.size();
         long entered = registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.ENTERED).count();
         long exited = registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.EXITED).count();
@@ -273,6 +288,32 @@ public class OrganizerService {
                         .map(tx -> new ReportRow(tx.getTransactionType().name(), format(tx.getScannedAt())))
                         .toList());
     }
+
+            @Transactional(readOnly = true)
+            public OrganizerOverallReportResponse overallReport(UUID organizerUserId) {
+            UserProfile organizer = userProfileRepository.findById(organizerUserId)
+                .orElseThrow(() -> new ForbiddenException("Organizer account not found"));
+            List<Event> ownedEvents = eventRepository.findByOrganizerUserId(organizerUserId);
+            List<OrganizerEventResponse> snapshots = ownedEvents.stream().map(this::toOrganizerEvent).toList();
+            long totalRegistered = snapshots.stream().mapToLong(OrganizerEventResponse::registeredCount).sum();
+            long enteredCount = snapshots.stream().mapToLong(OrganizerEventResponse::enteredCount).sum();
+            long exitedCount = snapshots.stream().mapToLong(OrganizerEventResponse::exitedCount).sum();
+            long attendanceCount = snapshots.stream().mapToLong(OrganizerEventResponse::attendedCount).sum();
+            long approvedScans = snapshots.stream().mapToLong(OrganizerEventResponse::successfulScans).sum();
+            long rejectedScans = snapshots.stream().mapToLong(OrganizerEventResponse::rejectedScans).sum();
+            long pointsDistributed = snapshots.stream().mapToLong(OrganizerEventResponse::totalPointsAwarded).sum();
+            long benefitClaims = snapshots.stream().mapToLong(OrganizerEventResponse::benefitClaims).sum();
+            long boothSessionVisits = snapshots.stream().mapToLong(OrganizerEventResponse::boothSessionVisits).sum();
+            long rewardRedemptions = snapshots.stream().mapToLong(OrganizerEventResponse::rewardRedemptions).sum();
+            List<OrganizerOverallEventReportRow> breakdown = snapshots.stream()
+                .map(event -> new OrganizerOverallEventReportRow(event.eventId(), event.title(), event.registeredCount(),
+                    event.enteredCount(), event.exitedCount(), event.successfulScans(), event.rejectedScans(),
+                    event.totalPointsAwarded()))
+                .toList();
+            return new OrganizerOverallReportResponse(organizer.getId(), organizer.getFullName(), snapshots.size(),
+                totalRegistered, enteredCount, exitedCount, attendanceCount, approvedScans, rejectedScans,
+                pointsDistributed, benefitClaims, boothSessionVisits, rewardRedemptions, breakdown);
+            }
 
     @Transactional(readOnly = true)
     public List<OrganizerStaffResponse> staff(UUID organizerUserId, UUID eventId) {
@@ -644,11 +685,14 @@ public class OrganizerService {
         EventStaffAssignment staff = staffAssignments.stream()
                 .filter(item -> log.getStaffUserId() != null && item.getStaffUserId().equals(log.getStaffUserId()))
                 .findFirst().orElse(null);
+        UserProfile staffProfile = staff == null ? null : userProfileRepository.findById(staff.getStaffUserId()).orElse(null);
         String staffName = staff == null ? "Staff " + (log.getStaffUserId() == null ? "unknown" : log.getStaffUserId().toString().substring(0, 8)) : toStaff(staff).name();
         String type = log.getTransactionType().name();
         return new OrganizerTransactionResponse(log.getId(), log.getEventId(), event.getTitle(), log.getAttendeeUserId(),
-                registration == null ? "Attendee " + log.getAttendeeUserId().toString().substring(0, 8) : registration.getAttendeeName(),
-                log.getRegistrationId(), log.getQrCredentialId(), log.getScanPurposeId(), log.getStaffUserId(), staffName,
+            registration == null ? "Attendee " + log.getAttendeeUserId().toString().substring(0, 8) : registration.getAttendeeName(),
+            registration == null ? null : registration.getAttendeeEmail(),
+            log.getRegistrationId(), log.getQrCredentialId(), log.getScanPurposeId(), log.getStaffUserId(), staffName,
+            staffProfile == null ? null : staffProfile.getEmail(),
                 log.getQrCredentialId() == null ? "" : log.getQrCredentialId().toString(),
                 purpose == null ? type : purpose.getName(), log.getTransactionType(),
                 log.getTransactionResult(), log.getPointsDelta(), log.getReason(),
