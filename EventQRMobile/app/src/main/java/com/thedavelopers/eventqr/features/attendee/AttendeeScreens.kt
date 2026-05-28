@@ -44,6 +44,33 @@ interface AttendeeView {
     fun showMessage(message: String)
 }
 
+private fun toFriendlyRegistrationError(message: String): String {
+    val normalized = message.lowercase()
+    return when {
+        normalized.contains("duplicate registration") || normalized.contains("already registered") || normalized.contains("duplicate key") || normalized.contains("unique constraint") -> "You are already registered for this event."
+        normalized.contains("event is at capacity") || normalized.contains("capacity") || normalized.contains("full") -> "This event is full."
+        normalized.contains("registration is closed") || normalized.contains("registration closed") || normalized.contains("closed") -> "Registration is closed."
+        normalized.contains("event is not active") || normalized.contains("not active") -> "This event is not active."
+        normalized.contains("unauthorized") || normalized.contains("forbidden") -> "You do not have permission to register for this event."
+        normalized.contains("not found") -> "Event not found."
+        normalized.contains("could not execute statement") || normalized.contains("foreign key") || normalized.contains("sql") || normalized.contains("database") || normalized.contains("statement") || normalized.contains("jpa") -> "Registration failed. Please try again."
+        normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> "Network error. Please check your connection and try again."
+        else -> "Registration failed. Please try again."
+    }
+}
+
+private fun toFriendlyQrError(message: String): String {
+    val normalized = message.lowercase()
+    return when {
+        normalized.contains("qr credential not found") || normalized.contains("credential missing") || normalized.contains("registration not found") -> "QR credential missing. Please try again."
+        normalized.contains("unauthorized") || normalized.contains("forbidden") -> "You do not have permission to view this QR credential."
+        normalized.contains("not found") -> "QR credential missing. Please try again."
+        normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> "Network error. Please check your connection and try again."
+        normalized.contains("database") || normalized.contains("sql") || normalized.contains("jpa") || normalized.contains("statement") -> "Could not load QR credential. Please try again."
+        else -> "Could not load QR credential. Please try again."
+    }
+}
+
 class EventsPresenter(
     private var view: EventsContract.View?,
     private val repository: AttendeeRepository,
@@ -501,7 +528,7 @@ class RegistrationPresenter(
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showMessage(regResult.message)
+                    view?.showMessage(toFriendlyRegistrationError(regResult.message))
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -667,7 +694,7 @@ class QrCredentialPresenter(
                 qrCredential.qrCredentialId.toString().also { repository.markQrDisplayed(it) }
             } else if (qrResult is NetworkResult.Error) {
                 view?.showLoading(false)
-                view?.showMessage(qrResult.message)
+                view?.showMessage(toFriendlyQrError(qrResult.message))
             }
         }
     }
