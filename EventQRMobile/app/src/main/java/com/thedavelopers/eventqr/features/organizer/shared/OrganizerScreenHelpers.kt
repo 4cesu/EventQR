@@ -382,21 +382,6 @@ internal fun AppCompatActivity.organizerShell(
     }
     headerRow.addView(titleBox)
 
-    if (darkHeader) {
-        headerRow.addView(text("Logout", 11, true, Color.WHITE).apply {
-            setPadding(dp(8), dp(4), dp(8), dp(4))
-            background = rounded(Color.parseColor("#33FFFFFF"), 8, null, density = resources.displayMetrics.density)
-            setOnClickListener {
-                com.thedavelopers.eventqr.core.session.SessionManager(this@organizerShell).clearSession()
-                val intent = Intent(this@organizerShell, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
-            }
-        })
-        headerRow.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(dp(8), 1) })
-    }
-
     if (topRightLabel != null) {
         val topBtn = Button(this).apply {
             text = topRightLabel
