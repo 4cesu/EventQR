@@ -32,6 +32,7 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequ
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -79,7 +80,7 @@ public class StaffController {
                             event.eventStartAt(),
                             event.eventEndAt(),
                             event.status(),
-                            assignment.isCanScan(),
+                            assignment.isCanScan() && event.status() != EventStatus.ENDED,
                             assignment.isCanPrintId(),
                             assignment.isCanViewLogs(),
                             assignment.isCanManageRewards()
@@ -240,6 +241,10 @@ public class StaffController {
 
     private void requireScanPermission(HttpServletRequest request, UUID eventId) {
         EventStaffAssignment assignment = requireActiveAssignment(request, eventId);
+        EventResponse event = eventService.findOne(eventId);
+        if (event.status() == EventStatus.ENDED) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Event has ended. Scanning is disabled.");
+        }
         if (assignment != null && !assignment.isCanScan()) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff user is not allowed to scan for this event");
         }

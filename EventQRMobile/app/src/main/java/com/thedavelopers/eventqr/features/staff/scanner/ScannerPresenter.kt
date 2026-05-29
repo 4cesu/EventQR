@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
@@ -28,7 +29,15 @@ class ScannerPresenter(
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
             when (val result = repository.getEvents()) {
-                is NetworkResult.Success -> view?.showEvents(result.data.map { EventSpinnerOption(it.eventId.toString(), it.title, it.canScan) })
+                is NetworkResult.Success -> {
+                    val selectable = result.data
+                        .filter { it.canScan && it.status != EventStatus.ENDED }
+                        .map { EventSpinnerOption(it.eventId.toString(), it.title, it.canScan) }
+                    if (selectable.isEmpty() && result.data.any { it.status == EventStatus.ENDED }) {
+                        view?.showMessage("Event has ended. Scanning is disabled.")
+                    }
+                    view?.showEvents(selectable)
+                }
                 is NetworkResult.Error -> view?.showMessage(result.message)
                 NetworkResult.Loading -> Unit
             }

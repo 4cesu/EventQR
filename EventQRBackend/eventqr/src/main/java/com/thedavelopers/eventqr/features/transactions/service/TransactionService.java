@@ -82,6 +82,9 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public ScanVerificationResponse verify(TransactionRequest request) {
         var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
+        if (eventSnapshot.status() == EventStatus.ENDED) {
+            throw new ForbiddenException("Event has ended. Scanning is disabled.");
+        }
         var purpose = scanPurposePort.requireActive(request.scanPurposeId());
         if (!eventSnapshot.eventId().equals(purpose.eventId())) {
             throw new ForbiddenException("Scan purpose does not belong to the event");
@@ -109,6 +112,9 @@ public class TransactionService {
 
     public TransactionResponse record(TransactionRequest request) {
         var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
+        if (eventSnapshot.status() == EventStatus.ENDED) {
+            throw new ForbiddenException("Event has ended. Scanning is disabled.");
+        }
         if (eventSnapshot.status() == EventStatus.REJECTED || eventSnapshot.status() == EventStatus.CANCELLED) {
             throw new ForbiddenException("Event is not available for scan transactions");
         }
