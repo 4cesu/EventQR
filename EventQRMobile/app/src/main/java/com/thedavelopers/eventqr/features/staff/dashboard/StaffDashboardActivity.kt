@@ -8,24 +8,33 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity
+import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
     private lateinit var presenter: StaffDashboardPresenter
+    private lateinit var repository: StaffRepository
     private lateinit var adapter: TransactionLogAdapter
     private lateinit var eventAdapter: StaffEventAdapter
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var activePurposesHost: LinearLayout
     private var isSwipeRefreshing = false
+    private var activePurposeJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,25 +48,30 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         setContentView(R.layout.activity_staff_dashboard)
 
-        presenter = StaffDashboardPresenter(this, StaffRepository(this))
+        repository = StaffRepository(this)
+        presenter = StaffDashboardPresenter(this, repository)
         adapter = TransactionLogAdapter()
         eventAdapter = StaffEventAdapter { event ->
             val intent = Intent(this, ScannerActivity::class.java)
             intent.putExtra(StaffScreenExtras.EXTRA_EVENT_ID, event.eventId.toString())
             startActivity(intent)
         }
+        activePurposesHost = findViewById(R.id.layoutActiveScanPurposes)
 
-        findViewById<RecyclerView>(R.id.recyclerRecentScans).apply {
+        findViewById<RecyclerView?>(R.id.recyclerRecentScans)?.apply {
             layoutManager = LinearLayoutManager(this@StaffDashboardActivity)
             adapter = this@StaffDashboardActivity.adapter
         }
 
-        findViewById<RecyclerView>(R.id.recyclerAssignedEvents).apply {
+        findViewById<RecyclerView?>(R.id.recyclerAssignedEvents)?.apply {
             layoutManager = LinearLayoutManager(this@StaffDashboardActivity)
             adapter = eventAdapter
         }
 
         findViewById<TextView>(R.id.txtStaffName).text = sessionManager.getFullName() ?: sessionManager.getEmail() ?: "Staff User"
+        findViewById<View>(R.id.btnNotification).setOnClickListener {
+            startActivity(Intent(this, AttendeeNotificationsActivity::class.java))
+        }
         findViewById<View>(R.id.btnQuickScan).setOnClickListener {
             startActivity(Intent(this, ScannerActivity::class.java))
         }
@@ -68,10 +82,6 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         findViewById<View>(R.id.btnQuickTransactions).setOnClickListener {
             startActivity(Intent(this, StaffTransactionsActivity::class.java))
-        }
-
-        findViewById<View>(R.id.btnQuickIdPrinting).setOnClickListener {
-            startActivity(Intent(this, IdPrintingActivity::class.java))
         }
 
         findViewById<View>(R.id.txtScansToday).setOnClickListener {
@@ -86,12 +96,12 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             startActivity(Intent(this, ScannerActivity::class.java))
         }
 
-        findViewById<View>(R.id.navLogs).setOnClickListener {
-            startActivity(Intent(this, StaffTransactionsActivity::class.java))
+        findViewById<View>(R.id.navEvents).setOnClickListener {
+            startActivity(Intent(this, EventRegistrationsActivity::class.java))
         }
 
-        findViewById<View>(R.id.navProfile).setOnClickListener {
-            startActivity(Intent(this, StaffProfileActivity::class.java))
+        findViewById<View>(R.id.navLogs).setOnClickListener {
+            startActivity(Intent(this, StaffTransactionsActivity::class.java))
         }
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
@@ -199,16 +209,18 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun onDestroy() {
+        activePurposeJob?.cancel()
         presenter.detach()
         super.onDestroy()
     }
 
     override fun renderEvents(items: List<com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse>) {
-        findViewById<TextView>(R.id.txtAssignedCount).text = items.size.toString()
+        findViewById<TextView?>(R.id.txtAssignedCount)?.text = items.size.toString()
         eventAdapter.submitItems(items)
-        findViewById<TextView>(R.id.txtAssignedEmptyState).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
-        findViewById<RecyclerView>(R.id.recyclerAssignedEvents).visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+        findViewById<TextView?>(R.id.txtAssignedEmptyState)?.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        findViewById<RecyclerView?>(R.id.recyclerAssignedEvents)?.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
         findViewById<View>(R.id.btnQuickScan).isEnabled = items.any { it.canScan }
+        loadActiveScanPurposes(items)
 
         if (items.isEmpty()) {
             Toast.makeText(this, "No events assigned to you yet", Toast.LENGTH_LONG).show()
@@ -219,6 +231,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
     override fun renderRecentScans(items: List<TransactionResponse>) {
         adapter.submitItems(items)
+        updateTodayActivity(items)
     }
 
     override fun updateStats(scans: Int, checkins: Int) {
@@ -248,4 +261,79 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             isSwipeRefreshing = false
         }
     }
+
+    private fun updateTodayActivity(items: List<TransactionResponse>) {
+        val claims = items.count {
+            it.transactionType.name == "BENEFIT_CLAIM" ||
+                it.transactionType.name == "REWARD_REDEMPTION" ||
+                it.transactionType.name == "REWARD_REDEMPTION_SCAN"
+        }
+        val printed = items.count { it.transactionType.name == "ID_PRINT" }
+        findViewById<TextView>(R.id.txtClaimsToday).text = claims.toString()
+        findViewById<TextView>(R.id.txtPrintedToday).text = printed.toString()
+    }
+
+    private fun loadActiveScanPurposes(items: List<com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse>) {
+        activePurposeJob?.cancel()
+        if (items.isEmpty()) {
+            renderActiveScanPurposes(emptyList())
+            return
+        }
+        activePurposeJob = lifecycleScope.launch {
+            val collected = linkedMapOf<String, ScanPurposeResponse>()
+            items.forEach { event ->
+                when (val result = repository.getScanPurposesByEvent(event.eventId.toString())) {
+                    is com.thedavelopers.eventqr.core.api.NetworkResult.Success -> {
+                        result.data.filter { it.active }.forEach { purpose ->
+                            collected.putIfAbsent(purpose.scanPurposeId.toString(), purpose)
+                        }
+                    }
+                    is com.thedavelopers.eventqr.core.api.NetworkResult.Error -> Unit
+                    com.thedavelopers.eventqr.core.api.NetworkResult.Loading -> Unit
+                }
+            }
+            renderActiveScanPurposes(collected.values.toList())
+        }
+    }
+
+    private fun renderActiveScanPurposes(purposes: List<ScanPurposeResponse>) {
+        activePurposesHost.removeAllViews()
+        if (purposes.isEmpty()) {
+            val empty = TextView(this).apply {
+                text = "No active scan purposes available."
+                setTextColor(android.graphics.Color.parseColor("#6B7280"))
+                textSize = 13f
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+            }
+            activePurposesHost.addView(empty)
+            return
+        }
+
+        val inflater = layoutInflater
+        purposes.forEach { purpose ->
+            val row = inflater.inflate(R.layout.item_staff_active_scan_purpose, activePurposesHost, false)
+            row.findViewById<TextView>(R.id.txtPurposeName).text = purposeName(purpose)
+            row.findViewById<TextView>(R.id.txtPurposePoints).text =
+                if (purpose.trackingOnly) "No points" else "+0 pts"
+            activePurposesHost.addView(row)
+        }
+    }
+
+    private fun purposeName(purpose: ScanPurposeResponse): String {
+        if (purpose.name.isNotBlank()) return purpose.name
+        return when (purpose.code) {
+            ScanPurposeCode.ENTRY -> "Event Entry"
+            ScanPurposeCode.ATTENDANCE -> "Session Attendance"
+            ScanPurposeCode.BOOTH_VISIT -> "Booth Visit"
+            ScanPurposeCode.SESSION_VISIT -> "Session Visit"
+            ScanPurposeCode.BENEFIT_CLAIM -> "Benefit Claim"
+            ScanPurposeCode.REWARD_REDEMPTION,
+            ScanPurposeCode.REWARD_REDEMPTION_SCAN -> "Reward Redemption"
+            ScanPurposeCode.EXIT -> "Event Exit"
+            ScanPurposeCode.ID_PRINT -> "ID Print"
+            ScanPurposeCode.REGISTRATION_LOOKUP -> "Registration Lookup"
+        }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

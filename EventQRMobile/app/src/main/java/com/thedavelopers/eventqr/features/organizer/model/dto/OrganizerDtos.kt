@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.model.dto
 
+import com.google.gson.annotations.SerializedName
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
@@ -193,11 +194,15 @@ data class StaffAssignmentUpdateRequestDto(
 )
 
 data class OrganizerScanPurposeDto(
+    @SerializedName(value = "scanPurposeId", alternate = ["purposeId", "id"])
     val scanPurposeId: UUID? = null,
     val eventId: UUID,
-    val title: String,
+    @SerializedName(value = "title", alternate = ["name", "purposeName"])
+    val title: String? = null,
     val description: String? = null,
+    @SerializedName(value = "code", alternate = ["scanPurposeCode"])
     val code: ScanPurposeCode,
+    @SerializedName(value = "enabled", alternate = ["active", "isActive"])
     val enabled: Boolean = false,
     val trackingOnly: Boolean = true,
     val pointsEnabled: Boolean = false,

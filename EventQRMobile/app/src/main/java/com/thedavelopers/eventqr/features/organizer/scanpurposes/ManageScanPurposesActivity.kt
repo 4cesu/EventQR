@@ -56,18 +56,26 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         purposeHost.addView(loadingState("Loading scan purposes..."))
         MainScope().launch {
             val source = repository.loadScanPurposesForMvp(selectedEvent.id)
+            val persistedPurposes = source.data.filter { !it.id.isNullOrBlank() }
+            val droppedWithoutId = source.data.size - persistedPurposes.size
             if (!isFinishing && !isDestroyed && requestSerial == loadRequestSerial) {
-                scanPurposes = source.data.toList()
+                scanPurposes = persistedPurposes.toList()
             }
             if (requestSerial != loadRequestSerial) return@launch
             Log.d(
                 TAG,
-                "eventId=${selectedEvent.id} refreshCount=$refreshCount loadedCount=${source.data.size} source=${source.source} message=${source.message}"
+                "eventId=${selectedEvent.id} refreshCount=$refreshCount loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId source=${source.source} message=${source.message}"
             )
             Log.d(
                 persistenceTag,
-                "eventId=${selectedEvent.id} loadedCount=${source.data.size} names=${source.data.joinToString { it.label }}"
+                "eventId=${selectedEvent.id} loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId names=${persistedPurposes.joinToString { it.label }}"
             )
+            if (droppedWithoutId > 0) {
+                Log.w(
+                    persistenceTag,
+                    "eventId=${selectedEvent.id} ignoredCount=$droppedWithoutId reason=missingPurposeIdOnLoad"
+                )
+            }
             renderPurposes(scanPurposes)
             source.message?.let {
                 Toast.makeText(this@ManageScanPurposesActivity, it, Toast.LENGTH_SHORT).show()

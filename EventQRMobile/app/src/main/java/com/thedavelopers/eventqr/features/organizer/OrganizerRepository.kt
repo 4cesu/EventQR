@@ -519,8 +519,8 @@ private fun OrganizerUserSearchDto.toAvailableStaff(): OrganizerMvpStaff = Organ
 )
 
 private fun OrganizerScanPurposeDto.toMvpScanPurpose(): OrganizerMvpScanPurpose = OrganizerMvpScanPurpose(
-    label = title.ifBlank { code.toDisplayPurposeName() },
-    description = description ?: title,
+    label = title?.takeIf { it.isNotBlank() } ?: code.toDisplayPurposeName(),
+    description = description ?: title ?: code.toDisplayPurposeName(),
     enabled = enabled,
     duplicateRule = duplicateRuleSummary ?: code.defaultDuplicateRule(),
     trackingOnly = trackingOnly,
