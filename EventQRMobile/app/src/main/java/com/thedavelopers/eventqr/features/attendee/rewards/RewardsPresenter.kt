@@ -24,15 +24,27 @@ class RewardsPresenter(
             when (val rewardsResult = repository.getRewardsByEvent(eventId)) {
                 is NetworkResult.Success -> {
                     val balanceResult = attendeeUserId?.takeIf { it.isNotBlank() }?.let { repository.getRewardBalance(eventId, it) }
-                    view?.showLoading(false)
-                    view?.renderRewards(rewardsResult.data)
-                    if (balanceResult is NetworkResult.Success) {
-                        view?.showBalance(balanceResult.data)
+                    when (balanceResult) {
+                        is NetworkResult.Success -> {
+                            view?.showLoading(false)
+                            view?.renderRewards(rewardsResult.data)
+                            view?.showBalance(balanceResult.data)
+                        }
+
+                        is NetworkResult.Error -> {
+                            view?.showLoading(false)
+                            view?.showError(balanceResult.message)
+                        }
+
+                        NetworkResult.Loading, null -> {
+                            view?.showLoading(false)
+                            view?.showError("Unable to load reward balance.")
+                        }
                     }
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showMessage(rewardsResult.message)
+                    view?.showError(rewardsResult.message)
                 }
                 NetworkResult.Loading -> Unit
             }

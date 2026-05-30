@@ -55,7 +55,7 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
             val title = mapTransactionTitle(item.transactionType)
 
             titleView.text = title
-            eventView.text = item.eventTitle?.takeIf { it.isNotBlank() } ?: "Event"
+            eventView.text = item.eventTitle.orEmpty()
             timeView.text = item.scannedAt?.let { displayFormatter.format(it) } ?: "-"
 
             val deltaPrefix = if (isEarned) "+" else ""

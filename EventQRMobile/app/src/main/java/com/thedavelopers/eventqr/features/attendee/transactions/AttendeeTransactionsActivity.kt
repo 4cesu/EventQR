@@ -14,8 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
-import java.time.Instant
-import java.util.UUID
 
 open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistoryContract.View {
     private lateinit var presenter: TransactionHistoryPresenter
@@ -33,9 +31,6 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private var eventFilterOptions: List<Pair<String?, String>> = emptyList()
     private var selectedEventId: String? = null
     private var pendingInitialEventId: String? = null
-    private val isDebuggableBuild: Boolean by lazy {
-        (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,14 +83,6 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun showError(message: String) {
         loadingView.visibility = View.GONE
-
-        if (isDebuggableBuild) {
-            errorText.text = "Unable to load live transactions. Showing sample data for development."
-            errorText.visibility = View.VISIBLE
-            retryButton.visibility = View.VISIBLE
-            renderTransactions(sampleFallbackTransactions())
-            return
-        }
 
         summaryCountText.text = "0 transactions"
         summaryNetText.text = "+0 pts net"
@@ -171,95 +158,6 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         summaryNetText.text = "$netPrefix$netPoints pts net"
         summaryNetText.setTextColor(
             if (netPoints >= 0) getColor(R.color.eventqr_success) else getColor(R.color.eventqr_error)
-        )
-    }
-
-    private fun sampleFallbackTransactions(): List<TransactionResponse> {
-        val attendeeId = UUID.randomUUID()
-        val registrationId = UUID.randomUUID()
-        val qrCredentialId = UUID.randomUUID()
-        val eventIdA = UUID.randomUUID()
-        val eventIdB = UUID.randomUUID()
-
-        return listOf(
-            TransactionResponse(
-                transactionId = UUID.randomUUID(),
-                eventId = eventIdA,
-                eventTitle = "UI/UX Design Conference",
-                attendeeUserId = attendeeId,
-                registrationId = registrationId,
-                qrCredentialId = qrCredentialId,
-                scanPurposeId = UUID.randomUUID(),
-                transactionType = com.thedavelopers.eventqr.core.api.dto.TransactionType.ENTRY,
-                transactionResult = com.thedavelopers.eventqr.core.api.dto.TransactionResult.APPROVED,
-                pointsDelta = 50,
-                scannedAt = Instant.parse("2026-05-10T02:15:00Z")
-            ),
-            TransactionResponse(
-                transactionId = UUID.randomUUID(),
-                eventId = eventIdA,
-                eventTitle = "UI/UX Design Conference",
-                attendeeUserId = attendeeId,
-                registrationId = registrationId,
-                qrCredentialId = qrCredentialId,
-                scanPurposeId = UUID.randomUUID(),
-                transactionType = com.thedavelopers.eventqr.core.api.dto.TransactionType.ATTENDANCE,
-                transactionResult = com.thedavelopers.eventqr.core.api.dto.TransactionResult.APPROVED,
-                pointsDelta = 50,
-                scannedAt = Instant.parse("2026-05-10T03:00:00Z")
-            ),
-            TransactionResponse(
-                transactionId = UUID.randomUUID(),
-                eventId = eventIdA,
-                eventTitle = "UI/UX Design Conference",
-                attendeeUserId = attendeeId,
-                registrationId = registrationId,
-                qrCredentialId = qrCredentialId,
-                scanPurposeId = UUID.randomUUID(),
-                transactionType = com.thedavelopers.eventqr.core.api.dto.TransactionType.BOOTH_VISIT,
-                transactionResult = com.thedavelopers.eventqr.core.api.dto.TransactionResult.APPROVED,
-                pointsDelta = 25,
-                scannedAt = Instant.parse("2026-05-10T05:30:00Z")
-            ),
-            TransactionResponse(
-                transactionId = UUID.randomUUID(),
-                eventId = eventIdA,
-                eventTitle = "UI/UX Design Conference",
-                attendeeUserId = attendeeId,
-                registrationId = registrationId,
-                qrCredentialId = qrCredentialId,
-                scanPurposeId = UUID.randomUUID(),
-                transactionType = com.thedavelopers.eventqr.core.api.dto.TransactionType.REWARD_REDEMPTION,
-                transactionResult = com.thedavelopers.eventqr.core.api.dto.TransactionResult.APPROVED,
-                pointsDelta = -100,
-                scannedAt = Instant.parse("2026-05-10T06:00:00Z")
-            ),
-            TransactionResponse(
-                transactionId = UUID.randomUUID(),
-                eventId = eventIdA,
-                eventTitle = "UI/UX Design Conference",
-                attendeeUserId = attendeeId,
-                registrationId = registrationId,
-                qrCredentialId = qrCredentialId,
-                scanPurposeId = UUID.randomUUID(),
-                transactionType = com.thedavelopers.eventqr.core.api.dto.TransactionType.EXIT,
-                transactionResult = com.thedavelopers.eventqr.core.api.dto.TransactionResult.APPROVED,
-                pointsDelta = 25,
-                scannedAt = Instant.parse("2026-05-10T09:00:00Z")
-            ),
-            TransactionResponse(
-                transactionId = UUID.randomUUID(),
-                eventId = eventIdB,
-                eventTitle = "Startup Expo 2026",
-                attendeeUserId = attendeeId,
-                registrationId = registrationId,
-                qrCredentialId = qrCredentialId,
-                scanPurposeId = UUID.randomUUID(),
-                transactionType = com.thedavelopers.eventqr.core.api.dto.TransactionType.ENTRY,
-                transactionResult = com.thedavelopers.eventqr.core.api.dto.TransactionResult.APPROVED,
-                pointsDelta = 50,
-                scannedAt = Instant.parse("2026-04-01T01:05:00Z")
-            )
         )
     }
 }

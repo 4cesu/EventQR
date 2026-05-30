@@ -7,13 +7,15 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
+import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
+import kotlinx.coroutines.launch
 import java.time.Instant
-import java.util.UUID
 
 open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.View {
     private lateinit var presenter: ClaimedRewardsPresenter
@@ -24,9 +26,6 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
     private lateinit var retryButton: Button
     private lateinit var recyclerView: RecyclerView
     private var eventId: String = ""
-    private val isDebuggableBuild: Boolean by lazy {
-        (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +44,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
 
         findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
         retryButton.setOnClickListener {
-            if (eventId.isBlank()) {
-                showError("No event selected for claimed rewards.")
-            } else {
-                presenter.loadRedemptions(eventId)
-            }
+            loadClaimedRewards()
         }
 
         recyclerView.apply {
@@ -57,19 +52,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
             adapter = this@ClaimedRewardsActivity.adapter
         }
 
-        if (eventId.isNotBlank()) {
-            presenter.loadRedemptions(eventId)
-        } else {
-            if (isDebuggableBuild) {
-                renderRedemptions(
-                    items = sampleFallbackItems(),
-                    eventTitle = "UI/UX Design Conference",
-                    rewardNamesById = emptyMap()
-                )
-            } else {
-                showError("No event selected for claimed rewards.")
-            }
-        }
+        loadClaimedRewards()
     }
 
     override fun onDestroy() {
@@ -93,18 +76,6 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
 
     override fun showError(message: String) {
         loadingView.visibility = View.GONE
-
-        if (isDebuggableBuild) {
-            errorView.text = "Unable to load live claimed rewards. Showing sample data for development."
-            errorView.visibility = View.VISIBLE
-            retryButton.visibility = View.VISIBLE
-            renderRedemptions(
-                items = sampleFallbackItems(),
-                eventTitle = "UI/UX Design Conference",
-                rewardNamesById = emptyMap()
-            )
-            return
-        }
 
         errorView.text = message.ifBlank { "Unable to load claimed rewards." }
         errorView.visibility = View.VISIBLE
@@ -130,21 +101,40 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
-    private fun sampleFallbackItems(): List<RewardRedemptionResponse> {
-        val event = UUID.randomUUID()
-        val attendee = UUID.randomUUID()
-        val reward = UUID.randomUUID()
-        return listOf(
-            RewardRedemptionResponse(
-                redemptionId = UUID.randomUUID(),
-                eventId = event,
-                attendeeUserId = attendee,
-                rewardId = reward,
-                pointsSpent = 100,
-                status = RedemptionStatus.REDEEMED,
-                redeemedAt = Instant.parse("2026-05-10T06:00:00Z"),
-                reason = "Coffee Voucher"
-            )
-        )
+    private fun loadClaimedRewards() {
+        if (eventId.isNotBlank()) {
+            presenter.loadRedemptions(eventId)
+            return
+        }
+
+        showLoading(true)
+        lifecycleScope.launch {
+            when (val registrationsResult = AttendeeRepository(this@ClaimedRewardsActivity).getMyRegistrations()) {
+                is NetworkResult.Success -> {
+                    val selectedRegistration = registrationsResult.data
+                        .filter { it.status != RegistrationStatus.CANCELLED && it.status != RegistrationStatus.NO_SHOW }
+                        .maxByOrNull { it.registeredAt ?: Instant.EPOCH }
+
+                    val selectedEventId = selectedRegistration?.eventId?.toString().orEmpty()
+                    if (selectedEventId.isBlank()) {
+                        loadingView.visibility = View.GONE
+                        emptyView.text = "No claimed rewards yet."
+                        emptyView.visibility = View.VISIBLE
+                        retryButton.visibility = View.GONE
+                        recyclerView.visibility = View.GONE
+                        return@launch
+                    }
+
+                    eventId = selectedEventId
+                    presenter.loadRedemptions(selectedEventId)
+                }
+
+                is NetworkResult.Error -> {
+                    showError(registrationsResult.message.ifBlank { "Unable to load claimed rewards." })
+                }
+
+                NetworkResult.Loading -> Unit
+            }
+        }
     }
 }

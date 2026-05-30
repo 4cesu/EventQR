@@ -56,6 +56,7 @@ data class RewardResponse(
     val rewardId: UUID,
     val eventId: UUID,
     val name: String,
+    val description: String? = null,
     val pointsRequired: Int,
     val status: RewardStatus,
     val stockQuantity: Int? = null,

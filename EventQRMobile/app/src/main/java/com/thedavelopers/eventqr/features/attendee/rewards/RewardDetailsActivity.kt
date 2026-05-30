@@ -40,6 +40,10 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     }
 
     override fun showLoading(isLoading: Boolean) = Unit
+    override fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }

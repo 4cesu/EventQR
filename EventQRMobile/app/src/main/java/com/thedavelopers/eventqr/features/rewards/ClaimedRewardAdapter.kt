@@ -55,11 +55,10 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
         fun bind(item: RewardRedemptionResponse) {
             val rewardName = rewardNamesById[item.rewardId.toString()]
                 ?: item.reason?.takeIf { it.isNotBlank() }
-                ?: "Reward"
+                .orEmpty()
             val eventName = item.reason?.takeIf { it.startsWith("event:", ignoreCase = true) }?.substringAfter(":")
                 ?.trim()?.takeIf { it.isNotBlank() }
-                ?: eventTitle
-                ?: "Event"
+                ?: eventTitle.orEmpty()
 
             titleText.text = rewardName
             eventText.text = eventName

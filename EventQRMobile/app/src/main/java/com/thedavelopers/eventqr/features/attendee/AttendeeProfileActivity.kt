@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import kotlinx.coroutines.launch
@@ -29,6 +30,13 @@ import java.io.FileOutputStream
 open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
+    private lateinit var txtProfileName: TextView
+    private lateinit var txtProfileRole: TextView
+    private lateinit var txtProfileEmail: TextView
+    private lateinit var txtPhone: TextView
+    private lateinit var progressProfileLoading: ProgressBar
+    private lateinit var txtProfileError: TextView
+    private lateinit var btnProfileRetry: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +44,16 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
         repository = AttendeeRepository(this)
+
+        txtProfileName = findViewById(R.id.txtProfileName)
+        txtProfileRole = findViewById(R.id.txtProfileRole)
+        txtProfileEmail = findViewById(R.id.txtProfileEmail)
+        txtPhone = findViewById(R.id.txtPhone)
+        progressProfileLoading = findViewById(R.id.progressProfileLoading)
+        txtProfileError = findViewById(R.id.txtProfileError)
+        btnProfileRetry = findViewById(R.id.btnProfileRetry)
+
+        btnProfileRetry.setOnClickListener { loadProfile() }
         
         findViewById<View>(R.id.cardEditProfile).setOnClickListener {
             startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
@@ -73,6 +91,9 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun loadProfile() {
+        setLoadingState(true)
+        clearErrorState()
+
         // Initial sync from session
         renderProfile()
 
@@ -81,25 +102,46 @@ open class AttendeeProfileActivity : AppCompatActivity() {
             when (val result = repository.getMyProfile()) {
                 is com.thedavelopers.eventqr.core.api.NetworkResult.Success -> {
                     val user = result.data
-                    sessionManager.updateProfile(user.fullName, user.phoneNumber)
-                    // If login didn't provide role/email or it changed, update it too
-                    // Note: SessionManager doesn't have an update for these yet, but render will use what's there
+                    sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
+                    sessionManager.saveRole(user.role)
                     renderProfile()
+                    clearErrorState()
+                }
+                is com.thedavelopers.eventqr.core.api.NetworkResult.Error -> {
+                    showErrorState(result.message.ifBlank { "Unable to load profile." })
                 }
                 else -> Unit
             }
+
+            setLoadingState(false)
         }
     }
 
     private fun renderProfile() {
-        findViewById<TextView>(R.id.txtProfileName)?.text =
-            sessionManager.getFullName()?.takeIf { it.isNotBlank() } ?: "Attendee"
-        findViewById<TextView>(R.id.txtProfileRole)?.text =
-            RoleMapper.getDisplayName(sessionManager.getUserRole())
-        findViewById<TextView>(R.id.txtProfileEmail)?.text =
-            sessionManager.getEmail()?.takeIf { it.isNotBlank() } ?: "No email saved"
-        findViewById<TextView>(R.id.txtPhone)?.text =
-            sessionManager.getPhone()?.takeIf { it.isNotBlank() } ?: "No Phone Number saved"
+        txtProfileName.text = sessionManager.getFullName().orEmpty()
+        txtProfileRole.text = sessionManager.getUserRole()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { RoleMapper.getDisplayName(it) }
+            .orEmpty()
+        txtProfileEmail.text = sessionManager.getEmail().orEmpty()
+        txtPhone.text = sessionManager.getPhone().orEmpty()
+    }
+
+    private fun setLoadingState(loading: Boolean) {
+        progressProfileLoading.visibility = if (loading) View.VISIBLE else View.GONE
+        btnProfileRetry.visibility = View.GONE
+        txtProfileError.visibility = View.GONE
+    }
+
+    private fun showErrorState(message: String) {
+        txtProfileError.text = message
+        txtProfileError.visibility = View.VISIBLE
+        btnProfileRetry.visibility = View.VISIBLE
+    }
+
+    private fun clearErrorState() {
+        txtProfileError.visibility = View.GONE
+        btnProfileRetry.visibility = View.GONE
     }
 }
 
@@ -115,6 +157,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var imgAvatarPlaceholder: ImageView
     private lateinit var txtChangePhoto: TextView
     private lateinit var txtApiError: TextView
+    private lateinit var btnRetryProfileLoad: Button
     private lateinit var progressLoading: ProgressBar
     private lateinit var btnSaveChanges: Button
 
@@ -169,12 +212,14 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         imgAvatarPlaceholder = findViewById(R.id.imgAvatarPlaceholder)
         txtChangePhoto = findViewById(R.id.txtChangePhoto)
         txtApiError = findViewById(R.id.txtApiError)
+        btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
         progressLoading = findViewById(R.id.progressLoading)
         btnSaveChanges = findViewById(R.id.btnSaveChanges)
     }
 
     private fun bindActions() {
         btnBack.setOnClickListener { finish() }
+        btnRetryProfileLoad.setOnClickListener { loadCurrentProfile() }
         txtChangePhoto.setOnClickListener {
             if (isLoadingProfile || isSavingProfile) {
                 return@setOnClickListener
@@ -381,11 +426,13 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun showApiError(message: String) {
         txtApiError.text = message
         txtApiError.visibility = View.VISIBLE
+        btnRetryProfileLoad.visibility = View.VISIBLE
     }
 
     private fun clearApiError() {
         txtApiError.text = ""
         txtApiError.visibility = View.GONE
+        btnRetryProfileLoad.visibility = View.GONE
     }
 
     private fun setLoadingState(loading: Boolean) {

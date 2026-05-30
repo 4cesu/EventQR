@@ -6,6 +6,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 interface RewardsContract {
     interface View : AttendeeView {
         fun showBalance(balance: PointBalanceResponse)
+        fun showError(message: String)
         fun renderRewards(items: List<RewardResponse>)
     }
 }
