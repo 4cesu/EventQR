@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_TITLE
@@ -30,6 +31,7 @@ open class ManageUsersActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var recyclerStaff: RecyclerView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyStateText: TextView
     private lateinit var staffAdapter: StaffAssignmentAdapter
@@ -58,9 +60,11 @@ open class ManageUsersActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
+        swipeRefresh = findViewById(R.id.swipeRefreshStaffAssignment)
         recyclerStaff = findViewById(R.id.recyclerStaffAssignment)
         progressBar = findViewById(R.id.progressStaffAssignment)
         emptyStateText = findViewById(R.id.txtEmptyStaff)
+        swipeRefresh.setOnRefreshListener { loadAssigned() }
     }
 
     private fun setupList() {
@@ -93,7 +97,9 @@ open class ManageUsersActivity : AppCompatActivity() {
     }
 
     private fun loadAssigned(showAlreadyAssignedRefreshFailureIfEmpty: Boolean = false) {
-        progressBar.visibility = View.VISIBLE
+        if (!swipeRefresh.isRefreshing) {
+            progressBar.visibility = View.VISIBLE
+        }
         emptyStateText.visibility = View.GONE
         recyclerStaff.visibility = View.VISIBLE
 
@@ -131,6 +137,7 @@ open class ManageUsersActivity : AppCompatActivity() {
                 emptyStateText.text = source.message ?: getString(R.string.staff_assignment_empty)
             }
             progressBar.visibility = View.GONE
+            swipeRefresh.isRefreshing = false
         }
     }
 
