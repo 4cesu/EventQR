@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -21,6 +22,7 @@ open class IdPrintingActivity : AppCompatActivity(), IdPrintingContract.View {
     private lateinit var presenter: IdPrintingPresenter
     private lateinit var adapter: IdPrintLogAdapter
     private lateinit var sessionManager: SessionManager
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +38,8 @@ open class IdPrintingActivity : AppCompatActivity(), IdPrintingContract.View {
 
         presenter = IdPrintingPresenter(this, StaffRepository(this))
         adapter = IdPrintLogAdapter()
+        swipeRefresh = findViewById(R.id.swipeRefreshIdPrintLogs)
+        swipeRefresh.setOnRefreshListener { loadLogsFromCurrentEvent() }
 
         val preselectedEventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID).orEmpty()
         if (preselectedEventId.isNotBlank()) {
@@ -61,8 +65,18 @@ open class IdPrintingActivity : AppCompatActivity(), IdPrintingContract.View {
         }
 
         findViewById<Button>(R.id.btnLoadPrintLogs).setOnClickListener {
-            presenter.loadLogs(findViewById<EditText>(R.id.edtPrintEventId).text.toString())
+            loadLogsFromCurrentEvent()
         }
+    }
+
+    private fun loadLogsFromCurrentEvent() {
+        val eventId = findViewById<EditText>(R.id.edtPrintEventId).text.toString()
+        if (eventId.isBlank()) {
+            swipeRefresh.isRefreshing = false
+            Toast.makeText(this, "Enter an event ID first.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        presenter.loadLogs(eventId)
     }
 
     override fun onDestroy() {
@@ -75,15 +89,22 @@ open class IdPrintingActivity : AppCompatActivity(), IdPrintingContract.View {
     }
 
     override fun renderLogs(items: List<IdPrintResponse>) {
+        swipeRefresh.isRefreshing = false
         adapter.submitItems(items)
     }
 
     override fun showMessage(message: String) {
+        swipeRefresh.isRefreshing = false
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     override fun showLoading(isLoading: Boolean) {
-        findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (!swipeRefresh.isRefreshing) {
+            findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
         findViewById<View>(R.id.btnPrintId)?.isEnabled = !isLoading
+        if (!isLoading) {
+            swipeRefresh.isRefreshing = false
+        }
     }
 }
