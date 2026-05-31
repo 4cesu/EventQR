@@ -33,7 +33,6 @@ import com.thedavelopers.eventqr.features.organizer.MUTED
 import com.thedavelopers.eventqr.features.organizer.NAV_EVENTS
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
-import com.thedavelopers.eventqr.features.organizer.PRIMARY
 import com.thedavelopers.eventqr.features.organizer.PURPLE
 import com.thedavelopers.eventqr.features.organizer.SUCCESS
 import com.thedavelopers.eventqr.features.organizer.TEXT
@@ -294,13 +293,10 @@ open class ManageRewardsActivity : AppCompatActivity() {
             })
             addView(header)
 
-            addView(text(reward.description?.takeIf { it.isNotBlank() } ?: "Reward item redeemable using event points.", 13, false, MUTED).apply {
-                setPadding(0, dp(5), 0, dp(12))
-            })
-
             val meta = LinearLayout(this@ManageRewardsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(12), 0, 0)
             }
             meta.addView(metaText("☆ ${formatCount(reward.pointsRequired)} pts"))
             meta.addView(metaText(if (stock == null) "${formatCount(claimed)} claimed" else "${formatCount(claimed)}/${formatCount(stock)} claimed"))
@@ -345,43 +341,43 @@ open class ManageRewardsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(12), dp(20), 0)
         }
-        val nameInput = EditText(this).apply {
-            hint = "Reward name"
+        val titleInput = EditText(this).apply {
+            hint = "e.g. Coffee Voucher"
             setText(reward?.name.orEmpty())
             singleLine()
         }
         val pointsInput = EditText(this).apply {
-            hint = "Points required"
+            hint = "e.g. 100"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.pointsRequired?.toString().orEmpty())
             singleLine()
         }
-        val stockInput = EditText(this).apply {
-            hint = "Stock quantity"
+        val quantityInput = EditText(this).apply {
+            hint = "e.g. 50"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.stockQuantity?.toString().orEmpty())
             singleLine()
         }
-        form.addView(fieldLabel("Reward Name"))
-        form.addView(nameInput)
-        form.addView(fieldLabel("Points Required"))
+        form.addView(fieldLabel("Reward Title"))
+        form.addView(titleInput)
+        form.addView(fieldLabel("Points Cost"))
         form.addView(pointsInput)
-        form.addView(fieldLabel("Stock Quantity"))
-        form.addView(stockInput)
+        form.addView(fieldLabel("Total Quantity"))
+        form.addView(quantityInput)
 
         AlertDialog.Builder(this)
-            .setTitle(if (isEdit) "Edit Reward" else "Add Reward")
+            .setTitle(if (isEdit) "Edit Reward" else "Create Reward")
             .setView(form)
             .setNegativeButton("Cancel", null)
             .setPositiveButton(if (isEdit) "Save" else "Create") { _, _ ->
-                val name = nameInput.text.toString().trim()
+                val title = titleInput.text.toString().trim()
                 val points = pointsInput.text.toString().toIntOrNull()
-                val stock = stockInput.text.toString().toIntOrNull()
-                if (name.isBlank() || points == null || points < 0) {
-                    Toast.makeText(this, "Enter a valid reward name and points.", Toast.LENGTH_SHORT).show()
+                val quantity = quantityInput.text.toString().toIntOrNull()
+                if (title.isBlank() || points == null || points <= 0 || quantity == null || quantity <= 0) {
+                    Toast.makeText(this, "Enter a valid reward title, points cost, and total quantity.", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                saveReward(reward, name, points, stock)
+                saveReward(reward, title, points, quantity)
             }
             .show()
     }
@@ -390,9 +386,9 @@ open class ManageRewardsActivity : AppCompatActivity() {
         setPadding(0, dp(12), 0, dp(4))
     }
 
-    private fun saveReward(existingReward: RewardResponse?, name: String, points: Int, stock: Int?) {
+    private fun saveReward(existingReward: RewardResponse?, title: String, points: Int, quantity: Int) {
         val eventId = selectedEvent.id
-        val request = RewardRequest(UUID.fromString(eventId), name, points, stock)
+        val request = RewardRequest(UUID.fromString(eventId), title, points, quantity)
         lifecycleScope.launch {
             try {
                 val response = if (existingReward == null) {
