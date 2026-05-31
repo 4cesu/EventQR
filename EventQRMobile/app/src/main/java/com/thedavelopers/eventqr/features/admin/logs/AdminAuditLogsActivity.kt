@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 class AdminAuditLogsActivity : AppCompatActivity() {
     private lateinit var repository: AdminRepository
     private lateinit var adapter: AdminAuditLogAdapter
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressLoading: ProgressBar
     private lateinit var textPlaceholder: TextView
     private lateinit var recyclerLogs: RecyclerView
@@ -47,11 +49,13 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
+        swipeRefresh = findViewById(R.id.swipeRefreshAuditLogs)
         progressLoading = findViewById(R.id.progressAuditLoading)
         textPlaceholder = findViewById(R.id.textAuditPlaceholder)
         recyclerLogs = findViewById(R.id.recyclerAuditLogs)
         recyclerLogs.layoutManager = LinearLayoutManager(this)
         recyclerLogs.adapter = adapter
+        swipeRefresh.setOnRefreshListener { loadLogs() }
 
         chipAll = findViewById(R.id.chipAuditAll)
         chipApproval = findViewById(R.id.chipAuditApproval)
@@ -88,18 +92,22 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     }
 
     private fun loadLogs() {
-        progressLoading.visibility = View.VISIBLE
+        if (!swipeRefresh.isRefreshing) {
+            progressLoading.visibility = View.VISIBLE
+        }
         recyclerLogs.visibility = View.GONE
         textPlaceholder.visibility = View.GONE
 
         lifecycleScope.launch {
             when (val result = repository.loadAuditLogs()) {
                 is NetworkResult.Success -> {
+                    swipeRefresh.isRefreshing = false
                     allLogs = result.data.sortedByDescending { it.timestamp }
                     progressLoading.visibility = View.GONE
                     applyFilter()
                 }
                 is NetworkResult.Error -> {
+                    swipeRefresh.isRefreshing = false
                     allLogs = emptyList()
                     progressLoading.visibility = View.GONE
                     recyclerLogs.visibility = View.GONE
@@ -146,37 +154,17 @@ class AdminAuditLogsActivity : AppCompatActivity() {
             val detailsText = log.details.orEmpty().lowercase()
             when (selectedFilter) {
                 AuditFilter.ALL -> true
-                AuditFilter.APPROVAL ->
-                    actionText.contains("approve") ||
-                        actionText.contains("reject") ||
-                        actionText.contains("request") ||
-                        detailsText.contains("approve") ||
-                        detailsText.contains("reject")
-                AuditFilter.ACCOUNT ->
-                    actionText.contains("account") ||
-                        actionText.contains("user") ||
-                        actionText.contains("role") ||
-                        detailsText.contains("account") ||
-                        detailsText.contains("role")
-                AuditFilter.SECURITY ->
-                    actionText.contains("security") ||
-                        actionText.contains("suspend") ||
-                        actionText.contains("permission") ||
-                        detailsText.contains("security") ||
-                        detailsText.contains("suspend")
-                AuditFilter.NOTIFICATION ->
-                    actionText.contains("notification") || detailsText.contains("notification")
+                AuditFilter.APPROVAL -> actionText.contains("approve") || actionText.contains("reject") || actionText.contains("request") || detailsText.contains("approve") || detailsText.contains("reject")
+                AuditFilter.ACCOUNT -> actionText.contains("account") || actionText.contains("user") || actionText.contains("role") || detailsText.contains("account") || detailsText.contains("role")
+                AuditFilter.SECURITY -> actionText.contains("security") || actionText.contains("suspend") || actionText.contains("permission") || detailsText.contains("security") || detailsText.contains("suspend")
+                AuditFilter.NOTIFICATION -> actionText.contains("notification") || detailsText.contains("notification")
             }
         }
 
         adapter.submitItems(filtered)
         recyclerLogs.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         textPlaceholder.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        textPlaceholder.text = if (filtered.isEmpty()) {
-            "Audit logs are not configured yet."
-        } else {
-            ""
-        }
+        textPlaceholder.text = if (filtered.isEmpty()) "Audit logs are not configured yet." else ""
     }
 
     private enum class AuditFilter {
