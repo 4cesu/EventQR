@@ -77,7 +77,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
 
         findViewById<View>(R.id.btnQuickRegistrations).setOnClickListener {
-            startActivity(Intent(this, EventRegistrationsActivity::class.java))
+            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
         }
 
         findViewById<View>(R.id.btnQuickTransactions).setOnClickListener {
@@ -89,7 +89,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
 
         findViewById<View>(R.id.txtCheckinsToday).setOnClickListener {
-            startActivity(Intent(this, EventRegistrationsActivity::class.java))
+            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
         }
 
         findViewById<View>(R.id.navScanner).setOnClickListener {
@@ -97,7 +97,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
 
         findViewById<View>(R.id.navEvents).setOnClickListener {
-            startActivity(Intent(this, EventRegistrationsActivity::class.java))
+            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
         }
 
         findViewById<View>(R.id.navLogs).setOnClickListener {
@@ -145,15 +145,12 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private fun showPortalSwitcher(portals: List<String>) {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_portal_switcher, null)
-        
         val container = view.findViewById<LinearLayout>(R.id.portalOptionsContainer)
         portals.forEach { portal ->
             val portalView = layoutInflater.inflate(R.layout.item_portal_option, container, false)
             portalView.findViewById<TextView>(R.id.txtPortalName).text = portal
-            
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
-            
             when(portal) {
                 "Attendee Portal" -> {
                     icon.setImageResource(R.drawable.ic_nav_profile)
@@ -183,7 +180,6 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             }
             container.addView(portalView)
         }
-        
         dialog.setContentView(view)
         dialog.show()
     }
@@ -194,9 +190,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java))
                 finish()
             }
-            "Staff Portal" -> {
-                // Already here
-            }
+            "Staff Portal" -> Unit
             "Organizer Portal" -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java))
                 finish()
@@ -245,9 +239,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
     override fun showLoading(isLoading: Boolean) {
         if (isSwipeRefreshing) {
-            if (!isLoading) {
-                stopSwipeRefresh()
-            }
+            if (!isLoading) stopSwipeRefresh()
             findViewById<View>(R.id.progressScanner)?.visibility = View.GONE
         } else {
             findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
@@ -313,8 +305,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         purposes.forEach { purpose ->
             val row = inflater.inflate(R.layout.item_staff_active_scan_purpose, activePurposesHost, false)
             row.findViewById<TextView>(R.id.txtPurposeName).text = purposeName(purpose)
-            row.findViewById<TextView>(R.id.txtPurposePoints).text =
-                if (purpose.trackingOnly) "No points" else "+0 pts"
+            row.findViewById<TextView>(R.id.txtPurposePoints).text = if (purpose.trackingOnly) "Tracking only" else "Enabled"
             activePurposesHost.addView(row)
         }
     }
