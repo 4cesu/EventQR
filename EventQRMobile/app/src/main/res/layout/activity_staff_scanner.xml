@@ -210,24 +210,29 @@
                         android:layout_gravity="bottom|end"
                         android:background="@drawable/bg_filter_chip_active" />
 
-                    <LinearLayout
+                    <FrameLayout
                         android:layout_width="180dp"
                         android:layout_height="180dp"
                         android:layout_gravity="center"
-                        android:background="#2D3746"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                        android:background="@drawable/bg_staff_scan_qr_placeholder">
+
+                        <SurfaceView
+                            android:id="@+id/surfaceInlineCameraPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
 
                         <ImageView
                             android:id="@+id/imgScannerIcon"
                             android:layout_width="82dp"
                             android:layout_height="82dp"
+                            android:layout_gravity="center"
                             android:src="@drawable/ic_qr_scan"
                             app:tint="#6B7280" />
-                    </LinearLayout>
+                    </FrameLayout>
                 </FrameLayout>
 
                 <TextView
+                    android:id="@+id/txtInlineCameraStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
