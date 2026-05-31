@@ -70,7 +70,7 @@ class RewardAdapter(
                 }
             }
 
-            pointsView.text = "${item.pointsRequired} pts"
+            pointsView.text = "☆ ${item.pointsRequired} pts"
             stockView.text = stockQuantity?.let { "$it left" } ?: "Stock unavailable"
 
             itemView.setOnClickListener { onClick(item) }
