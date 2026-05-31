@@ -344,19 +344,19 @@ open class ManageRewardsActivity : AppCompatActivity() {
         val titleInput = EditText(this).apply {
             hint = "e.g. Coffee Voucher"
             setText(reward?.name.orEmpty())
-            singleLine()
+            isSingleLine = true
         }
         val pointsInput = EditText(this).apply {
             hint = "e.g. 100"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.pointsRequired?.toString().orEmpty())
-            singleLine()
+            isSingleLine = true
         }
         val quantityInput = EditText(this).apply {
             hint = "e.g. 50"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.stockQuantity?.toString().orEmpty())
-            singleLine()
+            isSingleLine = true
         }
         form.addView(fieldLabel("Reward Title"))
         form.addView(titleInput)
