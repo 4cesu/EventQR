@@ -42,24 +42,21 @@ open class EventManagementHubActivity : AppCompatActivity() {
             val capacity = event.capacity.coerceAtLeast(0)
             val available = (capacity - registeredCount).coerceAtLeast(0)
 
-            // Full-width event banner below top bar
             content.addView(LinearLayout(this@EventManagementHubActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     dp(120),
                 ).apply {
-                    setMargins((0), (0), (0), 0)
+                    setMargins(-dp(16), -dp(16), -dp(16), 0)
                 }
-                // Purple gradient: left #5A45F2, right #9B8CF5
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.parseColor("#5A45F2"), Color.parseColor("#9B8CF5"))
+                    intArrayOf(Color.parseColor("#5A45F2"), Color.parseColor("#9B8CF5")),
                 )
                 setPadding(dp(20), 0, dp(20), 0)
                 gravity = android.view.Gravity.CENTER_VERTICAL
 
-                // Status pill
                 addView(text(event.lifecycleStatus(), 11, true, Color.parseColor("#5A45F2")).apply {
                     setPadding(dp(12), dp(4), dp(12), dp(4))
                     background = rounded(Color.WHITE, 16, null, density = resources.displayMetrics.density)
@@ -68,8 +65,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                     )
                 })
-                
-                // Event title
+
                 addView(text(event.title, 21, true, Color.WHITE).apply {
                     setPadding(0, dp(8), 0, 0)
                 })
@@ -80,17 +76,17 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 ).apply {
-                    topMargin = dp(8)
+                    topMargin = dp(14)
                 }
                 addView(summaryCard("Registered", formatCount(registeredCount)))
                 addView(summaryCard("Capacity", formatCount(capacity), Color.parseColor("#94A3B8")))
                 addView(summaryCard("Available", formatCount(available), SUCCESS))
             })
 
-            content.addView(section("Event Management").apply { 
+            content.addView(section("Event Management").apply {
                 setPadding(dp(2), dp(20), dp(2), dp(10))
             })
-            
+
             val menuItems = listOf(
                 Triple("Staff Assignment", com.thedavelopers.eventqr.R.drawable.ic_admin_users, ManageUsersActivity::class.java),
                 Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java),
