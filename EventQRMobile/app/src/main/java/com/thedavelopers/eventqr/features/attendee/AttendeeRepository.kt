@@ -33,6 +33,7 @@ class AttendeeRepository(context: Context) {
     suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }
     suspend fun createEventRequest(request: EventCreationRequestDto) = safeApiCall { apiService.createEventRequest(request) }
     suspend fun getMyEventRequests() = safeApiCall { apiService.getMyEventRequests() }
+    suspend fun getEventRequest(requestId: String) = safeApiCall { apiService.getEventRequest(requestId) }
     suspend fun getMyProfile() = safeApiCall { apiService.getUsersMe() }
     suspend fun updateProfile(fullName: String, phoneNumber: String?) = safeApiCall {
         apiService.updateUsersMe(com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest(fullName, phoneNumber))
