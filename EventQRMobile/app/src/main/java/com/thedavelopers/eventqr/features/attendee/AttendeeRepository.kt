@@ -6,6 +6,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -29,6 +30,7 @@ class AttendeeRepository(context: Context) {
     suspend fun getEvents() = safeApiCall { apiService.getAttendeeVisibleEvents() }
     suspend fun getEvent(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
     suspend fun getEventAvailability(eventId: String) = safeApiCall { apiService.getEventAvailability(eventId) }
+    suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }
     suspend fun createEventRequest(request: EventCreationRequestDto) = safeApiCall { apiService.createEventRequest(request) }
     suspend fun getMyEventRequests() = safeApiCall { apiService.getMyEventRequests() }
     suspend fun getMyProfile() = safeApiCall { apiService.getUsersMe() }
