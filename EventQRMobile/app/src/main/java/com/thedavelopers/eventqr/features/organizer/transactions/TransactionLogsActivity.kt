@@ -26,16 +26,22 @@ open class TransactionLogsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen("Transaction Logs")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Transaction Logs")
+        val selectableEvents = repository.getApprovedOrganizerEvents()
+        selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: return showMissingEventScreen("Transaction Logs")
         val content = organizerShell("Transaction Logs", selectedEvent.title, NAV_LOGS, showBack = true)
-        if (repository.getApprovedOrganizerEvents().approvedOnly().size > 1) {
-            content.addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) {
+
+        if (selectableEvents.isNotEmpty()) {
+            content.addView(eventSelector(selectableEvents, selectedEvent.id) {
                 selectedEvent = it
                 repository.saveSelectedEventId(it.id)
                 saveSelectedEventId(it.id)
+                filter = "All"
+                if (::search.isInitialized) search.setText("")
+                if (::detail.isInitialized) detail.removeAllViews()
                 loadLogs()
             })
         }
+
         search = EditText(this).apply {
             hint = "Search attendee, QR ID, transaction ID, staff, or event"
             background = rounded(Color.WHITE, 10, BORDER, density = resources.displayMetrics.density)
