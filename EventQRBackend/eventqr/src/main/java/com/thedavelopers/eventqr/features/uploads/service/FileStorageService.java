@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.uploads.service;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +9,8 @@ import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,11 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 
 @Service
 public class FileStorageService {
+
+    private static final int EVENT_POSTER_MIN_WIDTH = 1200;
+    private static final int EVENT_POSTER_MIN_HEIGHT = 675;
+    private static final double EVENT_POSTER_MIN_RATIO = 1.55;
+    private static final double EVENT_POSTER_MAX_RATIO = 1.90;
 
     private final Path storageRoot;
 
@@ -31,7 +40,7 @@ public class FileStorageService {
     }
 
     public StoredFileResponse store(UUID ownerId, String purpose, MultipartFile file) {
-        validateFile(file);
+        validateFile(file, purpose);
         try {
             UUID fileId = UUID.randomUUID();
             byte[] content = file.getBytes();
@@ -95,13 +104,38 @@ public class FileStorageService {
         return storageRoot.resolve(fileId.toString() + ".bin").normalize();
     }
 
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file, String purpose) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File is required");
         }
         String contentType = file.getContentType();
         if (contentType == null || !contentType.toLowerCase().startsWith("image/")) {
             throw new BadRequestException("Only image uploads are supported");
+        }
+        if ("event-poster".equalsIgnoreCase(purpose) || "event-logo".equalsIgnoreCase(purpose)) {
+            validateEventPoster(file);
+        }
+    }
+
+    private void validateEventPoster(MultipartFile file) {
+        try {
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(file.getBytes()));
+            if (image == null) {
+                throw new BadRequestException("Event poster must be a readable JPG, PNG, or WEBP image");
+            }
+            int width = image.getWidth();
+            int height = image.getHeight();
+            double ratio = height == 0 ? 0.0 : (double) width / (double) height;
+            if (width < EVENT_POSTER_MIN_WIDTH || height < EVENT_POSTER_MIN_HEIGHT) {
+                throw new BadRequestException("Event poster must be at least 1200 x 675 pixels");
+            }
+            if (ratio < EVENT_POSTER_MIN_RATIO || ratio > EVENT_POSTER_MAX_RATIO) {
+                throw new BadRequestException("Event poster must use a landscape 16:9-style ratio");
+            }
+        } catch (BadRequestException exception) {
+            throw exception;
+        } catch (IOException exception) {
+            throw new BadRequestException("Unable to validate event poster image");
         }
     }
 
