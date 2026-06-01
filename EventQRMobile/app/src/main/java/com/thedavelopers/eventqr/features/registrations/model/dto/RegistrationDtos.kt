@@ -24,4 +24,9 @@ data class RegistrationResponse(
     val eventLocation: String? = null,
     val eventStartAt: Instant? = null,
     val eventEndAt: Instant? = null,
+    val attendeePhoneNumber: String? = null,
+    val enteredAt: Instant? = null,
+    val exitedAt: Instant? = null,
+    val attendedAt: Instant? = null,
+    val pointsEarned: Int = 0,
 )
