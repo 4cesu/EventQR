@@ -4,9 +4,12 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +21,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
+import com.thedavelopers.eventqr.features.organizer.notifications.NotificationManagementActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -57,6 +61,8 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupNavigation() {
+        setupOrganizerNotificationBell()
+
         findViewById<View>(R.id.navDashboard).setOnClickListener {
             // Stay here
         }
@@ -105,6 +111,53 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         }
 
         setupPortalSwitcher()
+    }
+
+    private fun setupOrganizerNotificationBell() {
+        val contentRoot = findViewById<ViewGroup>(android.R.id.content)
+        val appRoot = contentRoot.getChildAt(0) as? LinearLayout ?: return
+        val header = appRoot.getChildAt(0) as? RelativeLayout ?: return
+        if (header.findViewWithTag<View>("organizer_notification_bell") != null) return
+
+        val headerContent = header.getChildAt(0) as? LinearLayout
+        val headerParams = headerContent?.layoutParams as? RelativeLayout.LayoutParams
+        if (headerContent != null && headerParams != null) {
+            headerParams.marginEnd = dp(56)
+            headerContent.layoutParams = headerParams
+        }
+
+        val bellContainer = FrameLayout(this).apply {
+            tag = "organizer_notification_bell"
+            setBackgroundResource(R.drawable.bg_header_icon_circle)
+            isClickable = true
+            isFocusable = true
+            contentDescription = "Notifications"
+            setOnClickListener {
+                startActivity(Intent(this@OrganizerDashboardActivity, NotificationManagementActivity::class.java))
+            }
+            layoutParams = RelativeLayout.LayoutParams(dp(40), dp(40)).apply {
+                addRule(RelativeLayout.ALIGN_PARENT_END)
+                addRule(RelativeLayout.CENTER_VERTICAL)
+            }
+        }
+
+        bellContainer.addView(ImageView(this).apply {
+            setImageResource(R.drawable.notification_bell)
+            setColorFilter(Color.WHITE)
+            contentDescription = "Notifications"
+            layoutParams = FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER)
+        })
+
+        bellContainer.addView(View(this).apply {
+            visibility = View.GONE
+            setBackgroundResource(R.drawable.bg_red_dot)
+            layoutParams = FrameLayout.LayoutParams(dp(8), dp(8), android.view.Gravity.TOP or android.view.Gravity.END).apply {
+                topMargin = dp(5)
+                marginEnd = dp(5)
+            }
+        })
+
+        header.addView(bellContainer)
     }
 
     private fun setupPortalSwitcher() {
