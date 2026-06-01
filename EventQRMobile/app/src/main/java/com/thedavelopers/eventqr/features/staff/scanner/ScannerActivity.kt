@@ -70,6 +70,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private lateinit var adapter: TransactionAdapter
     private lateinit var selectedEventTitle: TextView
     private lateinit var selectedEventDate: TextView
+    private lateinit var selectedEventCard: LinearLayout
+    private lateinit var eventChevron: TextView
     private lateinit var selectedPurposeCard: LinearLayout
     private lateinit var selectedPurposeName: TextView
     private lateinit var selectedPurposePoints: TextView
@@ -87,7 +89,9 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private var lastSubmittedAtMs: Long = 0L
     private var submitInFlight: Boolean = false
     private var isPurposeDropdownOpen = false
+    private var isEventDropdownOpen = false
     private var purposePopup: PopupWindow? = null
+    private var eventPopup: PopupWindow? = null
     private var camera: Camera? = null
     private val decoding = AtomicBoolean(false)
     private val decoderExecutor = Executors.newSingleThreadExecutor()
@@ -133,8 +137,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         qrInput = findViewById(R.id.edtScannerQr)
         notesInput = findViewById(R.id.edtScannerNotes)
         resultText = findViewById(R.id.txtScannerResult)
+        selectedEventCard = findViewById(R.id.cardScannerEvent)
         selectedEventTitle = findViewById(R.id.txtScannerEventTitle)
         selectedEventDate = findViewById(R.id.txtScannerEventDate)
+        eventChevron = findViewById(R.id.txtEventChevron)
         selectedPurposeCard = findViewById(R.id.cardSelectedPurpose)
         selectedPurposeName = findViewById(R.id.txtSelectedPurposeName)
         selectedPurposePoints = findViewById(R.id.txtSelectedPurposePoints)
@@ -151,23 +157,18 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         inlineCameraSurface.setZOrderMediaOverlay(false)
         requestInlineCameraStart()
 
+        selectedEventCard.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
+        selectedPurposeCard.setOnClickListener { setPurposeDropdownOpen(!isPurposeDropdownOpen) }
+
         findViewById<View>(R.id.navDashboard)?.setOnClickListener {
             startActivity(Intent(this, StaffDashboardActivity::class.java))
             finish()
         }
-
-        findViewById<View>(R.id.navEvents)?.setOnClickListener {
-            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
-        }
-
+        findViewById<View>(R.id.navEvents)?.setOnClickListener { startActivity(Intent(this, StaffAssignedEventsActivity::class.java)) }
         findViewById<View>(R.id.navLogs)?.setOnClickListener {
             startActivity(Intent(this, StaffTransactionsActivity::class.java).apply {
                 selectedEvent()?.id?.let { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it) }
             })
-        }
-
-        selectedPurposeCard.setOnClickListener {
-            setPurposeDropdownOpen(!isPurposeDropdownOpen)
         }
 
         findViewById<RecyclerView>(R.id.recyclerScannerResults).apply {
@@ -175,35 +176,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             adapter = this@ScannerActivity.adapter
         }
 
-        findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener {
-            requestInlineCameraStart()
-        }
-
-        findViewById<Button>(R.id.btnSubmitScan).setOnClickListener {
-            submitCurrentSelection(trigger = "manual")
-        }
-
+        findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener { requestInlineCameraStart() }
+        findViewById<Button>(R.id.btnSubmitScan).setOnClickListener { submitCurrentSelection(trigger = "manual") }
         presenter.loadEvents()
     }
 
-    override fun onResume() {
-        super.onResume()
-        requestInlineCameraStart()
-    }
-
-    override fun onPause() {
-        releaseInlineCamera()
-        purposePopup?.dismiss()
-        super.onPause()
-    }
-
-    override fun onDestroy() {
-        presenter.detach()
-        purposePopup?.dismiss()
-        releaseInlineCamera()
-        decoderExecutor.shutdownNow()
-        super.onDestroy()
-    }
+    override fun onResume() { super.onResume(); requestInlineCameraStart() }
+    override fun onPause() { releaseInlineCamera(); eventPopup?.dismiss(); purposePopup?.dismiss(); super.onPause() }
+    override fun onDestroy() { presenter.detach(); eventPopup?.dismiss(); purposePopup?.dismiss(); releaseInlineCamera(); decoderExecutor.shutdownNow(); super.onDestroy() }
 
     override fun surfaceCreated(holder: SurfaceHolder) { startInlineCameraIfReady() }
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) { releaseInlineCamera(); startInlineCameraIfReady() }
@@ -212,10 +192,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     override fun onPreviewFrame(data: ByteArray?, camera: Camera?) {
         if (data == null || camera == null || submitInFlight || !decoding.compareAndSet(false, true)) return
         val previewSize = camera.parameters.previewSize
-        val width = previewSize.width
-        val height = previewSize.height
         decoderExecutor.execute {
-            val decoded = decodeFrame(data, width, height)
+            val decoded = decodeFrame(data, previewSize.width, previewSize.height)
             runOnUiThread {
                 if (!decoded.isNullOrBlank()) handleInlineQrValue(decoded)
                 decoding.set(false)
@@ -228,7 +206,11 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         eventOptions.addAll(items)
         eventSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, items.map { it.label })
         eventSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { bindSelectedEventHeader(); loadSelectedPurposes() }
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                bindSelectedEventHeader()
+                renderEventDropdown()
+                loadSelectedPurposes()
+            }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
         if (!preselectedEventId.isNullOrBlank()) {
@@ -236,6 +218,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             if (index >= 0) eventSpinner.setSelection(index)
         }
         bindSelectedEventHeader()
+        renderEventDropdown()
         loadSelectedPurposes()
         findViewById<TextView>(R.id.txtScannerEmptyState).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
@@ -330,6 +313,70 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun bindSelectedEventHeader() { val event = selectedEvent(); selectedEventTitle.text = event?.label ?: "No assigned event"; selectedEventDate.text = event?.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty() }
     private fun bindSelectedPurposeHeader() { val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition); selectedPurposeName.text = purpose?.displayName().orEmpty().ifBlank { "Select purpose" }; selectedPurposePoints.visibility = View.GONE }
 
+    private fun renderEventDropdown() {
+        eventPopup?.dismiss()
+        eventPopup = PopupWindow(buildEventDropdownView(), selectedEventCard.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
+            isOutsideTouchable = true
+            elevation = dp(8).toFloat()
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { isEventDropdownOpen = false; eventChevron.text = "⌄" }
+        }
+    }
+
+    private fun buildEventDropdownView(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundResource(R.drawable.bg_card)
+        eventOptions.forEachIndexed { index, event ->
+            addView(LinearLayout(this@ScannerActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(12), dp(16), dp(12))
+                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setOnClickListener {
+                    eventSpinner.setSelection(index, false)
+                    qrInput.setText("")
+                    notesInput.setText("")
+                    submitInFlight = false
+                    lastSubmittedSignature = null
+                    bindSelectedEventHeader()
+                    renderEventDropdown()
+                    loadSelectedPurposes()
+                    setEventDropdownOpen(false)
+                }
+                addView(LinearLayout(this@ScannerActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    addView(TextView(this@ScannerActivity).apply {
+                        text = event.label
+                        setTextColor(if (index == eventSpinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
+                        textSize = 14f
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    })
+                    addView(TextView(this@ScannerActivity).apply {
+                        text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty().ifBlank { "Assigned event" }
+                        setTextColor(0xFF6B7280.toInt())
+                        textSize = 13f
+                    })
+                })
+            })
+        }
+    }
+
+    private fun setEventDropdownOpen(open: Boolean) {
+        if (open && eventOptions.isEmpty()) return
+        if (open) {
+            setPurposeDropdownOpen(false)
+            if (eventPopup == null || selectedEventCard.width > 0 && eventPopup?.width != selectedEventCard.width) renderEventDropdown()
+            isEventDropdownOpen = true
+            eventChevron.text = "⌃"
+            eventPopup?.showAsDropDown(selectedEventCard, 0, 0)
+        } else {
+            eventPopup?.dismiss()
+            isEventDropdownOpen = false
+            eventChevron.text = "⌄"
+        }
+    }
+
     private fun renderPurposeDropdown() {
         purposeDropdown.visibility = View.GONE
         purposePopup?.dismiss()
@@ -363,7 +410,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
 
     private fun setPurposeDropdownOpen(open: Boolean) {
         if (open && purposeOptions.isEmpty()) return
-        if (open) { if (purposePopup == null || selectedPurposeCard.width > 0 && purposePopup?.width != selectedPurposeCard.width) renderPurposeDropdown(); isPurposeDropdownOpen = true; purposeChevron.text = "⌃"; purposePopup?.showAsDropDown(selectedPurposeCard, 0, 0) }
+        if (open) { setEventDropdownOpen(false); if (purposePopup == null || selectedPurposeCard.width > 0 && purposePopup?.width != selectedPurposeCard.width) renderPurposeDropdown(); isPurposeDropdownOpen = true; purposeChevron.text = "⌃"; purposePopup?.showAsDropDown(selectedPurposeCard, 0, 0) }
         else { purposePopup?.dismiss(); isPurposeDropdownOpen = false; purposeChevron.text = "⌄" }
     }
 
