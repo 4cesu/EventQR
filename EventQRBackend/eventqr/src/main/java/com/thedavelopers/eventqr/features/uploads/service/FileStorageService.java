@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
@@ -46,7 +47,7 @@ public class FileStorageService {
             StoredFile storedFile = new StoredFile();
             storedFile.setOwnerId(ownerId);
             storedFile.setPurpose(normalizePurpose(purpose));
-            storedFile.setFileName(file.getOriginalFilename());
+            storedFile.setFileName(normalizeFileName(file.getOriginalFilename(), content));
             storedFile.setContentType(normalizeContentType(file.getContentType(), content));
             storedFile.setSize(content.length);
             storedFile.setStoredAt(Instant.now());
@@ -89,28 +90,52 @@ public class FileStorageService {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File is required");
         }
-        String contentType = file.getContentType();
-        if (contentType == null || !isAllowedImageType(contentType)) {
-            throw new BadRequestException("Only JPG and PNG image uploads are supported");
+        byte[] content = readBytes(file);
+        String detectedType = MediaTypeDetector.detect(content);
+        String declaredType = normalizeDeclaredContentType(file.getContentType());
+        String originalName = file.getOriginalFilename();
+        if (!isAllowedImageType(detectedType) && !isAllowedImageType(declaredType) && !hasAllowedImageExtension(originalName)) {
+            throw new BadRequestException("Only JPG, JPEG, and PNG image uploads are supported");
+        }
+        if (!isAllowedImageType(detectedType)) {
+            throw new BadRequestException("Selected file is not a readable JPG, JPEG, or PNG image");
         }
         if (file.getSize() > MAX_IMAGE_BYTES) {
             throw new BadRequestException("Image must not exceed 5 MB");
         }
         String normalizedPurpose = normalizePurpose(purpose);
         if ("event-poster".equals(normalizedPurpose) || "event-logo".equals(normalizedPurpose)) {
-            validateEventPoster(file);
+            validateEventPoster(content);
         } else if ("profile-photo".equals(normalizedPurpose)) {
-            validateProfilePhoto(file);
+            validateProfilePhoto(content);
+        }
+    }
+
+    private byte[] readBytes(MultipartFile file) {
+        try {
+            return file.getBytes();
+        } catch (IOException exception) {
+            throw new BadRequestException("Unable to read uploaded file");
         }
     }
 
     private boolean isAllowedImageType(String contentType) {
-        String normalized = contentType == null ? "" : contentType.trim().toLowerCase();
-        return "image/jpeg".equals(normalized) || "image/jpg".equals(normalized) || "image/png".equals(normalized);
+        String normalized = normalizeDeclaredContentType(contentType);
+        return "image/jpeg".equals(normalized) || "image/png".equals(normalized);
     }
 
-    private void validateEventPoster(MultipartFile file) {
-        BufferedImage image = readImage(file, "Event poster");
+    private String normalizeDeclaredContentType(String contentType) {
+        String normalized = contentType == null ? "" : contentType.trim().toLowerCase(Locale.US);
+        return "image/jpg".equals(normalized) ? "image/jpeg" : normalized;
+    }
+
+    private boolean hasAllowedImageExtension(String filename) {
+        String normalized = filename == null ? "" : filename.trim().toLowerCase(Locale.US);
+        return normalized.endsWith(".jpg") || normalized.endsWith(".jpeg") || normalized.endsWith(".png");
+    }
+
+    private void validateEventPoster(byte[] content) {
+        BufferedImage image = readImage(content, "Event poster");
         int width = image.getWidth();
         int height = image.getHeight();
         double ratio = height == 0 ? 0.0 : (double) width / (double) height;
@@ -122,8 +147,8 @@ public class FileStorageService {
         }
     }
 
-    private void validateProfilePhoto(MultipartFile file) {
-        BufferedImage image = readImage(file, "Profile photo");
+    private void validateProfilePhoto(byte[] content) {
+        BufferedImage image = readImage(content, "Profile photo");
         int width = image.getWidth();
         int height = image.getHeight();
         if (width < PROFILE_PHOTO_MIN_WIDTH || height < PROFILE_PHOTO_MIN_HEIGHT) {
@@ -131,11 +156,11 @@ public class FileStorageService {
         }
     }
 
-    private BufferedImage readImage(MultipartFile file, String label) {
+    private BufferedImage readImage(byte[] content, String label) {
         try {
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(file.getBytes()));
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(content));
             if (image == null) {
-                throw new BadRequestException(label + " must be a readable JPG or PNG image");
+                throw new BadRequestException(label + " must be a readable JPG, JPEG, or PNG image");
             }
             return image;
         } catch (BadRequestException exception) {
@@ -146,14 +171,31 @@ public class FileStorageService {
     }
 
     private String normalizePurpose(String purpose) {
-        return purpose == null || purpose.isBlank() ? "image" : purpose.trim().toLowerCase();
+        return purpose == null || purpose.isBlank() ? "image" : purpose.trim().toLowerCase(Locale.US);
     }
 
     private String normalizeContentType(String contentType, byte[] content) {
-        if (contentType != null && isAllowedImageType(contentType)) {
-            return "image/jpg".equalsIgnoreCase(contentType) ? "image/jpeg" : contentType.trim().toLowerCase();
+        String detectedType = MediaTypeDetector.detect(content);
+        if (isAllowedImageType(detectedType)) {
+            return detectedType;
         }
-        return MediaTypeDetector.detect(content);
+        String declaredType = normalizeDeclaredContentType(contentType);
+        if (isAllowedImageType(declaredType)) {
+            return declaredType;
+        }
+        return "application/octet-stream";
+    }
+
+    private String normalizeFileName(String originalFileName, byte[] content) {
+        String cleanName = originalFileName == null || originalFileName.isBlank() ? "upload" : originalFileName.trim();
+        String detectedType = MediaTypeDetector.detect(content);
+        if ("image/jpeg".equals(detectedType) && !cleanName.toLowerCase(Locale.US).matches(".*\\.jpe?g$")) {
+            return cleanName + ".jpg";
+        }
+        if ("image/png".equals(detectedType) && !cleanName.toLowerCase(Locale.US).endsWith(".png")) {
+            return cleanName + ".png";
+        }
+        return cleanName;
     }
 
     private StoredFileResponse toResponse(StoredFile storedFile, String status, boolean includeContent) {
