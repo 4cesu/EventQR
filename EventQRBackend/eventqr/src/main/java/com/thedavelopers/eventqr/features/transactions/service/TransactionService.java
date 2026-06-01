@@ -25,7 +25,6 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionRul
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
-import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
@@ -120,12 +119,15 @@ public class TransactionService {
         }
 
         var purpose = scanPurposePort.requireActive(request.scanPurposeId());
+        if (!eventSnapshot.eventId().equals(purpose.eventId())) {
+            throw new ForbiddenException("Scan purpose does not belong to the event");
+        }
         TransactionRule rule = loadRule(request.eventId(), request.scanPurposeId());
         validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
 
         var qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid QR credential"));
-        TransactionType transactionType = TransactionType.valueOf(purpose.code().name());
+        TransactionType transactionType = resolveTransactionType(purpose.code().name());
         if (!qrSnapshot.active()) {
             return reject(eventSnapshot.eventId(), qrSnapshot.attendeeUserId(), qrSnapshot.registrationId(),
                     qrSnapshot.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), "Inactive QR credential",
@@ -146,7 +148,7 @@ public class TransactionService {
                 transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
         }
 
-        String duplicateReason = determineDuplicateReason(purpose.code().name(), registration, rule);
+        String duplicateReason = determineDuplicateReason(registration, rule);
         if (duplicateReason != null) {
             return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                     registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), duplicateReason,
@@ -257,31 +259,28 @@ public class TransactionService {
         return rule;
     }
 
-    private String determineDuplicateReason(String purposeCode, RegistrationLookupPort.RegistrationSnapshot registration,
+    private String determineDuplicateReason(RegistrationLookupPort.RegistrationSnapshot registration,
                                             TransactionRule rule) {
         List<TransactionLog> history = transactionLogRepository.findByRegistrationIdAndScanPurposeIdOrderByScannedAtDesc(
                 registration.registrationId(), rule.getScanPurposeId());
-        long approvedUses = history.stream().filter(log -> log.getTransactionResult() == TransactionResult.APPROVED).count();
-        if (rule.getMaxUsesPerRegistration() > 0 && approvedUses >= rule.getMaxUsesPerRegistration()) {
-            return "Scan limit reached for this registration";
+        List<TransactionLog> approvedHistory = history.stream()
+                .filter(log -> log.getTransactionResult() == TransactionResult.APPROVED)
+                .toList();
+        long approvedUses = approvedHistory.size();
+        if (approvedUses == 0) {
+            return null;
         }
-        if (rule.getDuplicateWindowMinutes() > 0 && !history.isEmpty()) {
-            Instant latestScan = history.get(0).getScannedAt();
+        if (!rule.isAllowDuplicate()) {
+            return "Duplicate scan is not allowed for this scan purpose";
+        }
+        if (rule.getMaxUsesPerRegistration() > 0 && approvedUses >= rule.getMaxUsesPerRegistration()) {
+            return "Scan limit reached for this scan purpose";
+        }
+        if (rule.getDuplicateWindowMinutes() > 0) {
+            Instant latestScan = approvedHistory.get(0).getScannedAt();
             if (latestScan != null && latestScan.isAfter(Instant.now().minus(Duration.ofMinutes(rule.getDuplicateWindowMinutes())))) {
                 return "Duplicate scan is not allowed within the configured window";
             }
-        }
-        if (rule.isAllowDuplicate()) {
-            return null;
-        }
-        if ("ENTRY".equals(purposeCode) && registration.status() == RegistrationStatus.ENTERED) {
-            return "Duplicate entry is not allowed";
-        }
-        if ("EXIT".equals(purposeCode) && registration.status() == RegistrationStatus.EXITED) {
-            return "Duplicate exit is not allowed";
-        }
-        if ("ATTENDANCE".equals(purposeCode) && registration.attendedAt() != null) {
-            return "Duplicate attendance is not allowed";
         }
         return null;
     }
@@ -298,6 +297,13 @@ public class TransactionService {
         if (transactionType == TransactionType.ATTENDANCE) {
             registrationCommandPort.markAttended(registrationId);
         }
+    }
+
+    private TransactionType resolveTransactionType(String scanPurposeCode) {
+        if ("REGISTRATION_LOOKUP".equals(scanPurposeCode)) {
+            return TransactionType.REGISTRATION;
+        }
+        return TransactionType.valueOf(scanPurposeCode);
     }
 
     private TransactionResponse reject(UUID eventId, UUID attendeeUserId, UUID registrationId, UUID qrCredentialId,
