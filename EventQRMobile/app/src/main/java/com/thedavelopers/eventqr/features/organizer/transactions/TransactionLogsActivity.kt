@@ -73,12 +73,21 @@ open class TransactionLogsActivity : AppCompatActivity() {
             }
         }
 
+    private fun isApproved(log: OrganizerMvpTransaction): Boolean =
+        log.status.equals("Approved", true) || log.status.equals("Successful", true)
+
+    private fun isRejected(log: OrganizerMvpTransaction): Boolean =
+        log.status.equals("Rejected", true)
+
+    private fun normalizedStatus(log: OrganizerMvpTransaction): String =
+        if (isApproved(log)) "Approved" else log.status
+
     private fun renderSummary(logs: List<OrganizerMvpTransaction>) {
         summary.removeAllViews()
         summary.addView(row().apply {
             addView(summaryCard("Total Scans", logs.size.toString()))
-            addView(summaryCard("Approved", logs.count { it.status == "Approved" }.toString(), SUCCESS))
-            addView(summaryCard("Rejected", logs.count { it.status == "Rejected" }.toString(), ERROR))
+            addView(summaryCard("Approved", logs.count { isApproved(it) }.toString(), SUCCESS))
+            addView(summaryCard("Rejected", logs.count { isRejected(it) }.toString(), ERROR))
         })
         dataSourceBanner(logsSource)?.let { summary.addView(it) }
     }
@@ -89,7 +98,8 @@ open class TransactionLogsActivity : AppCompatActivity() {
         renderSummary(allLogs)
         val logs = allLogs.filter {
             val matchesFilter = filter == "All" ||
-                it.status.equals(filter, true)
+                (filter.equals("Approved", true) && isApproved(it)) ||
+                (filter.equals("Rejected", true) && isRejected(it))
             val matchesQuery = listOf(it.attendeeName, it.qrId, it.id, it.staffName, it.eventTitle).any { value ->
                 value.contains(q, true)
             }
@@ -112,24 +122,26 @@ open class TransactionLogsActivity : AppCompatActivity() {
 
     private fun logCard(log: OrganizerMvpTransaction): LinearLayout =
         card().apply {
+            val status = normalizedStatus(log)
             val top = row()
             top.addView(text(log.attendeeName, 16, true).apply {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
-            top.addView(badge(log.status))
+            top.addView(badge(status))
             addView(top)
-            addView(text("${log.type} • ${log.status}", 12, true, if (log.status == "Rejected") ERROR else SUCCESS))
+            addView(text("${log.type} • $status", 12, true, if (status == "Rejected") ERROR else SUCCESS))
             addView(text(log.eventTitle, 12, false, MUTED))
             addView(text("Attendee: ${log.attendeeEmail.ifBlank { "No email" }}", 12, false, MUTED))
             addView(text("Staff: ${log.staffName}", 12, false, MUTED))
             addView(text("Staff email: ${log.staffEmail.ifBlank { "No email" }}", 12, false, MUTED))
             addView(text(log.timestamp, 12, false, MUTED))
-            if (log.status == "Rejected") addView(text("Reason: ${log.reason}", 12, true, ERROR))
+            if (status == "Rejected") addView(text("Reason: ${log.reason}", 12, true, ERROR))
             setOnClickListener { renderDetail(log) }
         }
 
     private fun renderDetail(log: OrganizerMvpTransaction) {
         detail.removeAllViews()
+        val status = normalizedStatus(log)
         detail.addView(card().apply {
             addView(text("Transaction ID: ${log.id}", 15, true))
             addView(text("Event: ${log.eventTitle} / ${log.eventId}"))
@@ -139,7 +151,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
             addView(text("Staff email: ${log.staffEmail.ifBlank { "No email" }}"))
             addView(text("QR ID: ${log.qrId}"))
             addView(text("Scan purpose: ${log.scanPurpose}"))
-            addView(text("Result status: ${log.status}"))
+            addView(text("Result status: $status"))
             addView(text("Reason/message: ${log.reason}"))
             addView(text("Created timestamp: ${log.timestamp}"))
             addView(text("Device/source: ${log.deviceSource}"))
