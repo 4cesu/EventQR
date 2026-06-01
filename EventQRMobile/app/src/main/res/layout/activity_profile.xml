@@ -17,7 +17,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Header Section -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="240dp"
@@ -33,10 +32,12 @@
                     <FrameLayout
                         android:layout_width="110dp"
                         android:layout_height="110dp">
+
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:background="@drawable/bg_circle_avatar" />
+
                         <ImageView
                             android:id="@+id/imgProfileAvatar"
                             android:layout_width="100dp"
@@ -45,6 +46,7 @@
                             android:contentDescription="Profile photo"
                             android:scaleType="centerCrop"
                             android:visibility="gone" />
+
                         <FrameLayout
                             android:id="@+id/imgProfileAvatarPlaceholder"
                             android:layout_width="100dp"
@@ -70,7 +72,6 @@
                         android:background="@drawable/bg_profile_role_badge"
                         android:paddingHorizontal="24dp"
                         android:paddingVertical="8dp"
-                        android:text=""
                         android:textColor="#FFFFFF"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -132,7 +133,6 @@
                     android:visibility="gone" />
             </LinearLayout>
 
-            <!-- Menu List Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -147,7 +147,6 @@
                     android:layout_height="0dp"
                     android:visibility="gone" />
 
-                <!-- Edit Profile -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardEditProfile"
                     android:layout_width="match_parent"
@@ -156,19 +155,23 @@
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
                         <FrameLayout
                             android:layout_width="40dp"
                             android:layout_height="40dp">
+
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="@drawable/bg_admin_icon_tile_blue" />
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
@@ -176,6 +179,7 @@
                                 android:src="@drawable/ic_fileedit"
                                 app:tint="#4F46E5" />
                         </FrameLayout>
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -185,6 +189,7 @@
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -193,7 +198,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- My Events -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardMyEvents"
                     android:layout_width="match_parent"
@@ -202,19 +206,23 @@
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
                         <FrameLayout
                             android:layout_width="40dp"
                             android:layout_height="40dp">
+
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="@drawable/bg_admin_icon_tile_purple" />
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
@@ -222,6 +230,7 @@
                                 android:src="@drawable/ic_nav_calendar"
                                 app:tint="#7C3AED" />
                         </FrameLayout>
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -231,6 +240,7 @@
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -239,7 +249,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Transaction History -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardTransactionHistory"
                     android:layout_width="match_parent"
@@ -248,19 +257,23 @@
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
                         <FrameLayout
                             android:layout_width="40dp"
                             android:layout_height="40dp">
+
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="@drawable/bg_admin_icon_tile_blue" />
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
@@ -268,6 +281,7 @@
                                 android:src="@drawable/ic_trend_up"
                                 app:tint="#06B6D4" />
                         </FrameLayout>
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -277,6 +291,7 @@
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -285,7 +300,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Claimed Rewards -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardClaimedRewards"
                     android:layout_width="match_parent"
@@ -294,19 +308,23 @@
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
                         <FrameLayout
                             android:layout_width="40dp"
                             android:layout_height="40dp">
+
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="@drawable/bg_admin_icon_tile_green" />
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
@@ -314,6 +332,7 @@
                                 android:src="@drawable/ic_nav_gift"
                                 app:tint="#10B981" />
                         </FrameLayout>
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -323,6 +342,7 @@
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -331,7 +351,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Event Requests -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardMyEventRequests"
                     android:layout_width="match_parent"
@@ -340,19 +359,23 @@
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
                         <FrameLayout
                             android:layout_width="40dp"
                             android:layout_height="40dp">
+
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="@drawable/bg_admin_icon_tile_yellow" />
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
@@ -360,6 +383,7 @@
                                 android:src="@drawable/ic_fileedit"
                                 app:tint="#F59E0B" />
                         </FrameLayout>
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -369,6 +393,7 @@
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -377,7 +402,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Notifications -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardNotifications"
                     android:layout_width="match_parent"
@@ -386,19 +410,23 @@
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="16dp">
+
                         <FrameLayout
                             android:layout_width="40dp"
                             android:layout_height="40dp">
+
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="@drawable/bg_admin_icon_tile_pink" />
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
@@ -406,6 +434,7 @@
                                 android:src="@drawable/notification_bell"
                                 app:tint="#F43F5E" />
                         </FrameLayout>
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -415,6 +444,7 @@
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -438,8 +468,128 @@
         </LinearLayout>
     </ScrollView>
 
-    <FrameLayout
-        android:id="@+id/bottomNavContainer"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="76dp"
+        android:background="@drawable/bg_bottom_nav"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp">
+
+        <LinearLayout
+            android:id="@+id/navDashboard"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgNavDashboard"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_nav_icon_inactive"
+                android:contentDescription="Dashboard"
+                android:padding="8dp"
+                android:src="@drawable/ic_nav_home"
+                app:tint="#000000" />
+
+            <TextView
+                android:id="@+id/txtNavDashboard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Dashboard"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navEvents"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgNavEvents"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_nav_icon_inactive"
+                android:contentDescription="Events"
+                android:padding="8dp"
+                android:src="@drawable/ic_nav_calendar"
+                app:tint="#000000" />
+
+            <TextView
+                android:id="@+id/txtNavEvents"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Events"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navRewards"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgNavRewards"
+                android:layout_width="39dp"
+                android:layout_height="39dp"
+                android:background="@drawable/bg_nav_icon_inactive"
+                android:contentDescription="Rewards"
+                android:padding="8dp"
+                android:src="@drawable/ic_nav_gift"
+                app:tint="#000000" />
+
+            <TextView
+                android:id="@+id/txtNavRewards"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:text="Rewards"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgNavProfile"
+                android:layout_width="39dp"
+                android:layout_height="39dp"
+                android:background="@drawable/bg_nav_icon_active"
+                android:contentDescription="Profile"
+                android:padding="8dp"
+                android:src="@drawable/ic_nav_profile"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/txtNavProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:text="Profile"
+                android:textColor="#312E81"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
