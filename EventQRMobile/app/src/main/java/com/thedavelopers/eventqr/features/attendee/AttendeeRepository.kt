@@ -43,6 +43,11 @@ class AttendeeRepository(context: Context) {
         val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
         apiService.uploadAvatar(part)
     }
+    suspend fun uploadEventPoster(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
+        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+        val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
+        apiService.uploadEventLogo(part)
+    }
     suspend fun downloadAvatar(avatarPath: String): NetworkResult<ByteArray> = withContext(Dispatchers.IO) {
         runCatching {
             apiService.downloadAvatar(avatarPath).bytes()
