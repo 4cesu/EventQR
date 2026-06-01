@@ -45,12 +45,21 @@
                             android:contentDescription="Profile photo"
                             android:scaleType="centerCrop"
                             android:visibility="gone" />
-                        <View
+                        <FrameLayout
                             android:id="@+id/imgProfileAvatarPlaceholder"
                             android:layout_width="100dp"
                             android:layout_height="100dp"
                             android:layout_gravity="center"
-                            android:background="@drawable/bg_profile_avatar_gradient" />
+                            android:background="@drawable/bg_profile_avatar_gradient">
+
+                            <ImageView
+                                android:layout_width="44dp"
+                                android:layout_height="44dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="Default profile icon"
+                                android:src="@drawable/ic_nav_profile"
+                                app:tint="@android:color/white" />
+                        </FrameLayout>
                     </FrameLayout>
 
                     <TextView
@@ -298,7 +307,7 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- My Event Requests -->
+                <!-- Event Requests -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardMyEventRequests"
                     android:layout_width="match_parent"
@@ -324,7 +333,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_action_request"
+                                android:src="@drawable/ic_fileedit"
                                 app:tint="#F59E0B" />
                         </FrameLayout>
                         <TextView
@@ -370,8 +379,8 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_notification_bell"
-                                app:tint="#EF4444" />
+                                android:src="@drawable/notification_bell"
+                                app:tint="#F43F5E" />
                         </FrameLayout>
                         <TextView
                             android:layout_width="0dp"
@@ -390,152 +399,23 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Sign Out -->
                 <Button
                     android:id="@+id/btnProfileLogout"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="32dp"
-                    android:background="@drawable/bg_sign_out_button"
+                    android:background="@drawable/bg_logout_button"
                     android:text="Sign Out"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-
-                <!-- Compatibility placeholders for shared layout -->
-                <TextView android:id="@+id/txtProfileName" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/txtProfileEmail" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/txtPhone" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <Button android:id="@+id/btnEditProfile" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
-    <!-- Keep Bottom Navigation As Is -->
-    <LinearLayout
+    <FrameLayout
+        android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
-        android:layout_height="76dp"
-        android:background="@drawable/bg_bottom_nav"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="20dp">
-
-        <LinearLayout
-            android:id="@+id/navDashboard"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavDashboard"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Dashboard"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_home"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavDashboard"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Dashboard"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navEvents"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavEvents"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Events"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_calendar"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavEvents"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Events"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navRewards"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavRewards"
-                android:layout_width="39dp"
-                android:layout_height="39dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Rewards"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_gift"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavRewards"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:text="Rewards"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navProfile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavProfile"
-                android:layout_width="39dp"
-                android:layout_height="39dp"
-                android:background="@drawable/bg_nav_icon_active"
-                android:contentDescription="Profile"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_profile"
-                android:tint="#FFFFFF" />
-
-            <TextView
-                android:id="@+id/txtNavProfile"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:text="Profile"
-                android:textColor="#312E81"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </LinearLayout>
+        android:layout_height="wrap_content" />
 </LinearLayout>
