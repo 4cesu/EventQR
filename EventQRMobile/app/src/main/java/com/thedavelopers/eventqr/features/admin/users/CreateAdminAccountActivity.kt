@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.admin.users
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -21,7 +20,6 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.admin.AdminRepository
-import com.thedavelopers.eventqr.features.admin.dashboard.SuperAdminDashboardActivity
 import kotlinx.coroutines.launch
 
 class CreateAdminAccountActivity : AppCompatActivity() {
@@ -51,7 +49,6 @@ class CreateAdminAccountActivity : AppCompatActivity() {
 
         if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.SUPER_ADMIN.name) {
             Toast.makeText(this, "Only Super Admin can create admin accounts.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, SuperAdminDashboardActivity::class.java))
             finish()
             return
         }
