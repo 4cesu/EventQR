@@ -13,6 +13,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
@@ -22,6 +25,7 @@ import kotlinx.coroutines.launch
 
 class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var repository: AdminRepository
+    private lateinit var sessionManager: SessionManager
     private lateinit var adapter: AdminAccountAdapter
     private lateinit var searchInput: EditText
     private lateinit var recyclerAccounts: RecyclerView
@@ -35,10 +39,15 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_account_management)
 
         repository = AdminRepository(this)
+        sessionManager = SessionManager(this)
         adapter = AdminAccountAdapter()
         bindViews()
         bindNav()
         bindSearch()
+    }
+
+    override fun onResume() {
+        super.onResume()
         loadAccounts()
     }
 
@@ -49,9 +58,25 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         textPlaceholder = findViewById(R.id.textAccountsPlaceholder)
         recyclerAccounts.layoutManager = LinearLayoutManager(this)
         recyclerAccounts.adapter = adapter
+
+        val isSuperAdmin = isSuperAdmin()
+        findViewById<View>(R.id.buttonCreateAdminAccount).visibility = if (isSuperAdmin) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.buttonCreateAdminAccount).setOnClickListener {
+            startActivity(Intent(this, CreateAdminAccountActivity::class.java))
+        }
     }
 
     private fun bindNav() {
+        if (isSuperAdmin()) {
+            findViewById<View>(R.id.navDashboard).visibility = View.GONE
+            findViewById<View>(R.id.navRequests).visibility = View.GONE
+            findViewById<View>(R.id.navLogs).visibility = View.GONE
+            findViewById<View>(R.id.navAccounts).setOnClickListener {
+                // current tab
+            }
+            return
+        }
+
         findViewById<View>(R.id.navDashboard).setOnClickListener {
             startActivity(Intent(this, AdminDashboardActivity::class.java))
             finish()
@@ -84,7 +109,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
             adapter.submitItems(filtered)
             textPlaceholder.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             textPlaceholder.text = if (allUsers.isEmpty()) {
-                "Account management is not configured yet."
+                "No accounts found yet."
             } else {
                 "No accounts match your search."
             }
@@ -103,7 +128,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                     progressLoading.visibility = View.GONE
                     recyclerAccounts.visibility = if (allUsers.isEmpty()) View.GONE else View.VISIBLE
                     textPlaceholder.visibility = if (allUsers.isEmpty()) View.VISIBLE else View.GONE
-                    textPlaceholder.text = "Account management is not configured yet."
+                    textPlaceholder.text = "No accounts found yet."
                     adapter.submitItems(allUsers)
                 }
                 is NetworkResult.Error -> {
@@ -111,10 +136,14 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                     progressLoading.visibility = View.GONE
                     recyclerAccounts.visibility = View.GONE
                     textPlaceholder.visibility = View.VISIBLE
-                    textPlaceholder.text = "Account management is not configured yet."
+                    textPlaceholder.text = "Account management is currently unavailable."
                 }
                 NetworkResult.Loading -> Unit
             }
         }
+    }
+
+    private fun isSuperAdmin(): Boolean {
+        return RoleMapper.normalizeRole(sessionManager.getUserRole()) == AccountRole.SUPER_ADMIN.name
     }
 }
