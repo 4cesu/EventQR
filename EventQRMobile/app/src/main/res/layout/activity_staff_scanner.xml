@@ -227,9 +227,11 @@
                         android:background="@drawable/bg_filter_chip_active" />
 
                     <FrameLayout
+                        android:id="@+id/frameCameraContainer"
                         android:layout_width="180dp"
                         android:layout_height="180dp"
                         android:layout_gravity="center"
+                        android:clipChildren="true"
                         android:background="@drawable/bg_staff_scan_qr_placeholder">
 
                         <SurfaceView

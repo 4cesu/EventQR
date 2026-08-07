@@ -14,6 +14,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -80,6 +81,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private lateinit var inlineCameraSurface: SurfaceView
     private lateinit var inlineCameraStatus: TextView
     private lateinit var scannerIcon: ImageView
+    private lateinit var cameraContainer: FrameLayout
     private var staffUserId: String? = null
 
     private val eventOptions = mutableListOf<EventSpinnerOption>()
@@ -149,6 +151,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         inlineCameraSurface = findViewById(R.id.surfaceInlineCameraPreview)
         inlineCameraStatus = findViewById(R.id.txtInlineCameraStatus)
         scannerIcon = findViewById(R.id.imgScannerIcon)
+        cameraContainer = findViewById(R.id.frameCameraContainer)
         adapter = TransactionAdapter()
         staffUserId = SessionManager(this).getUserId()
 
@@ -271,17 +274,77 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
                     focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO) -> params.focusMode = Camera.Parameters.FOCUS_MODE_AUTO
                 }
                 params.previewFormat = android.graphics.ImageFormat.NV21
+                // Select optimal preview size to avoid default mismatch
+                val containerW = cameraContainer.width
+                val containerH = cameraContainer.height
+                // Rotated 90°: target landscape dims = (containerH x containerW)
+                val best = chooseOptimalPreviewSize(params.supportedPreviewSizes, containerH, containerW)
+                if (best != null) {
+                    params.setPreviewSize(best.width, best.height)
+                }
                 this.parameters = params
                 setPreviewDisplay(inlineCameraSurface.holder)
                 setDisplayOrientation(90)
                 setPreviewCallback(this@ScannerActivity)
                 startPreview()
                 scannerIcon.visibility = View.GONE
+                // Adjust SurfaceView to match preview aspect ratio (center-crop)
+                val previewSize = parameters.previewSize
+                applyCenterCrop(inlineCameraSurface, previewSize.height, previewSize.width, containerW, containerH)
             }
         }.onFailure {
             inlineCameraStatus.text = "Unable to start camera"
             scannerIcon.visibility = View.VISIBLE
             Log.w(tag, "inline camera failed: ${it.message}", it)
+        }
+    }
+
+    /**
+     * Pick the supported preview size closest to [targetW]×[targetH] (landscape).
+     * Prefers sizes that are at least as large as the target for sharpness.
+     */
+    private fun chooseOptimalPreviewSize(
+        sizes: List<Camera.Size>?,
+        targetW: Int,
+        targetH: Int
+    ): Camera.Size? {
+        if (sizes.isNullOrEmpty()) return null
+        val targetRatio = targetW.toDouble() / targetH.coerceAtLeast(1)
+        // Sort by how closely the aspect ratio matches, then prefer larger
+        return sizes.minByOrNull {
+            val ratio = it.width.toDouble() / it.height.coerceAtLeast(1)
+            val ratioDiff = Math.abs(ratio - targetRatio)
+            // Tie-break: prefer sizes >= target area
+            val areaPenalty = if (it.width >= targetW && it.height >= targetH) 0.0 else 1000.0
+            ratioDiff + areaPenalty
+        }
+    }
+
+    /**
+     * Resize [surface] so that a camera preview of [previewW]×[previewH] (portrait, post-rotation)
+     * fills [containerW]×[containerH] without distortion (center-crop).
+     */
+    private fun applyCenterCrop(
+        surface: SurfaceView,
+        previewW: Int,
+        previewH: Int,
+        containerW: Int,
+        containerH: Int
+    ) {
+        if (previewW <= 0 || previewH <= 0 || containerW <= 0 || containerH <= 0) return
+        val previewAspect = previewW.toFloat() / previewH
+        val containerAspect = containerW.toFloat() / containerH
+        val (viewW, viewH) = if (previewAspect > containerAspect) {
+            // Preview is wider proportionally → match height, overflow width
+            ((containerH * previewAspect).toInt()) to containerH
+        } else {
+            // Preview is taller proportionally → match width, overflow height
+            containerW to ((containerW / previewAspect).toInt())
+        }
+        surface.layoutParams = (surface.layoutParams as FrameLayout.LayoutParams).apply {
+            width = viewW
+            height = viewH
+            gravity = Gravity.CENTER
         }
     }
 
