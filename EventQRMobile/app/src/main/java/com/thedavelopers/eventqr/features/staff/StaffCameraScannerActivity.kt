@@ -2,8 +2,11 @@ package com.thedavelopers.eventqr.features.staff
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.BarcodeFormat
@@ -22,6 +25,7 @@ open class StaffCameraScannerActivity : AppCompatActivity(), SurfaceHolder.Callb
     private val tag = "StaffQrScanner"
     private lateinit var surfaceView: SurfaceView
     private lateinit var statusText: TextView
+    private lateinit var rootContainer: FrameLayout
     private var camera: android.hardware.Camera? = null
     private val reader = MultiFormatReader()
     private val decoding = AtomicBoolean(false)
@@ -38,6 +42,7 @@ open class StaffCameraScannerActivity : AppCompatActivity(), SurfaceHolder.Callb
 
         surfaceView = findViewById(R.id.surfaceCameraPreview)
         statusText = findViewById(R.id.txtCameraStatus)
+        rootContainer = findViewById(R.id.frameCameraRoot)
         surfaceView.holder.addCallback(this)
         Log.d(tag, "analyzer initialized")
 
@@ -120,19 +125,75 @@ open class StaffCameraScannerActivity : AppCompatActivity(), SurfaceHolder.Callb
                         parameters.focusMode = android.hardware.Camera.Parameters.FOCUS_MODE_AUTO
                 }
                 parameters.previewFormat = android.graphics.ImageFormat.NV21
+                // Select optimal preview size
+                val containerW = rootContainer.width
+                val containerH = rootContainer.height
+                // Rotated 90°: target landscape dims = (containerH x containerW)
+                val best = chooseOptimalPreviewSize(parameters.supportedPreviewSizes, containerH, containerW)
+                if (best != null) {
+                    parameters.setPreviewSize(best.width, best.height)
+                }
                 this.parameters = parameters
                 setPreviewDisplay(holder)
                 setDisplayOrientation(90)
                 setPreviewCallback(this@StaffCameraScannerActivity)
                 startPreview()
+                // Adjust SurfaceView to match preview aspect ratio (center-crop)
+                val previewSize = this.parameters.previewSize
+                applyCenterCrop(surfaceView, previewSize.height, previewSize.width, containerW, containerH)
                 Log.d(
                     tag,
-                    "camera bind/start success preview=${parameters.previewSize.width}x${parameters.previewSize.height} focusMode=${parameters.focusMode}"
+                    "camera bind/start success preview=${this.parameters.previewSize.width}x${this.parameters.previewSize.height} focusMode=${this.parameters.focusMode}"
                 )
             }
         }.onFailure {
             statusText.text = "Unable to start camera"
             Log.w(tag, "camera bind/start failed: ${it.message}", it)
+        }
+    }
+
+    /**
+     * Pick the supported preview size closest to [targetW]×[targetH] (landscape).
+     * Prefers sizes that are at least as large as the target for sharpness.
+     */
+    private fun chooseOptimalPreviewSize(
+        sizes: List<android.hardware.Camera.Size>?,
+        targetW: Int,
+        targetH: Int
+    ): android.hardware.Camera.Size? {
+        if (sizes.isNullOrEmpty()) return null
+        val targetRatio = targetW.toDouble() / targetH.coerceAtLeast(1)
+        return sizes.minByOrNull {
+            val ratio = it.width.toDouble() / it.height.coerceAtLeast(1)
+            val ratioDiff = Math.abs(ratio - targetRatio)
+            val areaPenalty = if (it.width >= targetW && it.height >= targetH) 0.0 else 1000.0
+            ratioDiff + areaPenalty
+        }
+    }
+
+    /**
+     * Resize [surface] so that a camera preview of [previewW]×[previewH] (portrait, post-rotation)
+     * fills [containerW]×[containerH] without distortion (center-crop).
+     */
+    private fun applyCenterCrop(
+        surface: SurfaceView,
+        previewW: Int,
+        previewH: Int,
+        containerW: Int,
+        containerH: Int
+    ) {
+        if (previewW <= 0 || previewH <= 0 || containerW <= 0 || containerH <= 0) return
+        val previewAspect = previewW.toFloat() / previewH
+        val containerAspect = containerW.toFloat() / containerH
+        val (viewW, viewH) = if (previewAspect > containerAspect) {
+            ((containerH * previewAspect).toInt()) to containerH
+        } else {
+            containerW to ((containerW / previewAspect).toInt())
+        }
+        surface.layoutParams = (surface.layoutParams as FrameLayout.LayoutParams).apply {
+            width = viewW
+            height = viewH
+            gravity = Gravity.CENTER
         }
     }
 
