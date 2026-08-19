@@ -16,12 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auditlogs.service.AuditLogService;
-import com.thedavelopers.eventqr.features.users.model.dto.AdminCreateRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRoleRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserStatusRequest;
-import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.service.UserService;
 import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventRequestDecisionRequest;
 import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventRequestResponse;
@@ -58,16 +56,6 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserResponse>> findUser(HttpServletRequest request, @PathVariable UUID userId) {
         requireAdmin(request);
         return ResponseEntity.ok(ApiResponse.success(userService.findOne(userId)));
-    }
-
-    @PostMapping("/users/admins")
-    public ResponseEntity<ApiResponse<UserResponse>> createAdmin(HttpServletRequest request,
-                                                                 @Valid @RequestBody AdminCreateRequest body) {
-        requireAdmin(request);
-        UserRequest createRequest = new UserRequest(body.email(), body.fullName(), body.phoneNumber(), body.password(), AccountRole.ADMIN);
-        UserResponse created = userService.create(createRequest);
-        logAdminAction(request, "ADMIN_ACCOUNT_CREATED", created.fullName(), null, created.userId());
-        return ResponseEntity.ok(ApiResponse.success("Admin account created", created));
     }
 
     @PatchMapping("/users/{userId}")
