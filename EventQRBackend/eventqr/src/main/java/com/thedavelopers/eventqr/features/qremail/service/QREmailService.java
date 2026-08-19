@@ -72,15 +72,19 @@ public class QREmailService {
 
     public DeliveryResult sendForRegistrationSafely(UUID registrationId) {
         try {
+            log.info("QR email delivery requested registrationId={}", registrationId);
             return sendForRegistration(registrationId);
         } catch (Exception exception) {
-            log.warn("QR email delivery skipped for registration {}: {}", registrationId, exception.getMessage());
+            log.error("QR email delivery aborted registrationId={} reason={}", registrationId,
+                    exception.getMessage(), exception);
             return new DeliveryResult(registrationId, null, EmailDeliveryStatus.FAILED);
         }
     }
 
     private DeliveryResult send(EventRegistration registration, QrCredential credential) {
         String recipientEmail = registration.getAttendeeEmail();
+        log.info("Preparing QR email registrationId={} qrCredentialId={} recipient={}",
+            registration.getId(), credential.getId(), recipientEmail);
         EmailDeliveryLog deliveryLog = newLog(registration, credential, recipientEmail, EmailDeliveryStatus.RETRY_PENDING, null);
         saveLog(deliveryLog);
         if (!isValidEmail(recipientEmail)) {
@@ -91,6 +95,8 @@ public class QREmailService {
             sendMessage(recipientEmail, registration.getAttendeeName(), credential.getQrValue());
             return sent(registration, credential, deliveryLog);
         } catch (Exception firstFailure) {
+            log.warn("QR email first attempt failed registrationId={} reason={}",
+                    registration.getId(), firstFailure.getMessage());
             updateLog(deliveryLog, EmailDeliveryStatus.RETRY_PENDING, firstFailure.getMessage());
             sleepBeforeRetry();
             try {
@@ -98,6 +104,7 @@ public class QREmailService {
                 return sent(registration, credential, deliveryLog);
             } catch (Exception secondFailure) {
                 String error = secondFailure.getMessage() == null ? firstFailure.getMessage() : secondFailure.getMessage();
+                log.error("QR email retry failed registrationId={} reason={}", registration.getId(), error, secondFailure);
                 return fail(registration, credential, deliveryLog, error);
             }
         }
@@ -112,6 +119,7 @@ public class QREmailService {
     private DeliveryResult sent(EventRegistration registration, QrCredential credential, EmailDeliveryLog deliveryLog) {
         updateLog(deliveryLog, EmailDeliveryStatus.SENT, null);
         qrCredentialPort.markEmailSent(credential.getId());
+        log.info("QR email sent registrationId={} qrCredentialId={}", registration.getId(), credential.getId());
         return new DeliveryResult(registration.getId(), credential.getId(), EmailDeliveryStatus.SENT);
     }
 

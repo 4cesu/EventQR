@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,8 @@ import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort.Regist
 @Service
 @Transactional
 public class RegistrationService implements RegistrationLookupPort, RegistrationCommandPort {
+
+    private static final Logger log = LoggerFactory.getLogger(RegistrationService.class);
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -98,6 +102,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         registration.setStatus(RegistrationStatus.REGISTERED);
         registration.setRegisteredAt(Instant.now());
         registration = registrationRepository.saveAndFlush(registration);
+        log.info("Registration saved registrationId={} eventId={} attendeeUserId={}",
+            registration.getId(), registration.getEventId(), registration.getAttendeeUserId());
 
         eventService.incrementCurrentAttendeeCount(request.eventId());
 
@@ -107,10 +113,26 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         UUID registrationId = registration.getId();
         EventRegistration savedRegistration = registrationRepository.findById(registrationId)
             .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
-        QrCredentialSnapshot qrCredential = qrCredentialPort.findByRegistrationId(savedRegistration.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("QR credential not found for registration: " + savedRegistration.getId()));
 
+        log.info("Generating or recovering QR credential registrationId={}", registrationId);
+        QrCredentialSnapshot qrCredential = qrCredentialPort.issueOrReturnExisting(
+            savedRegistration.getEventId(), savedRegistration.getAttendeeUserId(),
+            savedRegistration.getId(), savedRegistration.getAttendeeEmail());
+        if (!qrCredential.qrCredentialId().equals(savedRegistration.getQrCredentialId())) {
+            savedRegistration.setQrCredentialId(qrCredential.qrCredentialId());
+            savedRegistration = registrationRepository.saveAndFlush(savedRegistration);
+            log.info("QR credential linked registrationId={} qrCredentialId={}",
+                registrationId, qrCredential.qrCredentialId());
+        } else {
+            log.info("QR credential already linked registrationId={} qrCredentialId={}",
+                registrationId, qrCredential.qrCredentialId());
+        }
+
+        log.info("Starting QR email delivery registrationId={} qrCredentialId={}",
+            registrationId, qrCredential.qrCredentialId());
         qrEmailService.sendForRegistrationSafely(savedRegistration.getId());
+        log.info("Registration workflow completed registrationId={} qrCredentialId={}",
+            registrationId, qrCredential.qrCredentialId());
 
         return new RegistrationSubmissionResponse(toResponse(savedRegistration), qrCredential);
     }
