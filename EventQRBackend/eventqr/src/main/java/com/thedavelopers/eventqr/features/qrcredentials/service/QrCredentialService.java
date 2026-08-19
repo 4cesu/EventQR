@@ -2,7 +2,15 @@ package com.thedavelopers.eventqr.features.qrcredentials.service;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +71,19 @@ public class QrCredentialService implements QrCredentialPort {
     @Override
     public Optional<QrCredentialSnapshot> findByQrValue(String qrValue) {
         return qrCredentialRepository.findByQrValueIgnoreCase(qrValue).map(QrCredential::toSnapshot);
+    }
+
+    @Override
+    public byte[] renderQrImage(String qrValue) {
+        try {
+            BitMatrix matrix = new MultiFormatWriter().encode(qrValue, BarcodeFormat.QR_CODE, 320, 320,
+                    Map.of(EncodeHintType.CHARACTER_SET, StandardCharsets.UTF_8.name()));
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", output);
+            return output.toByteArray();
+        } catch (Exception exception) {
+            throw new IllegalStateException("QR image could not be generated", exception);
+        }
     }
 
     @Override

@@ -18,6 +18,8 @@ public interface QrCredentialPort {
 
     Optional<QrCredentialSnapshot> findByQrValue(String qrValue);
 
+    byte[] renderQrImage(String qrValue);
+
     QrCredentialSnapshot markDisplayedOnce(UUID qrCredentialId);
 
     QrCredentialSnapshot markDownloaded(UUID qrCredentialId);
