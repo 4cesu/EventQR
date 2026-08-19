@@ -24,6 +24,10 @@ public interface QrCredentialPort {
 
     QrCredentialSnapshot markEmailQueued(UUID qrCredentialId);
 
+    QrCredentialSnapshot markEmailSent(UUID qrCredentialId);
+
+    QrCredentialSnapshot markEmailFailed(UUID qrCredentialId);
+
     record QrCredentialSnapshot(UUID qrCredentialId, UUID eventId, UUID attendeeUserId, UUID registrationId,
                                 String qrValue, boolean active, QrDisplayStatus displayStatus,
                                 QrDeliveryStatus deliveryStatus, boolean downloaded) {
