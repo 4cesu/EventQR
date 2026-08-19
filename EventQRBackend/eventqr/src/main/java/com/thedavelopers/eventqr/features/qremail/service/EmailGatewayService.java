@@ -26,6 +26,9 @@ public class EmailGatewayService {
 
     public void send(String recipientEmail, EmailTemplateBuilder.EmailContent content) {
         try {
+            boolean containsInlineQr = content.html().contains("data:image/png;base64,");
+            log.debug("Brevo email HTML prepared recipient={} htmlLength={} containsInlineQr={}",
+                    recipientEmail, content.html().length(), containsInlineQr);
             log.debug("Sending QR email through Brevo REST API recipient={}", recipientEmail);
             SendSmtpEmail email = new SendSmtpEmail()
                     .sender(new SendSmtpEmailSender().email(senderEmail).name("EventQR"))

@@ -105,6 +105,7 @@ public class QREmailService {
 
     private void sendMessage(String recipientEmail, String attendeeName, String qrValue) {
         byte[] qrImageBytes = qrCredentialPort.renderQrImage(qrValue);
+        log.debug("QR image bytes retrieved registrationEmail={} byteCount={}", recipientEmail, qrImageBytes.length);
         emailGatewayService.send(recipientEmail, templateBuilder.build(attendeeName, qrValue, qrImageBytes));
     }
 
