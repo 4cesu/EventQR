@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.qremail.service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -25,11 +26,12 @@ public class EmailTemplateBuilder {
     public void populate(MimeMessage message, String recipientEmail, String attendeeName, String qrValue) {
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom("onboarding@resend.dev", "EventQR");
             helper.setTo(recipientEmail);
             helper.setSubject("Your EventQR credential");
             helper.setText(buildHtml(attendeeName, qrValue), true);
             helper.addInline(CONTENT_ID, new ByteArrayResource(renderQrCode(qrValue)), "image/png");
-        } catch (MessagingException exception) {
+        } catch (MessagingException | UnsupportedEncodingException exception) {
             throw new IllegalStateException("QR email content could not be built", exception);
         }
     }
