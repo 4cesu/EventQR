@@ -3,12 +3,8 @@ package com.thedavelopers.eventqr.features.qremail.service;
 import java.time.Instant;
 import java.util.UUID;
 
-import jakarta.mail.internet.AddressException;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,22 +30,19 @@ public class QREmailService {
     private final QrCredentialPort qrCredentialPort;
     private final EmailTemplateBuilder templateBuilder;
     private final EmailGatewayService emailGatewayService;
-    private final JavaMailSender mailSender;
 
     public QREmailService(EventRegistrationRepository registrationRepository,
                           QrCredentialRepository qrCredentialRepository,
                           EmailDeliveryLogRepository deliveryLogRepository,
                           QrCredentialPort qrCredentialPort,
                           EmailTemplateBuilder templateBuilder,
-                          EmailGatewayService emailGatewayService,
-                          JavaMailSender mailSender) {
+                          EmailGatewayService emailGatewayService) {
         this.registrationRepository = registrationRepository;
         this.qrCredentialRepository = qrCredentialRepository;
         this.deliveryLogRepository = deliveryLogRepository;
         this.qrCredentialPort = qrCredentialPort;
         this.templateBuilder = templateBuilder;
         this.emailGatewayService = emailGatewayService;
-        this.mailSender = mailSender;
     }
 
     @Transactional
@@ -111,9 +104,7 @@ public class QREmailService {
     }
 
     private void sendMessage(String recipientEmail, String attendeeName, String qrValue) {
-        MimeMessage message = mailSender.createMimeMessage();
-        templateBuilder.populate(message, recipientEmail, attendeeName, qrValue);
-        emailGatewayService.send(message);
+        emailGatewayService.send(recipientEmail, templateBuilder.build(attendeeName, qrValue));
     }
 
     private DeliveryResult sent(EventRegistration registration, QrCredential credential, EmailDeliveryLog deliveryLog) {
@@ -161,13 +152,7 @@ public class QREmailService {
         if (email == null || email.isBlank()) {
             return false;
         }
-        try {
-            InternetAddress address = new InternetAddress(email.trim());
-            address.validate();
-            return true;
-        } catch (AddressException exception) {
-            return false;
-        }
+        return email.trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     }
 
     private void sleepBeforeRetry() {
