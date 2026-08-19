@@ -95,6 +95,20 @@ public class QrCredentialService implements QrCredentialPort {
         return qrCredentialRepository.save(qrCredential).toSnapshot();
     }
 
+    @Override
+    public QrCredentialSnapshot markEmailSent(UUID qrCredentialId) {
+        QrCredential qrCredential = load(qrCredentialId);
+        qrCredential.setDeliveryStatus(QrDeliveryStatus.SENT);
+        return qrCredentialRepository.save(qrCredential).toSnapshot();
+    }
+
+    @Override
+    public QrCredentialSnapshot markEmailFailed(UUID qrCredentialId) {
+        QrCredential qrCredential = load(qrCredentialId);
+        qrCredential.setDeliveryStatus(QrDeliveryStatus.FAILED);
+        return qrCredentialRepository.save(qrCredential).toSnapshot();
+    }
+
     private QrCredential load(UUID qrCredentialId) {
         return qrCredentialRepository.findById(qrCredentialId)
                 .orElseThrow(() -> new ResourceNotFoundException("QR credential not found: " + qrCredentialId));

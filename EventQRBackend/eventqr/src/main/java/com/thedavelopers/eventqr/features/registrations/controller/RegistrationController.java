@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.qrcredentials.service.QrCredentialService;
+import com.thedavelopers.eventqr.features.qremail.service.QREmailService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
@@ -29,11 +30,14 @@ public class RegistrationController {
 
     private final RegistrationService registrationService;
     private final QrCredentialService qrCredentialService;
+    private final QREmailService qrEmailService;
     private final JwtService jwtService;
 
-    public RegistrationController(RegistrationService registrationService, QrCredentialService qrCredentialService, JwtService jwtService) {
+    public RegistrationController(RegistrationService registrationService, QrCredentialService qrCredentialService,
+                                  QREmailService qrEmailService, JwtService jwtService) {
         this.registrationService = registrationService;
         this.qrCredentialService = qrCredentialService;
+        this.qrEmailService = qrEmailService;
         this.jwtService = jwtService;
     }
 
@@ -89,14 +93,18 @@ public class RegistrationController {
 
     @PostMapping("/{registrationId}/qr/email")
     public ResponseEntity<ApiResponse<QrCredentialSnapshot>> emailQr(@PathVariable UUID registrationId) {
-        QrCredentialSnapshot qr = registrationService.getOrCreateQrCredential(registrationId);
-        return ResponseEntity.ok(ApiResponse.success("QR email queued", qrCredentialService.markEmailQueued(qr.qrCredentialId())));
+        registrationService.getOrCreateQrCredential(registrationId);
+        qrEmailService.sendForRegistrationSafely(registrationId);
+        return ResponseEntity.ok(ApiResponse.success("QR email delivery attempted",
+                registrationService.getOrCreateQrCredential(registrationId)));
     }
 
     @PostMapping("/{registrationId}/qr/email/retry")
     public ResponseEntity<ApiResponse<QrCredentialSnapshot>> retryEmailQr(@PathVariable UUID registrationId) {
-        QrCredentialSnapshot qr = registrationService.getOrCreateQrCredential(registrationId);
-        return ResponseEntity.ok(ApiResponse.success("QR email retried", qrCredentialService.markEmailQueued(qr.qrCredentialId())));
+        registrationService.getOrCreateQrCredential(registrationId);
+        qrEmailService.sendForRegistrationSafely(registrationId);
+        return ResponseEntity.ok(ApiResponse.success("QR email retry attempted",
+            registrationService.getOrCreateQrCredential(registrationId)));
     }
 
     @GetMapping("/{registrationId}/email-status")

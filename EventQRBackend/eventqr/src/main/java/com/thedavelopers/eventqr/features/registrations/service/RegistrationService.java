@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
+import com.thedavelopers.eventqr.features.qremail.service.QREmailService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
@@ -42,17 +43,20 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final EventLookupPort eventLookupPort;
     private final QrCredentialPort qrCredentialPort;
     private final EventService eventService;
+    private final QREmailService qrEmailService;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
                                EventLookupPort eventLookupPort,
                                QrCredentialPort qrCredentialPort,
-                               EventService eventService) {
+                               EventService eventService,
+                               QREmailService qrEmailService) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.eventLookupPort = eventLookupPort;
         this.qrCredentialPort = qrCredentialPort;
         this.eventService = eventService;
+        this.qrEmailService = qrEmailService;
     }
 
     public RegistrationSubmissionResponse register(RegistrationRequest request) {
@@ -105,6 +109,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
         QrCredentialSnapshot qrCredential = qrCredentialPort.findByRegistrationId(savedRegistration.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("QR credential not found for registration: " + savedRegistration.getId()));
+
+        qrEmailService.sendForRegistrationSafely(savedRegistration.getId());
 
         return new RegistrationSubmissionResponse(toResponse(savedRegistration), qrCredential);
     }
@@ -163,7 +169,9 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     }
 
     public QrCredentialSnapshot linkQrCredential(UUID registrationId) {
-        return getOrCreateQrCredential(registrationId);
+        QrCredentialSnapshot qrCredential = getOrCreateQrCredential(registrationId);
+        qrEmailService.sendForRegistrationSafely(registrationId);
+        return qrCredential;
     }
 
     @Override
