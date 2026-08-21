@@ -25,7 +25,7 @@ public class EmailTemplateBuilder {
                 <html><body>
                 <p>Hello %s,</p>
                 <p>Here is your EventQR credential. Present this QR code at the event when requested.</p>
-                <p><img src="cid:qr-code" alt="EventQR credential" style="max-width: 250px; height: auto;" /></p>
+                <p><img src="cid:qr-code" alt="EventQR credential" style="max-width: 250px;" /></p>
                 <p>Your credential value: <strong>%s</strong></p>
                 <p>Keep this email available as your backup QR access.</p>
                 </body></html>

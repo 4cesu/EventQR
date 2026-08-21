@@ -31,7 +31,6 @@ public class EmailGatewayService {
             SendSmtpEmailAttachment qrAttachment = new SendSmtpEmailAttachment()
                     .content(content.qrImageBytes())
                     .name("qrcode.png")
-                    .inline(true)
                     .contentId(contentId);
             log.debug("Sending QR code as inline attachment recipient={} contentId={} byteCount={}",
                 recipientEmail, contentId, content.qrImageBytes().length);
