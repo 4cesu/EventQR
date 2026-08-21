@@ -8,8 +8,6 @@ import org.springframework.web.util.HtmlUtils;
 @Component
 public class EmailTemplateBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(EmailTemplateBuilder.class);
-
     public EmailContent build(String attendeeName, String qrValue, byte[] qrImageBytes) {
         if (qrImageBytes == null || qrImageBytes.length == 0) {
             throw new IllegalArgumentException("QR image bytes must not be empty");
