@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import brevo.ApiException;
 import brevoApi.TransactionalEmailsApi;
 import brevoModel.SendSmtpEmail;
+import brevoModel.SendSmtpEmailAttachment;
 import brevoModel.SendSmtpEmailSender;
 import brevoModel.SendSmtpEmailTo;
 
@@ -26,15 +27,16 @@ public class EmailGatewayService {
 
     public void send(String recipientEmail, EmailTemplateBuilder.EmailContent content) {
         try {
-            boolean containsInlineQr = content.html().contains("data:image/png;base64,");
-            log.debug("Brevo email HTML prepared recipient={} htmlLength={} containsInlineQr={}",
-                    recipientEmail, content.html().length(), containsInlineQr);
             log.debug("Sending QR email through Brevo REST API recipient={}", recipientEmail);
             SendSmtpEmail email = new SendSmtpEmail()
                     .sender(new SendSmtpEmailSender().email(senderEmail).name("EventQR"))
                     .addToItem(new SendSmtpEmailTo().email(recipientEmail))
                     .subject(content.subject())
                     .htmlContent(content.html());
+            SendSmtpEmailAttachment attachment = new SendSmtpEmailAttachment()
+                .content(content.qrImageBytes())
+                .name("qrImage.png");
+            email.addAttachmentItem(attachment);
             transactionalEmailsApi.sendTransacEmail(email);
             log.debug("Brevo REST API accepted QR email recipient={}", recipientEmail);
         } catch (ApiException | RuntimeException exception) {
