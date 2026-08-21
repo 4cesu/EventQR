@@ -1,7 +1,5 @@
 package com.thedavelopers.eventqr.features.qremail.service;
 
-import java.util.Base64;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,12 +28,11 @@ public class EmailGatewayService {
     public void send(String recipientEmail, EmailTemplateBuilder.EmailContent content) {
         try {
             String contentId = "qr-code";
-            String encodedQrImage = Base64.getEncoder().encodeToString(content.qrImageBytes());
             SendSmtpEmailAttachment qrAttachment = new SendSmtpEmailAttachment()
-                .content(encodedQrImage)
-                .name("qr-code.png")
-                .inline(true)
-                .contentId(contentId);
+                    .content(content.qrImageBytes())
+                    .name("qrcode.png")
+                    .inline(true)
+                    .contentId(contentId);
             log.debug("Sending QR code as inline attachment recipient={} contentId={} byteCount={}",
                 recipientEmail, contentId, content.qrImageBytes().length);
             log.debug("Sending QR email through Brevo REST API recipient={}", recipientEmail);
@@ -43,8 +40,8 @@ public class EmailGatewayService {
                     .sender(new SendSmtpEmailSender().email(senderEmail).name("EventQR"))
                     .addToItem(new SendSmtpEmailTo().email(recipientEmail))
                     .subject(content.subject())
-                .htmlContent(content.html())
-                .addAttachmentItem(qrAttachment);
+                    .htmlContent(content.html())
+                    .addAttachmentItem(qrAttachment);
             transactionalEmailsApi.sendTransacEmail(email);
             log.debug("Brevo REST API accepted QR email recipient={}", recipientEmail);
         } catch (ApiException | RuntimeException exception) {
