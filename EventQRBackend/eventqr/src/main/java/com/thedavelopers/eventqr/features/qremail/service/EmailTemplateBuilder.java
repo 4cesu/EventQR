@@ -8,6 +8,8 @@ import org.springframework.web.util.HtmlUtils;
 @Component
 public class EmailTemplateBuilder {
 
+    private static final Logger log = LoggerFactory.getLogger(EmailTemplateBuilder.class);
+
     public EmailContent build(String attendeeName, String qrValue, byte[] qrImageBytes) {
         if (qrImageBytes == null || qrImageBytes.length == 0) {
             throw new IllegalArgumentException("QR image bytes must not be empty");
@@ -23,7 +25,7 @@ public class EmailTemplateBuilder {
                 <html><body>
                 <p>Hello %s,</p>
                 <p>Here is your EventQR credential. Present this QR code at the event when requested.</p>
-                <p><img src="cid:qr-code" alt="EventQR credential" style="max-width: 250px;" /></p>
+                <p><img src="cid:qrImage.png" alt="EventQR credential" style="max-width: 250px;" /></p>
                 <p>Your credential value: <strong>%s</strong></p>
                 <p>Keep this email available as your backup QR access.</p>
                 </body></html>
