@@ -47,21 +47,9 @@ open class EventReportsActivity : AppCompatActivity() {
         selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Event Reports")
         content = organizerShell(
             title = "Event Reports",
-            subtitle = selectedEvent.title,
             selectedNav = NAV_REPORTS,
-            topRightLabel = "Generate All",
-            onTopRight = { generateAllReports() },
         )
         val report = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(card().apply {
-            addView(text("Select Event", 13, false, MUTED))
-            addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) {
-                selectedEvent = it
-                repository.saveSelectedEventId(it.id)
-                saveSelectedEventId(it.id)
-                loadScreen()
-            })
-        })
         content.addView(report)
         loadScreen()
     }
@@ -96,6 +84,15 @@ open class EventReportsActivity : AppCompatActivity() {
 
     private fun renderList(container: LinearLayout) {
         container.removeAllViews()
+        container.addView(card().apply {
+            addView(text("Select Event", 13, false, MUTED))
+            addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) {
+                selectedEvent = it
+                repository.saveSelectedEventId(it.id)
+                saveSelectedEventId(it.id)
+                loadScreen()
+            })
+        })
         container.addView(buildSummaryHeaderCard())
         container.addView(sectionHeader("Generate Reports"))
         reportCatalog().forEach { item ->
