@@ -65,6 +65,7 @@
         <activity android:name=".features.organizer.SearchAttendeesActivity" android:exported="false" />
         <activity android:name=".features.organizer.transactions.TransactionLogsActivity" android:exported="false" />
         <activity android:name=".features.organizer.reports.EventReportsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.reports.ReportPreviewActivity" android:exported="false" />
         <activity android:name=".features.organizer.NotificationManagementActivity" android:exported="false" />
         <activity android:name=".features.organizer.ReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.ManageRewardsActivity" android:exported="false" />
@@ -103,6 +104,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".features.auth.login.LoginActivity" android:exported="false" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>
