@@ -1,11 +1,16 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
+import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -26,10 +31,12 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDt
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterStatus
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
+import androidx.annotation.RequiresApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -290,6 +297,44 @@ if (isCombined) {
     }
 
     private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            saveToPublicDownloads(bytes, fileName, contentType)
+        } else {
+            saveToLegacyPrivateStorage(bytes, fileName, contentType)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun saveToPublicDownloads(bytes: ByteArray, fileName: String, contentType: String) {
+        val resolver: ContentResolver = contentResolver
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, contentType)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        }
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            ?: throw IllegalStateException("Failed to create MediaStore entry for $fileName")
+        try {
+            resolver.openOutputStream(uri).use { outputStream ->
+                outputStream?.write(bytes)
+            }
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, contentType)
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+                Snackbar.make(content, "Export saved to Downloads/$fileName", Snackbar.LENGTH_LONG).show()
+            } else {
+                Snackbar.make(content, "Export saved to Downloads (open manually)", Snackbar.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null) // Clean up on failure
+            Snackbar.make(content, "Failed to save export: ${e.message}", Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun saveToLegacyPrivateStorage(bytes: ByteArray, fileName: String, contentType: String) {
         val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir
         val file = File(downloadsDir, fileName)
         try {
@@ -301,9 +346,9 @@ if (isCombined) {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                Snackbar.make(content, "Export saved and opened", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(content, "Export saved and opened (app storage)", Snackbar.LENGTH_LONG).show()
             } else {
-                Snackbar.make(content, "Export saved to Downloads/$fileName", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(content, "Export saved to app storage/$fileName", Snackbar.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
             Snackbar.make(content, "Failed to save export: ${e.message}", Snackbar.LENGTH_LONG).show()
