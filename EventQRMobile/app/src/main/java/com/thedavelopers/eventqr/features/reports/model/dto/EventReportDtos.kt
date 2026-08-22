@@ -3,6 +3,9 @@ package com.thedavelopers.eventqr.features.reports.model.dto
 import java.io.Serializable
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class EventReportSnapshot(
     val totalAttendees: Int = 0,
@@ -67,13 +70,17 @@ data class EventReportDto(
     val reportType: EventReportType = EventReportType.ROSTER,
     val reportTitle: String = "",
     val eventName: String = "",
-    val generatedAt: Instant? = null,
+    val generatedAt: String? = null,
     val columns: List<String> = emptyList(),
     val rows: List<EventReportRowDto> = emptyList(),
     val chartSeries: Map<String, Long> = emptyMap(),
     val emptyState: EventReportEmptyState = EventReportEmptyState.NONE,
     val appliedFilters: EventReportFiltersDto = EventReportFiltersDto(),
-) : Serializable
+) : Serializable {
+
+    val generatedAtInstant: Instant?
+        get() = generatedAt?.let { Instant.parse(it) }
+}
 
 data class EventReportExportRequestDto(
     val format: String = "CSV",
