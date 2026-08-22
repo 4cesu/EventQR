@@ -31,7 +31,6 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.time.Instant
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -95,14 +94,14 @@ class ReportPreviewActivity : AppCompatActivity() {
 
         eventId = intent.getStringExtra(EXTRA_EVENT_ID) ?: return finishWithError("Event ID is missing")
         isCombined = intent.getBooleanExtra(EXTRA_IS_COMBINED, false)
-        summary = intent.getParcelableExtra(EXTRA_SUMMARY) ?: EventReportSummaryDto()
+        summary = intent.getSerializableExtra(EXTRA_SUMMARY) as? EventReportSummaryDto ?: EventReportSummaryDto()
 
-        if (isCombined) {
-            val array = intent.getParcelableArrayExtra(EXTRA_REPORTS)
-            combinedReports = array?.map { it as EventReportDto }?.toList() ?: emptyList()
+if (isCombined) {
+            val array = intent.getSerializableExtra(EXTRA_REPORTS) as? Array<EventReportDto>
+            combinedReports = array?.toList() ?: emptyList()
         } else {
-            singleReport = intent.getParcelableExtra(EXTRA_REPORT)
-            sourceFilters = intent.getParcelableExtra(EXTRA_SOURCE_FILTERS) ?: EventReportFiltersDto()
+            singleReport = intent.getSerializableExtra(EXTRA_REPORT) as? EventReportDto
+            sourceFilters = intent.getSerializableExtra(EXTRA_SOURCE_FILTERS) as? EventReportFiltersDto ?: EventReportFiltersDto()
         }
 
         if (!isCombined && singleReport == null) {
@@ -130,7 +129,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             val report = singleReport ?: combinedReports?.firstOrNull()
             addView(text(report?.reportTitle ?: "Report", 20, true))
             addView(text(summary.eventName, 14, false, MUTED).apply { setPadding(0, dp(4), 0, dp(4)) })
-            val generatedText = report?.generatedAt?.let { "Generated ${dateFormatter.format(it)}" } ?: "Generated just now"
+            val generatedText = report?.generatedAtInstant?.let { "Generated ${dateFormatter.format(it)}" } ?: "Generated just now"
             addView(text(generatedText, 12, false, MUTED))
             if (!isCombined) {
                 addView(buildFilterChips(sourceFilters).apply { setPadding(0, dp(8), 0, 0) })
