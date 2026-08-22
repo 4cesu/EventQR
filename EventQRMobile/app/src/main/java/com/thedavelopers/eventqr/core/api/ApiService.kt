@@ -41,6 +41,11 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRe
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSnapshot
+import com.thedavelopers.eventqr.features.reports.model.dto.EventReportDto
+import com.thedavelopers.eventqr.features.reports.model.dto.EventReportExportRequestDto
+import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterStatus
+import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
+import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleResponse
@@ -71,6 +76,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Streaming
 import retrofit2.http.Url
+import retrofit2.Response
 
 interface ApiService {
     @POST("auth/login")
@@ -206,6 +212,27 @@ interface ApiService {
 
     @GET("organizer/events/{eventId}/reports/summary")
     suspend fun getOrganizerReport(@Path("eventId") eventId: String): ApiResponse<OrganizerReportDto>
+
+    @GET("events/{eventId}/reports/summary")
+    suspend fun getEventReportSummary(@Path("eventId") eventId: String): ApiResponse<EventReportSummaryDto>
+
+    @GET("events/{eventId}/reports/{reportType}")
+    suspend fun getEventReportByType(
+        @Path("eventId") eventId: String,
+        @Path("reportType") reportType: EventReportType,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null,
+        @Query("attendeeQuery") attendeeQuery: String? = null,
+        @Query("status") status: EventReportFilterStatus = EventReportFilterStatus.ALL,
+    ): ApiResponse<EventReportDto>
+
+    @Streaming
+    @POST("events/{eventId}/reports/{reportType}/export")
+    suspend fun exportEventReport(
+        @Path("eventId") eventId: String,
+        @Path("reportType") reportType: EventReportType,
+        @Body request: EventReportExportRequestDto,
+    ): Response<ResponseBody>
 
     @GET("organizer/reports/summary")
     suspend fun getOrganizerOverallReport(): ApiResponse<OrganizerOverallReportDto>
