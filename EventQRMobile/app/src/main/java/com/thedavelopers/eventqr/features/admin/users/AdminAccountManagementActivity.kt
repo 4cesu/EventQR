@@ -78,13 +78,15 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     }
 
     private fun setupRoleFilterChips() {
-        val roles = listOf(
+        val roles = mutableListOf(
             null to "All",
-            AccountRole.ADMIN to "Admin",
             AccountRole.ORGANIZER to "Organizer",
             AccountRole.STAFF to "Staff",
             AccountRole.ATTENDEE to "Attendee"
         )
+        if (isSuperAdmin()) {
+            roles.add(1, AccountRole.ADMIN to "Admin")
+        }
 
         val chipBg = ContextCompat.getColorStateList(this, R.color.chip_background_selector)
         val chipText = ContextCompat.getColorStateList(this, R.color.chip_text_selector)

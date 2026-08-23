@@ -104,6 +104,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserResponse>> disableUser(HttpServletRequest request,
                                                                  @PathVariable UUID userId) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UUID adminUserId = currentAdminId(request);
         if (adminUserId.equals(userId)) {
             throw new BadRequestException("Cannot disable your own account");
@@ -117,6 +118,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserResponse>> enableUser(HttpServletRequest request,
                                                                 @PathVariable UUID userId) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UUID adminUserId = currentAdminId(request);
         if (adminUserId.equals(userId)) {
             throw new BadRequestException("Cannot enable your own account");
@@ -129,6 +131,7 @@ public class AdminController {
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(HttpServletRequest request, @PathVariable UUID userId) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UUID adminUserId = currentAdminId(request);
         if (adminUserId.equals(userId)) {
             throw new BadRequestException("Cannot delete your own account");
@@ -191,6 +194,17 @@ public class AdminController {
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
         if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required");
+        }
+    }
+
+    private void forbidManagingAdminTargets(HttpServletRequest request, UUID targetUserId) {
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (callerRole == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        UserResponse target = userService.findOne(targetUserId);
+        if (target.role() == AccountRole.ADMIN || target.role() == AccountRole.SUPER_ADMIN) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admins cannot manage admin accounts");
         }
     }
 
