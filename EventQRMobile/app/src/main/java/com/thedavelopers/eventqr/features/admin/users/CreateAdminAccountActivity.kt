@@ -26,7 +26,8 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     private lateinit var repository: AdminRepository
     private lateinit var sessionManager: SessionManager
 
-    private lateinit var fullNameInput: EditText
+    private lateinit var firstNameInput: EditText
+    private lateinit var lastNameInput: EditText
     private lateinit var emailInput: EditText
     private lateinit var phoneInput: EditText
     private lateinit var passwordInput: EditText
@@ -70,7 +71,8 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
-        fullNameInput = findViewById(R.id.inputAdminFullName)
+        firstNameInput = findViewById(R.id.inputAdminFirstName)
+        lastNameInput = findViewById(R.id.inputAdminLastName)
         emailInput = findViewById(R.id.inputAdminEmail)
         phoneInput = findViewById(R.id.inputAdminPhone)
         passwordInput = findViewById(R.id.inputAdminPassword)
@@ -96,19 +98,26 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     }
 
     private fun submitCreateAdmin() {
-        val fullName = fullNameInput.text.toString().trim()
+        val firstName = firstNameInput.text.toString().trim()
+        val lastName = lastNameInput.text.toString().trim()
         val email = emailInput.text.toString().trim()
         val phone = phoneInput.text.toString().trim()
-        val phoneValue = phone.ifBlank { null }
         val password = passwordInput.text.toString().trim()
         val confirmPassword = confirmPasswordInput.text.toString().trim()
 
         var valid = true
-        if (!Validators.isNonEmpty(fullName)) {
-            fullNameInput.error = "Full name is required"
+        if (!Validators.isNonEmpty(firstName)) {
+            firstNameInput.error = "First name is required"
             valid = false
         } else {
-            fullNameInput.error = null
+            firstNameInput.error = null
+        }
+
+        if (!Validators.isNonEmpty(lastName)) {
+            lastNameInput.error = "Last name is required"
+            valid = false
+        } else {
+            lastNameInput.error = null
         }
 
         if (!Validators.isValidEmail(email)) {
@@ -118,7 +127,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
             emailInput.error = null
         }
 
-        if (phoneValue != null && !Validators.isValidPhoneNumber(phoneValue)) {
+        if (!Validators.isValidPhoneNumber(phone)) {
             phoneInput.error = "Phone number must start with 63 and be 12 digits long"
             valid = false
         } else {
@@ -141,9 +150,11 @@ class CreateAdminAccountActivity : AppCompatActivity() {
 
         if (!valid) return
 
+        val fullName = listOf(firstName, lastName).filter { it.isNotBlank() }.joinToString(" ").trim()
+
         setLoading(true)
         lifecycleScope.launch {
-            when (val result = repository.createAdminAccount(fullName, email, phoneValue, password)) {
+            when (val result = repository.createAdminAccount(fullName, email, phone, password)) {
                 is NetworkResult.Success -> {
                     setLoading(false)
                     Toast.makeText(
@@ -193,7 +204,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     }
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = "${if (isMet) "OK" else "--"} $label"
+        view.text = "${if (isMet) "✓" else "○"} $label"
         view.setTextColor(getColor(if (isMet) R.color.eventqr_success else R.color.eventqr_muted))
     }
 
