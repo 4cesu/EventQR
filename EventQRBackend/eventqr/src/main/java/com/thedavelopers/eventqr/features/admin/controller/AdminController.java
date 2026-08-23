@@ -140,7 +140,8 @@ public class AdminController {
     }
 
     private void requireAdmin(HttpServletRequest request) {
-        if (jwtService.extractRoleFromBearer(request.getHeader("Authorization")) != AccountRole.ADMIN) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required");
         }
     }

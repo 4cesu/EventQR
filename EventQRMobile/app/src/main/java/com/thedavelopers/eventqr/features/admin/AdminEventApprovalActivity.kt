@@ -60,7 +60,7 @@ class AdminEventApprovalActivity : AppCompatActivity() {
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)
 
-        if (sessionManager.getUserRole() != "ADMIN") {
+        if (sessionManager.getUserRole() != "ADMIN" && sessionManager.getUserRole() != "SUPER_ADMIN") {
             showUnauthorized()
             return
         }

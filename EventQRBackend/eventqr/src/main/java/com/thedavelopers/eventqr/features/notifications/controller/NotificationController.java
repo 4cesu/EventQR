@@ -46,7 +46,8 @@ public class NotificationController {
                                                                     @Valid @RequestBody NotificationRequest request) {
         NotificationResponse response = notificationService.create(request);
         UUID userId = jwtService.extractUserIdFromBearer(servletRequest.getHeader("Authorization"));
-        if (jwtService.extractRoleFromBearer(servletRequest.getHeader("Authorization")) == AccountRole.ADMIN) {
+        AccountRole role = jwtService.extractRoleFromBearer(servletRequest.getHeader("Authorization"));
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
             auditLogService.log(
                     "NOTIFICATION_BROADCAST",
                     request.title(),

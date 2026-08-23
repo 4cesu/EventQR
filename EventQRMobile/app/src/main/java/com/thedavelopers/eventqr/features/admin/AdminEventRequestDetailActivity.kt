@@ -82,7 +82,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.getCurrentUser()) {
                 is NetworkResult.Success -> {
-                    if (result.data.role != AccountRole.ADMIN) {
+                    if (result.data.role != AccountRole.ADMIN && result.data.role != AccountRole.SUPER_ADMIN) {
                         loadingDetail.visibility = View.GONE
                         textDetailError.visibility = View.VISIBLE
                         textDetailError.text = "Admin access required."
