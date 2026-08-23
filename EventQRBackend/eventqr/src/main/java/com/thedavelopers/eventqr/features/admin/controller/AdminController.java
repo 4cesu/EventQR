@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +37,8 @@ import com.thedavelopers.eventqr.shared.security.JwtService;
 @RequestMapping("/api/v1/admin")
 public class AdminController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+
     private final UserService userService;
     private final JwtService jwtService;
     private final EventCreationRequestService eventCreationRequestService;
@@ -52,6 +56,7 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<List<UserResponse>>> listUsers(HttpServletRequest request,
                                                                      @RequestParam(required = false) AccountRole role) {
+        log.info("Received role filter param: {}", role);
         requireAdmin(request);
         List<UserResponse> users;
         if (role != null) {
