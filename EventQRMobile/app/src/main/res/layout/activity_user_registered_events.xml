@@ -22,7 +22,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:padding="12dp"
-            android:src="@drawable/back_btn"
+            android:src="@drawable/ic_back_chevron"
             app:tint="@color/eventqr_text" />
 
         <TextView

@@ -19,7 +19,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:padding="10dp"
-            android:src="@drawable/back_btn" />
+            android:src="@drawable/ic_back_chevron" />
 
         <TextView
             android:layout_width="wrap_content"
