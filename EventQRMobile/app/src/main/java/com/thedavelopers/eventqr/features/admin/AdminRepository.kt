@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.admin
 
 import android.content.Context
+import android.util.Log
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -23,8 +24,10 @@ class AdminRepository(private val context: Context) {
     suspend fun getEventRequest(requestId: String): NetworkResult<EventRequestResponse> =
         safeApiCall { apiService.getAdminEventRequest(requestId) }
 
-    suspend fun loadUsers(role: AccountRole? = null): NetworkResult<List<UserResponse>> =
-        safeApiCall { apiService.getUsers(role?.name) }
+    suspend fun loadUsers(role: AccountRole? = null): NetworkResult<List<UserResponse>> {
+        Log.d("FilterDebug", "Requesting users with role=${role?.name}")
+        return safeApiCall { apiService.getUsers(role?.name) }
+    }
 
     suspend fun disableUser(userId: String): NetworkResult<UserResponse> =
         safeApiCall { apiService.disableUser(userId) }
