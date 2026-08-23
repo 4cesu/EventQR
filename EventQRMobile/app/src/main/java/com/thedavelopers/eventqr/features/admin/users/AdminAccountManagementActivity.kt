@@ -67,12 +67,23 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     }
 
     private fun bindNav() {
-        if (isSuperAdmin()) {
-            findViewById<View>(R.id.navDashboard).visibility = View.GONE
-            findViewById<View>(R.id.navRequests).visibility = View.GONE
-            findViewById<View>(R.id.navLogs).visibility = View.GONE
+        val isSuper = isSuperAdmin()
+        if (isSuper) {
+            // SUPER_ADMIN gets same full nav as ADMIN
+            findViewById<View>(R.id.navDashboard).setOnClickListener {
+                startActivity(Intent(this, AdminDashboardActivity::class.java))
+                finish()
+            }
+            findViewById<View>(R.id.navRequests).setOnClickListener {
+                startActivity(Intent(this, AdminEventApprovalBackendActivity::class.java))
+                finish()
+            }
             findViewById<View>(R.id.navAccounts).setOnClickListener {
                 // current tab
+            }
+            findViewById<View>(R.id.navLogs).setOnClickListener {
+                startActivity(Intent(this, AdminAuditLogsActivity::class.java))
+                finish()
             }
             return
         }
