@@ -24,7 +24,7 @@ class AdminRepository(private val context: Context) {
         safeApiCall { apiService.getAdminEventRequest(requestId) }
 
     suspend fun loadUsers(role: AccountRole? = null): NetworkResult<List<UserResponse>> =
-        safeApiCall { apiService.getUsers(role) }
+        safeApiCall { apiService.getUsers(role?.name) }
 
     suspend fun disableUser(userId: String): NetworkResult<UserResponse> =
         safeApiCall { apiService.disableUser(userId) }

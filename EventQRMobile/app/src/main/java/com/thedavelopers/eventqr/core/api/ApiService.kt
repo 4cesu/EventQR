@@ -124,7 +124,7 @@ interface ApiService {
     suspend fun createAdminUser(@Body request: UserRequest): ApiResponse<UserResponse>
 
     @GET("users")
-    suspend fun getUsers(@Query("role") role: AccountRole? = null): ApiResponse<List<UserResponse>>
+    suspend fun getUsers(@Query("role") role: String? = null): ApiResponse<List<UserResponse>>
 
     @PATCH("admin/users/{userId}/disable")
     suspend fun disableUser(@Path("userId") userId: String): ApiResponse<UserResponse>
