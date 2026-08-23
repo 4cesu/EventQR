@@ -1,9 +1,11 @@
 package com.thedavelopers.eventqr.core.api
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import com.google.gson.GsonBuilder
 import com.thedavelopers.eventqr.core.session.SessionManager
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.Instant
@@ -25,9 +27,14 @@ object ApiClient {
             .setLenient()
             .create()
 
-        val client = OkHttpClient.Builder()
+        val isDebuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val clientBuilder = OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(sessionManager))
-            .build()
+        if (isDebuggable) {
+            val loggingInterceptor = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+            clientBuilder.addInterceptor(loggingInterceptor)
+        }
+        val client = clientBuilder.build()
 
         return Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
