@@ -48,8 +48,18 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserResponse>>> list() {
-        return ResponseEntity.ok(ApiResponse.success(userService.findAllUsers()));
+    public ResponseEntity<ApiResponse<List<UserResponse>>> list(HttpServletRequest request,
+                                                                @RequestParam(required = false) AccountRole role) {
+        requireAdmin(request);
+        List<UserResponse> users;
+        if (role != null) {
+            users = userService.findAllUsers().stream()
+                    .filter(u -> u.role() == role)
+                    .toList();
+        } else {
+            users = userService.findAllUsers();
+        }
+        return ResponseEntity.ok(ApiResponse.success(users));
     }
 
     @GetMapping("/me")
@@ -78,5 +88,12 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> changeRole(@PathVariable UUID userId,
                                                                 @PathVariable AccountRole role) {
         return ResponseEntity.ok(ApiResponse.success("Role updated", userService.changeRoleResponse(userId, role)));
+    }
+
+    private void requireAdmin(HttpServletRequest request) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required");
+        }
     }
 }
