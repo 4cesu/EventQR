@@ -85,7 +85,7 @@ public class EventCreationRequestService {
     @Transactional(readOnly = true)
     public EventRequestResponse findOne(UUID currentUserId, AccountRole role, UUID requestId) {
         EventCreationRequest request = requireRequest(requestId);
-        if (role != AccountRole.ADMIN && !request.getRequesterUserId().equals(currentUserId)) {
+        if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN && !request.getRequesterUserId().equals(currentUserId)) {
             throw new ForbiddenException("You can only view your own event requests");
         }
         return toResponse(request);
