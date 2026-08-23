@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -85,11 +86,18 @@ class AdminAccountManagementActivity : AppCompatActivity() {
             AccountRole.ATTENDEE to "Attendee"
         )
 
+        val chipBg = ContextCompat.getColorStateList(this, R.color.chip_background_selector)
+        val chipText = ContextCompat.getColorStateList(this, R.color.chip_text_selector)
+
         roles.forEach { (role, label) ->
             val chip = Chip(this).apply {
                 text = label
                 isCheckable = true
                 isChecked = role == null
+                setChipIconVisible(false)
+                setCheckedIconVisible(false)
+                setChipBackgroundColor(chipBg)
+                setTextColor(chipText)
                 setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
                         selectedRoleFilter = role

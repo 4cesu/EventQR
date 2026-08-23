@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/eventqr_bg"
@@ -99,13 +100,14 @@
             android:paddingHorizontal="4dp"
             android:paddingBottom="4dp">
 
-            <LinearLayout
+            <com.google.android.material.chip.ChipGroup
                 android:id="@+id/filterChipsLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp" />
+                android:paddingVertical="4dp"
+                app:singleSelection="true" />
         </HorizontalScrollView>
 
         <ProgressBar
