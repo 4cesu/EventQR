@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.okhttp)
+    implementation(libs.ucrop)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.material)
