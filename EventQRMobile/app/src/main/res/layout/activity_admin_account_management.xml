@@ -91,6 +91,23 @@
             android:textColor="#111827"
             android:textColorHint="#9CA3AF"/>
 
+        <HorizontalScrollView
+            android:id="@+id/filterChipsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:paddingHorizontal="4dp"
+            android:paddingBottom="4dp">
+
+            <LinearLayout
+                android:id="@+id/filterChipsLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp" />
+        </HorizontalScrollView>
+
         <ProgressBar
             android:id="@+id/progressAccountsLoading"
             android:layout_width="32dp"

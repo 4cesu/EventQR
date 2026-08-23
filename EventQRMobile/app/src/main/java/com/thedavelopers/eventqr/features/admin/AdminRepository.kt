@@ -23,8 +23,17 @@ class AdminRepository(private val context: Context) {
     suspend fun getEventRequest(requestId: String): NetworkResult<EventRequestResponse> =
         safeApiCall { apiService.getAdminEventRequest(requestId) }
 
-    suspend fun loadUsers(): NetworkResult<List<UserResponse>> =
-        safeApiCall { apiService.getUsers() }
+    suspend fun loadUsers(role: AccountRole? = null): NetworkResult<List<UserResponse>> =
+        safeApiCall { apiService.getUsers(role) }
+
+    suspend fun disableUser(userId: String): NetworkResult<UserResponse> =
+        safeApiCall { apiService.disableUser(userId) }
+
+    suspend fun enableUser(userId: String): NetworkResult<UserResponse> =
+        safeApiCall { apiService.enableUser(userId) }
+
+    suspend fun deleteUser(userId: String): NetworkResult<Unit> =
+        safeApiCall { apiService.deleteUser(userId) }
 
     suspend fun createAdminAccount(
         fullName: String,

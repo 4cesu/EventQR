@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auditlogs.service.AuditLogService;
@@ -25,6 +26,8 @@ import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventRequestDe
 import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventRequestResponse;
 import com.thedavelopers.eventqr.features.eventrequests.service.EventCreationRequestService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountStatus;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -47,9 +50,18 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> listUsers(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<List<UserResponse>>> listUsers(HttpServletRequest request,
+                                                                     @RequestParam(required = false) AccountRole role) {
         requireAdmin(request);
-        return ResponseEntity.ok(ApiResponse.success(userService.findAllUsers()));
+        List<UserResponse> users;
+        if (role != null) {
+            users = userService.findAllUsers().stream()
+                    .filter(u -> u.role() == role)
+                    .toList();
+        } else {
+            users = userService.findAllUsers();
+        }
+        return ResponseEntity.ok(ApiResponse.success(users));
     }
 
     @GetMapping("/users/{userId}")
@@ -88,13 +100,49 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Role updated", updated));
     }
 
+    @PatchMapping("/users/{userId}/disable")
+    public ResponseEntity<ApiResponse<UserResponse>> disableUser(HttpServletRequest request,
+                                                                 @PathVariable UUID userId) {
+        requireAdmin(request);
+        UUID adminUserId = currentAdminId(request);
+        if (adminUserId.equals(userId)) {
+            throw new BadRequestException("Cannot disable your own account");
+        }
+        UserResponse updated = userService.updateStatus(userId, AccountStatus.INACTIVE);
+        logAdminAction(request, "ACCOUNT_DISABLED", updated.fullName(), null, userId);
+        return ResponseEntity.ok(ApiResponse.success("Account disabled", updated));
+    }
+
+    @PatchMapping("/users/{userId}/enable")
+    public ResponseEntity<ApiResponse<UserResponse>> enableUser(HttpServletRequest request,
+                                                                @PathVariable UUID userId) {
+        requireAdmin(request);
+        UUID adminUserId = currentAdminId(request);
+        if (adminUserId.equals(userId)) {
+            throw new BadRequestException("Cannot enable your own account");
+        }
+        UserResponse updated = userService.updateStatus(userId, AccountStatus.ACTIVE);
+        logAdminAction(request, "ACCOUNT_ENABLED", updated.fullName(), null, userId);
+        return ResponseEntity.ok(ApiResponse.success("Account enabled", updated));
+    }
+
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(HttpServletRequest request, @PathVariable UUID userId) {
         requireAdmin(request);
+        UUID adminUserId = currentAdminId(request);
+        if (adminUserId.equals(userId)) {
+            throw new BadRequestException("Cannot delete your own account");
+        }
         UserResponse target = userService.findOne(userId);
-        userService.softDelete(userId);
-        logAdminAction(request, "ACCOUNT_SUSPENDED", target.fullName(), null, userId);
-        return ResponseEntity.ok(ApiResponse.success("User deleted", null));
+        if (target.status() == AccountStatus.ACTIVE) {
+            throw new BadRequestException("Account must be disabled before deletion");
+        }
+        if (userService.hasDependentRecords(userId)) {
+            throw new BadRequestException("Account has transaction history, cannot be deleted");
+        }
+        userService.hardDelete(userId);
+        logAdminAction(request, "ACCOUNT_DELETED", target.fullName(), null, userId);
+        return ResponseEntity.ok(ApiResponse.success("Account permanently deleted", null));
     }
 
     @GetMapping("/event-requests")

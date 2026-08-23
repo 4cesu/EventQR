@@ -7,6 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
+import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
@@ -26,10 +28,17 @@ public class UserService implements AttendeeDirectoryPort {
     private static final String UNUSABLE_HASH_PREFIX = "{UNUSABLE}";
 
     private final UserProfileRepository userProfileRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
+    private final TransactionLogRepository transactionLogRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserProfileRepository userProfileRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserProfileRepository userProfileRepository,
+                       EventRegistrationRepository eventRegistrationRepository,
+                       TransactionLogRepository transactionLogRepository,
+                       PasswordEncoder passwordEncoder) {
         this.userProfileRepository = userProfileRepository;
+        this.eventRegistrationRepository = eventRegistrationRepository;
+        this.transactionLogRepository = transactionLogRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -94,6 +103,23 @@ public class UserService implements AttendeeDirectoryPort {
         UserProfile userProfile = requireUser(userId);
         userProfile.setStatus(AccountStatus.SUSPENDED);
         userProfileRepository.save(userProfile);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasDependentRecords(UUID userId) {
+        // Check for registrations
+        boolean hasRegistrations = !eventRegistrationRepository.findByAttendeeUserId(userId).isEmpty();
+        // Check for transactions
+        boolean hasTransactions = !transactionLogRepository.findByAttendeeUserId(userId).isEmpty();
+        return hasRegistrations || hasTransactions;
+    }
+
+    public void hardDelete(UUID userId) {
+        UserProfile userProfile = requireUser(userId);
+        if (hasDependentRecords(userId)) {
+            throw new BadRequestException("Account has transaction history, cannot be deleted");
+        }
+        userProfileRepository.delete(userProfile);
     }
 
     public UserResponse changeRoleResponse(UUID userId, AccountRole role) {
