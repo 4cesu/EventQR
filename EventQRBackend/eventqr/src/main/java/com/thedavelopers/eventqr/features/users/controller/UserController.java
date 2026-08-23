@@ -51,13 +51,17 @@ public class UserController {
     public ResponseEntity<ApiResponse<List<UserResponse>>> list(HttpServletRequest request,
                                                                 @RequestParam(required = false) AccountRole role) {
         requireAdmin(request);
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
         List<UserResponse> users;
-        if (role != null) {
-            users = userService.findAllUsers().stream()
-                    .filter(u -> u.role() == role)
-                    .toList();
-        } else {
+        if (callerRole == AccountRole.SUPER_ADMIN) {
             users = userService.findAllUsers();
+        } else {
+            users = userService.findAllUsers().stream()
+                    .filter(u -> u.role() != AccountRole.ADMIN && u.role() != AccountRole.SUPER_ADMIN)
+                    .toList();
+        }
+        if (role != null) {
+            users = users.stream().filter(u -> u.role() == role).toList();
         }
         return ResponseEntity.ok(ApiResponse.success(users));
     }
