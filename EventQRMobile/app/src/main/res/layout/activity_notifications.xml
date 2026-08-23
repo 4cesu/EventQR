@@ -20,7 +20,7 @@
             android:background="@drawable/bg_circle_back_button"
             android:contentDescription="Back"
             android:padding="10dp"
-            android:src="@drawable/back_btn" />
+            android:src="@drawable/ic_back_chevron" />
 
         <TextView
             android:layout_width="0dp"

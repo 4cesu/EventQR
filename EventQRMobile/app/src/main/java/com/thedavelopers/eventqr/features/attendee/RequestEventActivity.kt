@@ -3,7 +3,7 @@ package com.thedavelopers.eventqr.features.attendee
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
+import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.Instant
@@ -61,6 +62,11 @@ class RequestEventActivity : AppCompatActivity() {
     private var isSubmitting = false
     private var selectedPosterFile: File? = null
 
+    private companion object {
+        val ALLOWED_POSTER_MIME_TYPES = setOf("image/jpeg", "image/jpg", "image/png")
+        val MAX_POSTER_BYTES = 5L * 1024L * 1024L
+    }
+
     private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
     private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
 
@@ -70,8 +76,29 @@ class RequestEventActivity : AppCompatActivity() {
     private var registrationEndDateTimeValue: LocalDateTime? = null
 
     private val posterPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { handlePosterSelected(it) }
+        uri?.let { launchPosterCrop(it) }
     }
+
+    // SCOPE ADDITION (beyond SRS/SDD Module 3 - event management): FB-style crop-before-upload
+    // flow for the event poster. The picked image is opened in uCrop with a locked 16:9 frame so
+    // every submitted poster is guaranteed to be landscape before it reaches the server.
+    private val posterCropLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            when {
+                result.resultCode == RESULT_OK -> {
+                    val croppedUri = result.data?.let { UCrop.getOutput(it) }
+                    if (croppedUri != null) {
+                        handleCroppedPoster(croppedUri)
+                    } else {
+                        showMessage("Unable to process cropped poster. Please try again.")
+                    }
+                }
+                result.resultCode == UCrop.RESULT_ERROR -> {
+                    result.data?.let { UCrop.getError(it) }
+                    showMessage("Unable to crop selected poster. Please choose another image.")
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -181,34 +208,53 @@ class RequestEventActivity : AppCompatActivity() {
         }
     }
 
-    private fun handlePosterSelected(uri: Uri) {
+    private fun launchPosterCrop(sourceUri: Uri) {
         hideMessage()
-        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }
-        val width = options.outWidth
-        val height = options.outHeight
-        val ratio = if (height == 0) 0.0 else width.toDouble() / height.toDouble()
+        val destinationUri = Uri.fromFile(File(cacheDir, "event_poster_cropped_${System.currentTimeMillis()}.jpg"))
+        val options = UCrop.Options().apply {
+            setCompressionFormat(Bitmap.CompressFormat.JPEG)
+            setCompressionQuality(85)
+            // Aspect lock is the point of this flow: no free-style cropping.
+            setFreeStyleCropEnabled(false)
+        }
+        val cropIntent = UCrop.of(sourceUri, destinationUri)
+            .withAspectRatio(16f, 9f)
+            .withMaxResultSize(1920, 1080)
+            .withOptions(options)
+            .getIntent(this)
+        posterCropLauncher.launch(cropIntent)
+    }
 
-        if (width < 1200 || height < 675 || ratio < 1.55 || ratio > 1.90) {
-            showMessage("Event poster must be at least 1200 x 675 pixels and use a landscape 16:9-style ratio.")
+    private fun handleCroppedPoster(croppedUri: Uri) {
+        hideMessage()
+
+        // Crop output is forced to JPEG by UCrop options; still guard the type explicitly.
+        val croppedType = contentResolver.getType(croppedUri)?.lowercase()
+        if (croppedType != null && croppedType !in ALLOWED_POSTER_MIME_TYPES) {
+            showMessage("Only JPG and PNG posters are supported. Please choose another image.")
             return
         }
 
-        val extension = contentResolver.getType(uri)?.substringAfterLast('/')?.lowercase()?.takeIf { it.length <= 5 } ?: "jpg"
-        val posterFile = File(cacheDir, "event_poster_${System.currentTimeMillis()}.$extension")
+        val posterFile = File(cacheDir, "event_poster_${System.currentTimeMillis()}.jpg")
         runCatching {
-            contentResolver.openInputStream(uri)?.use { input ->
+            contentResolver.openInputStream(croppedUri)?.use { input ->
                 posterFile.outputStream().use { output -> input.copyTo(output) }
-            } ?: error("Unable to open selected image")
+            } ?: error("Unable to open cropped image")
         }.onSuccess {
+            if (posterFile.length() > MAX_POSTER_BYTES) {
+                posterFile.delete()
+                showMessage("Cropped poster must not exceed 5 MB. Please choose a smaller image.")
+                return
+            }
+            selectedPosterFile?.delete()
             selectedPosterFile = posterFile
-            eventPosterPreview.setImageURI(uri)
+            eventPosterPreview.setImageURI(croppedUri)
             eventPosterPreview.visibility = View.VISIBLE
             eventPosterPlaceholder.visibility = View.GONE
-            eventPosterStatusText.text = "Poster selected. It will appear on the Event Details header after approval."
+            eventPosterStatusText.text = "Poster ready (16:9). Tap it to replace or re-crop."
             eventPosterStatusText.setTextColor(0xFF4F46E5.toInt())
         }.onFailure {
-            showMessage("Unable to attach selected poster. Please choose another image.")
+            showMessage("Unable to attach cropped poster. Please choose another image.")
         }
     }
 

@@ -22,7 +22,7 @@
             android:background="@drawable/bg_circle_light"
             android:contentDescription="Back"
             android:padding="9dp"
-            android:src="@drawable/back_btn"
+            android:src="@drawable/ic_back_chevron"
             app:tint="#111827" />
 
         <TextView

@@ -27,7 +27,8 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back"
                 android:padding="10dp"
-                android:src="@drawable/back_btn"
+                android:src="@drawable/ic_back_chevron"
+                android:tag="light_back_button"
                 android:tint="@android:color/white" />
 
             <TextView

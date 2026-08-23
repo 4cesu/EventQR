@@ -22,7 +22,7 @@
             android:layout_height="0dp"
             android:visibility="gone"
             android:contentDescription="Back"
-            android:src="@drawable/back_btn" />
+            android:src="@drawable/ic_back_chevron" />
 
         <TextView
             android:layout_width="0dp"

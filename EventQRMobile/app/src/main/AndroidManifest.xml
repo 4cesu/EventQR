@@ -104,6 +104,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".features.auth.login.LoginActivity" android:exported="false" />
+        <!-- uCrop crop screen for the event poster flow (scope addition beyond SRS/SDD Module 3).
+             Declared explicitly because the AAR manifest was not merging on AGP 9.2.1. -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:theme="@style/Theme.EventQR"
+            android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

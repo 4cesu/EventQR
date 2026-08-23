@@ -24,8 +24,6 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 @Transactional
 public class FileStorageService {
 
-    private static final int EVENT_POSTER_MIN_WIDTH = 1200;
-    private static final int EVENT_POSTER_MIN_HEIGHT = 675;
     private static final double EVENT_POSTER_MIN_RATIO = 1.55;
     private static final double EVENT_POSTER_MAX_RATIO = 1.90;
 
@@ -139,9 +137,9 @@ public class FileStorageService {
         int width = image.getWidth();
         int height = image.getHeight();
         double ratio = height == 0 ? 0.0 : (double) width / (double) height;
-        if (width < EVENT_POSTER_MIN_WIDTH || height < EVENT_POSTER_MIN_HEIGHT) {
-            throw new BadRequestException("Event poster must be at least 1200 x 675 pixels");
-        }
+        // Minimum-dimension check relaxed: the mobile app crops posters to a locked 16:9 frame
+        // before upload (scope addition beyond SRS/SDD Module 3), so small source images can
+        // produce valid smaller-than-1200px crops. Ratio is still enforced server-side.
         if (ratio < EVENT_POSTER_MIN_RATIO || ratio > EVENT_POSTER_MAX_RATIO) {
             throw new BadRequestException("Event poster must use a landscape 16:9-style ratio");
         }

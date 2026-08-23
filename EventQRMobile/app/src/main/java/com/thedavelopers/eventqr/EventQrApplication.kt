@@ -59,8 +59,8 @@ class EventQrApplication : Application() {
         }
 
         private fun styleBackImage(activity: Activity, view: ImageView) {
-            view.setImageResource(R.drawable.back_btn)
-            view.imageTintList = ColorStateList.valueOf(Color.parseColor("#111827"))
+            view.setImageResource(R.drawable.ic_back_chevron)
+            view.imageTintList = ColorStateList.valueOf(resolveBackTint(view))
             view.background = null
             view.setBackgroundResource(resolveBorderlessRipple(activity))
             view.setPadding(dp(activity, 10), dp(activity, 10), dp(activity, 10), dp(activity, 10))
@@ -84,14 +84,15 @@ class EventQrApplication : Application() {
         }
 
         private fun styleBackText(activity: Activity, view: TextView) {
-            val icon = activity.getDrawable(R.drawable.back_btn)?.mutate() ?: return
+            val icon = activity.getDrawable(R.drawable.ic_back_chevron)?.mutate() ?: return
             val size = dp(activity, 20)
+            val tint = resolveBackTint(view)
             icon.setBounds(0, 0, size, size)
-            icon.setTint(Color.parseColor("#111827"))
+            icon.setTint(tint)
 
             view.text = ""
             view.setCompoundDrawables(icon, null, null, null)
-            view.compoundDrawableTintList = ColorStateList.valueOf(Color.parseColor("#111827"))
+            view.compoundDrawableTintList = ColorStateList.valueOf(tint)
             view.gravity = Gravity.CENTER
             view.background = null
             view.setBackgroundResource(resolveBorderlessRipple(activity))
@@ -106,6 +107,19 @@ class EventQrApplication : Application() {
                 params.height = dp(activity, 40)
                 view.layoutParams = params
             }
+        }
+
+        private fun hasLightBackMarker(view: View?): Boolean {
+            var current: View? = view
+            while (current != null) {
+                if (current.tag == "light_back_button") return true
+                current = current.parent as? View
+            }
+            return false
+        }
+
+        private fun resolveBackTint(view: View): Int {
+            return if (hasLightBackMarker(view)) Color.WHITE else Color.parseColor("#111827")
         }
 
         private fun isBackView(activity: Activity, view: View?): Boolean {
