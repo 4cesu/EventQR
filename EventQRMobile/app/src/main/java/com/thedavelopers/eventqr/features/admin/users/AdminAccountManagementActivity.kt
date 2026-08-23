@@ -6,14 +6,19 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.api.dto.AccountStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
@@ -31,8 +36,11 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var recyclerAccounts: RecyclerView
     private lateinit var progressLoading: ProgressBar
     private lateinit var textPlaceholder: TextView
+    private lateinit var filterChipsLayout: ChipGroup
 
     private var allUsers: List<UserResponse> = emptyList()
+    private var selectedRoleFilter: AccountRole? = null
+    private val currentUserId: String? by lazy { sessionManager.getUserId() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,10 +48,11 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)
-        adapter = AdminAccountAdapter()
+        adapter = AdminAccountAdapter(onActionClick = ::onAccountActionClick)
         bindViews()
         bindNav()
         bindSearch()
+        setupRoleFilterChips()
     }
 
     override fun onResume() {
@@ -56,6 +65,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         recyclerAccounts = findViewById(R.id.recyclerAdminAccounts)
         progressLoading = findViewById(R.id.progressAccountsLoading)
         textPlaceholder = findViewById(R.id.textAccountsPlaceholder)
+        filterChipsLayout = findViewById(R.id.filterChipsLayout)
         recyclerAccounts.layoutManager = LinearLayoutManager(this)
         recyclerAccounts.adapter = adapter
 
@@ -63,6 +73,36 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         findViewById<View>(R.id.buttonCreateAdminAccount).visibility = if (isSuperAdmin) View.VISIBLE else View.GONE
         findViewById<View>(R.id.buttonCreateAdminAccount).setOnClickListener {
             startActivity(Intent(this, CreateAdminAccountActivity::class.java))
+        }
+    }
+
+    private fun setupRoleFilterChips() {
+        val roles = listOf(
+            null to "All",
+            AccountRole.ADMIN to "Admin",
+            AccountRole.ORGANIZER to "Organizer",
+            AccountRole.STAFF to "Staff",
+            AccountRole.ATTENDEE to "Attendee"
+        )
+
+        roles.forEach { (role, label) ->
+            val chip = Chip(this).apply {
+                text = label
+                isCheckable = true
+                isChecked = role == null
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        selectedRoleFilter = role
+                        filterChipsLayout.check(id)
+                        loadAccounts()
+                    }
+                }
+                layoutParams = ChipGroup.LayoutParams(
+                    ChipGroup.LayoutParams.WRAP_CONTENT,
+                    ChipGroup.LayoutParams.WRAP_CONTENT
+                ).apply { setMargins(0, 0, (8 * resources.displayMetrics.density).toInt(), 0) }
+            }
+            filterChipsLayout.addView(chip)
         }
     }
 
@@ -133,7 +173,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         textPlaceholder.visibility = View.GONE
 
         lifecycleScope.launch {
-            when (val result = repository.loadUsers()) {
+            when (val result = repository.loadUsers(selectedRoleFilter)) {
                 is NetworkResult.Success -> {
                     allUsers = result.data.sortedBy { it.fullName.lowercase() }
                     progressLoading.visibility = View.GONE
@@ -148,6 +188,86 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                     recyclerAccounts.visibility = View.GONE
                     textPlaceholder.visibility = View.VISIBLE
                     textPlaceholder.text = "Account management is currently unavailable."
+                }
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+
+    private fun onAccountActionClick(user: UserResponse, action: AccountAction) {
+        when (action) {
+            AccountAction.ENABLE -> {
+                if (user.userId.toString() == currentUserId) {
+                    Toast.makeText(this, "Cannot enable your own account", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                performEnable(user)
+            }
+            AccountAction.DISABLE -> {
+                if (user.userId.toString() == currentUserId) {
+                    Toast.makeText(this, "Cannot disable your own account", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                performDisable(user)
+            }
+            AccountAction.DELETE -> {
+                if (user.userId.toString() == currentUserId) {
+                    Toast.makeText(this, "Cannot delete your own account", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                showDeleteConfirmation(user)
+            }
+        }
+    }
+
+    private fun performEnable(user: UserResponse) {
+        lifecycleScope.launch {
+            when (val result = repository.enableUser(user.userId.toString())) {
+                is NetworkResult.Success -> {
+                    Toast.makeText(this@AdminAccountManagementActivity, "Account enabled", Toast.LENGTH_SHORT).show()
+                    loadAccounts()
+                }
+                is NetworkResult.Error -> {
+                    Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
+                }
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+
+    private fun performDisable(user: UserResponse) {
+        lifecycleScope.launch {
+            when (val result = repository.disableUser(user.userId.toString())) {
+                is NetworkResult.Success -> {
+                    Toast.makeText(this@AdminAccountManagementActivity, "Account disabled", Toast.LENGTH_SHORT).show()
+                    loadAccounts()
+                }
+                is NetworkResult.Error -> {
+                    Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
+                }
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+
+    private fun showDeleteConfirmation(user: UserResponse) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Account")
+            .setMessage("Permanently delete ${user.fullName}? This cannot be undone and requires the account to be disabled first with no transaction history.")
+            .setPositiveButton("Delete") { _, _ -> performDelete(user) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performDelete(user: UserResponse) {
+        lifecycleScope.launch {
+            when (val result = repository.deleteUser(user.userId.toString())) {
+                is NetworkResult.Success -> {
+                    Toast.makeText(this@AdminAccountManagementActivity, "Account deleted", Toast.LENGTH_SHORT).show()
+                    loadAccounts()
+                }
+                is NetworkResult.Error -> {
+                    Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
                 }
                 NetworkResult.Loading -> Unit
             }
