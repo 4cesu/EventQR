@@ -118,7 +118,7 @@ if (isCombined) {
         val reportTitle = if (isCombined) "Combined Report" else (singleReport?.reportTitle ?: "Report")
         content = organizerShell(
             title = "Report Preview",
-            subtitle = "$reportTitle • ${summary.eventName}",
+            subtitle = "$reportTitle • ${summary.eventName ?: ""}",
             selectedNav = NAV_REPORTS,
             showBack = true,
             topRightLabel = "Export",
@@ -135,7 +135,7 @@ if (isCombined) {
         content.addView(card(16).apply {
             val report = singleReport ?: combinedReports?.firstOrNull()
             addView(text(report?.reportTitle ?: "Report", 20, true))
-            addView(text(summary.eventName, 14, false, MUTED).apply { setPadding(0, dp(4), 0, dp(4)) })
+            addView(text(summary.eventName ?: "", 14, false, MUTED).apply { setPadding(0, dp(4), 0, dp(4)) })
             val generatedText = report?.generatedAtInstant?.let { "Generated ${dateFormatter.format(it)}" } ?: "Generated just now"
             addView(text(generatedText, 12, false, MUTED))
             if (!isCombined) {
@@ -175,7 +175,7 @@ if (isCombined) {
         if (report.chartSeries.isNotEmpty()) {
             content.addView(card(16).apply {
                 addView(text("Chart Summary", 16, true).apply { setPadding(0, 0, 0, dp(8)) })
-                addView(BarChartView(this@ReportPreviewActivity, report.chartSeries))
+                addView(BarChartView(this@ReportPreviewActivity, report.chartSeries.filterKeys { it != null }))
             })
         }
 
@@ -204,7 +204,7 @@ if (isCombined) {
     }
 
     private fun buildDataTable(report: EventReportDto): LinearLayout = card(12).apply {
-        addView(text(report.reportTitle, 16, true).apply { setPadding(0, 0, 0, dp(12)) })
+        addView(text(report.reportTitle ?: "", 16, true).apply { setPadding(0, 0, 0, dp(12)) })
 
         val columnCount = report.columns.size
 
@@ -214,7 +214,7 @@ if (isCombined) {
             setBackgroundColor(Color.parseColor("#F9FAFB"))
             setPadding(dp(12), dp(10), dp(12), dp(10))
             report.columns.forEachIndexed { index, column ->
-                addView(text(column, 13, true, TEXT).apply {
+                addView(text(column ?: "", 13, true, TEXT).apply {
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                     gravity = Gravity.CENTER
                     setTypeface(null, Typeface.BOLD)
@@ -232,7 +232,7 @@ if (isCombined) {
                 }
             }
             reportRow.values.forEachIndexed { index, value ->
-                val displayValue = if (value.isBlank()) "—" else value
+                val displayValue = value?.ifBlank { "—" } ?: "—"
                 rowView.addView(text(displayValue, 13, false, TEXT).apply {
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                     gravity = Gravity.CENTER
@@ -361,7 +361,7 @@ if (isCombined) {
     }
 
     // Simple bar chart view
-    private class BarChartView(context: Context, private val data: Map<String, Long>) : View(context) {
+    private class BarChartView(context: Context, private val data: Map<String?, Long>) : View(context) {
         private val paint = android.graphics.Paint().apply {
             isAntiAlias = true
             color = PURPLE
@@ -382,7 +382,8 @@ if (isCombined) {
             textAlign = android.graphics.Paint.Align.CENTER
             typeface = Typeface.DEFAULT_BOLD
         }
-        private val maxValue = data.values.maxOrNull() ?: 1L
+        private val filteredData = data.filterKeys { it != null }
+        private val maxValue = filteredData.values.maxOrNull() ?: 1L
         private val barColor = PURPLE
 
         override fun onDraw(canvas: android.graphics.Canvas) {
@@ -392,7 +393,7 @@ if (isCombined) {
             val padding = dp(16).toFloat()
             val barAreaWidth = w - 2 * padding
             val barAreaHeight = h - 2 * padding - dp(40).toFloat()
-            val entries = data.entries.toList()
+            val entries = filteredData.entries.toList()
             val entryCount = entries.size
             val barWidth = (barAreaWidth / (entryCount * 1.5f)).coerceAtMost(dp(60).toFloat())
             val spacing = (barAreaWidth - barWidth * entryCount) / (entryCount + 1)
@@ -408,7 +409,7 @@ if (isCombined) {
                 canvas.drawRect(x, y, x + barWidth, padding + barAreaHeight, paint)
 
                 canvas.drawText(entry.value.toString(), x + barWidth / 2, y - dp(4).toFloat(), valuePaint)
-                canvas.drawText(entry.key, x + barWidth / 2, h - padding + dp(4).toFloat(), labelPaint)
+                canvas.drawText(entry.key ?: "", x + barWidth / 2, h - padding + dp(4).toFloat(), labelPaint)
             }
         }
 

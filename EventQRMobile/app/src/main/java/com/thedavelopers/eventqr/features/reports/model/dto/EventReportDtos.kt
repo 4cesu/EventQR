@@ -46,8 +46,8 @@ enum class EventReportEmptyState : Serializable {
 }
 
 data class EventReportSummaryDto(
-    val eventId: String = "",
-    val eventName: String = "",
+    val eventId: String? = "",
+    val eventName: String? = "",
     val registeredCount: Int = 0,
     val checkedInCount: Int = 0,
     val exitedCount: Int = 0,
@@ -62,18 +62,18 @@ data class EventReportFiltersDto(
 ) : Serializable
 
 data class EventReportRowDto(
-    val values: List<String> = emptyList(),
+    val values: List<String?> = emptyList(),
 ) : Serializable
 
 data class EventReportDto(
-    val eventId: String = "",
+    val eventId: String? = "",
     val reportType: EventReportType = EventReportType.ROSTER,
-    val reportTitle: String = "",
-    val eventName: String = "",
+    val reportTitle: String? = "",
+    val eventName: String? = "",
     val generatedAt: String? = null,
-    val columns: List<String> = emptyList(),
+    val columns: List<String?> = emptyList(),
     val rows: List<EventReportRowDto> = emptyList(),
-    val chartSeries: Map<String, Long> = emptyMap(),
+    val chartSeries: Map<String?, Long> = emptyMap(),
     val emptyState: EventReportEmptyState = EventReportEmptyState.NONE,
     val appliedFilters: EventReportFiltersDto = EventReportFiltersDto(),
 ) : Serializable {
