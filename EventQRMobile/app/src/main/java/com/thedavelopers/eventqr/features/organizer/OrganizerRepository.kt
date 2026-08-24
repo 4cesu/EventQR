@@ -396,7 +396,7 @@ private fun EventStatus.toDisplayStatus(): String = when (this) {
 
 private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEvent(
     id = eventId.toString(),
-    title = title,
+    title = title ?: "",
     organizerName = organizerName ?: "Organizer",
     dateTime = dateTime ?: "-",
     shortDate = shortDate ?: "-",
@@ -404,7 +404,7 @@ private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEven
     status = status ?: "Pending",
     submittedDate = submittedDate ?: "-",
     adminRemarks = adminRemarks ?: "No admin remarks.",
-    additionalOrganizers = additionalOrganizers,
+    additionalOrganizers = additionalOrganizers.orEmpty().filterNotNull(),
     registeredCount = registeredCount,
     enteredCount = enteredCount,
     attendedCount = attendedCount,

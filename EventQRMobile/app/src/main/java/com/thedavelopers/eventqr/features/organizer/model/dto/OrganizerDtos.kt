@@ -9,7 +9,7 @@ import java.util.UUID
 
 data class OrganizerEventDto(
     val eventId: UUID,
-    val title: String,
+    val title: String? = null,
     val organizerName: String? = null,
     val dateTime: String? = null,
     val shortDate: String? = null,
