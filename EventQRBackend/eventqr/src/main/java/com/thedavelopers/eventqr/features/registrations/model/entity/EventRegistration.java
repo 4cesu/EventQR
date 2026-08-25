@@ -13,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 @Getter
 @Setter
@@ -35,6 +37,15 @@ public class EventRegistration extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RegistrationStatus status = RegistrationStatus.REGISTERED;
+
+    /**
+     * Per-event sequence number assigned by DB trigger trg_assign_registration_number (V13).
+     * The database owns this value: Hibernate omits it from INSERT/UPDATE and re-reads it
+     * after insert so trigger-assigned numbers are visible without a manual refresh.
+     */
+    @Generated(event = EventType.INSERT)
+    @Column(name = "registration_number", insertable = false, updatable = false)
+    private Integer registrationNumber;
 
     private UUID qrCredentialId;
 

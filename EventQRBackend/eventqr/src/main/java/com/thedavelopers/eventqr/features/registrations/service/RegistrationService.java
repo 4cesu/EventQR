@@ -275,13 +275,14 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             registration.getQrCredentialId(), registration.getRegisteredAt(), eventSnapshot.title(),
             eventSnapshot.location(), eventSnapshot.eventStartAt(), eventSnapshot.eventEndAt(), attendeePhoneNumber,
             registration.getEnteredAt(), registration.getExitedAt(), registration.getAttendedAt(),
-            registration.getPointsEarned());
+            registration.getPointsEarned(), registration.getRegistrationNumber());
     }
 
     private RegistrationSnapshot toSnapshot(EventRegistration registration) {
         return new RegistrationSnapshot(registration.getId(), registration.getEventId(), registration.getAttendeeUserId(),
                 registration.getAttendeeEmail(), registration.getAttendeeName(), registration.getStatus(),
                 registration.getQrCredentialId(), registration.getRegisteredAt(), registration.getEnteredAt(),
-                registration.getExitedAt(), registration.getAttendedAt(), registration.getPointsEarned());
+                registration.getExitedAt(), registration.getAttendedAt(), registration.getPointsEarned(),
+                registration.getRegistrationNumber());
     }
 }

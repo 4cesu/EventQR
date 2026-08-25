@@ -29,9 +29,11 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
  * the ID layout, design, colors, logo, or visual format." Only field visibility toggling is
  * implemented here.
  *
- * Scope-tracked decision: ATTENDEE_ID maps to user_profiles.id (UUID). A UUID is visually poor
- * on a printed card (36 chars), but no other identifier column exists without deviating from
- * the SDD — documented as a known limitation.
+ * Scope-tracked decision: ATTENDEE_ID maps to event_registrations.registration_number (V13),
+ * a per-event 1..N sequence assigned by a DB trigger. This replaces the earlier
+ * user_profiles.id (UUID) source — the UUID was visually poor on a printed card (36 chars)
+ * and was documented as a known limitation; registration_number resolves it without any SDD
+ * deviation.
  */
 @Service
 public class IdTemplateConfigurationService {

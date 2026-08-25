@@ -10,5 +10,5 @@ public record RegistrationResponse(UUID registrationId, UUID eventId, UUID atten
                                    Instant registeredAt, String eventTitle, String eventLocation,
                                    Instant eventStartAt, Instant eventEndAt, String attendeePhoneNumber,
                                    Instant enteredAt, Instant exitedAt, Instant attendedAt,
-                                   Integer pointsEarned) {
+                                   Integer pointsEarned, Integer registrationNumber) {
 }
