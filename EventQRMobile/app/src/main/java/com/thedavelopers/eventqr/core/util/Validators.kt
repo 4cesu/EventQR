@@ -20,7 +20,8 @@ object Validators {
     }
 
     fun isValidPhoneNumber(value: String): Boolean {
-        val cleaned = value.trim()
+        // Accepts E.164 (+639171234567) and legacy 639171234567 forms.
+        val cleaned = value.trim().removePrefix("+")
         return cleaned.startsWith("63") && cleaned.length == 12 && cleaned.all { it.isDigit() }
     }
 
