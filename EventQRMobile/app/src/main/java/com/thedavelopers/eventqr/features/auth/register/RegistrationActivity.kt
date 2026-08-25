@@ -23,6 +23,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var lastNameInput: EditText
     private lateinit var emailInput: EditText
     private lateinit var phoneInput: EditText
+    private lateinit var phoneCounterText: TextView
     private lateinit var passwordInput: EditText
     private lateinit var confirmPasswordInput: EditText
     private lateinit var registerButton: Button
@@ -46,6 +47,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         lastNameInput = findViewById(R.id.edtLastName)
         emailInput = findViewById(R.id.edtEmail)
         phoneInput = findViewById(R.id.edtPhoneNumber)
+        phoneCounterText = findViewById(R.id.txtPhoneCounter)
         passwordInput = findViewById(R.id.edtPassword)
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
         registerButton = findViewById(R.id.btnRegister)
@@ -65,6 +67,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
 
         configurePasswordToggle(passwordInput)
         configurePasswordToggle(confirmPasswordInput)
+        configurePhoneInput()
         passwordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -75,11 +78,19 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         updatePasswordRequirements(passwordInput.text.toString())
 
         registerButton.setOnClickListener {
+            // EventQR - UI validation deviation beyond SRS UC-01 field spec
+            // Field holds 10 local digits under a fixed "+63" prefix; the full E.164 value
+            // (+63 + digits, e.g. +639171234567) is assembled only here at submit time.
+            val phoneDigits = phoneInput.text.toString()
+            if (phoneDigits.length != 10) {
+                phoneInput.error = "Enter valid 10-digit mobile number"
+                return@setOnClickListener
+            }
             presenter.submitRegistration(
                 firstNameInput.text.toString(),
                 lastNameInput.text.toString(),
                 emailInput.text.toString(),
-                phoneInput.text.toString(),
+                "+63$phoneDigits",
                 passwordInput.text.toString(),
                 confirmPasswordInput.text.toString(),
             )
@@ -168,6 +179,40 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
                 if (index < metCount) getColor(colorRes) else getColor(R.color.eventqr_border)
             )
         }
+    }
+
+    // EventQR - UI validation deviation beyond SRS UC-01 field spec
+    // Phone format enforcement: numeric-only entry capped at 10 digits (PH mobile without
+    // leading 0). Pasted full numbers ("0917...", "63917...", "+63917...") are auto-normalized
+    // to the last 10 digits; a live n/10 counter mirrors the field state.
+    private fun configurePhoneInput() {
+        phoneInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(editable: Editable?) {
+                val current = editable ?: return
+                val normalized = normalizePhoneDigits(current.toString())
+                phoneCounterText.text = "${normalized.length}/10"
+                if (normalized != current.toString()) {
+                    current.replace(0, current.length, normalized)
+                    phoneInput.error = null
+                }
+            }
+        })
+    }
+
+    private fun normalizePhoneDigits(input: String): String {
+        var digits = input.filter { it.isDigit() }
+        while (digits.length > 10 && digits.startsWith("0")) {
+            digits = digits.removePrefix("0")
+        }
+        while (digits.length > 10 && digits.startsWith("63")) {
+            digits = digits.removePrefix("63")
+        }
+        if (digits.startsWith("0")) {
+            digits = digits.removePrefix("0")
+        }
+        return digits.take(10)
     }
 
     private fun configurePasswordToggle(input: EditText) {

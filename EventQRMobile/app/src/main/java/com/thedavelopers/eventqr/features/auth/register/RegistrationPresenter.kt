@@ -56,7 +56,7 @@ class RegistrationPresenter(
             view?.showFieldError("email", null)
         }
         if (!Validators.isValidPhoneNumber(phoneValue)) {
-            view?.showFieldError("phone", "Phone number must start with 63 and be 12 digits long")
+            view?.showFieldError("phone", "Enter valid 10-digit mobile number")
             valid = false
         } else {
             view?.showFieldError("phone", null)
