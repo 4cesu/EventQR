@@ -21,4 +21,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     List<EventRegistration> findByEventId(UUID eventId);
 
     List<EventRegistration> findByAttendeeUserId(UUID attendeeUserId);
+
+    // Counts every registration row for the event (matches currentAttendeeCount semantics
+    // used across organizer reporting; no status filtering).
+    long countByEventId(UUID eventId);
 }

@@ -113,8 +113,29 @@ public class OrganizerService {
         return toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId));
     }
 
+    // SDD 3.5 (UC-20) — Manage Approved Event Details.
+    // Reuse notes: ownership + approved-only gating live in requireOrganizerEvent (403/404 via
+    // GlobalExceptionHandler); no separate OrganizerAuthorizationValidator/exception class was
+    // created for this flow.
+    //
+    // SCOPE DEVIATION: Event Update Log Repository (SDD 3.5) omitted in MVP — tracked separately
+    // for capstone defense.
     public EventResponse updateEvent(UUID organizerUserId, UUID eventId, EventRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
+        if (request.title() == null || request.title().isBlank()) {
+            throw new BadRequestException("Title is required");
+        }
+        if (request.eventStartAt() == null) {
+            throw new BadRequestException("Date is required");
+        }
+        if (request.capacity() == null || request.capacity() <= 0) {
+            throw new BadRequestException("Capacity must be greater than 0");
+        }
+        long registeredCount = registrationRepository.countByEventId(eventId);
+        if (request.capacity() < registeredCount) {
+            throw new BadRequestException(
+                    "Capacity cannot be less than current registered attendees (" + registeredCount + ")");
+        }
         event.setTitle(request.title().trim());
         event.setDescription(request.description());
         event.setLocation(request.location());
@@ -664,7 +685,8 @@ public class OrganizerService {
                         .mapToLong(TransactionLog::getPointsDelta).sum(),
                 "Backend status unavailable", event.isRewardsEnabled() ? "Enabled" : "Disabled",
                 staffAssignmentRepository.findByEventId(eventId).size(),
-                scanPurposeRepository.findByEventId(eventId).stream().filter(ScanPurpose::isActive).count());
+                scanPurposeRepository.findByEventId(eventId).stream().filter(ScanPurpose::isActive).count(),
+                event.isRewardsEnabled(), event.getOrganizerUserId(), event.getEventLogoUrl());
     }
 
     private OrganizerAttendeeResponse toAttendee(EventRegistration registration, List<TransactionLog> logs) {

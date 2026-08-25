@@ -42,6 +42,10 @@ data class OrganizerEventDto(
     val rewardsStatus: String? = null,
     val staffCount: Int = 0,
     val scanPurposesCount: Int = 0,
+    // Raw values needed to echo unchanged fields back on event update (UC-20).
+    val rewardsEnabled: Boolean? = null,
+    val organizerUserId: UUID? = null,
+    val eventLogoUrl: String? = null,
 )
 
 data class OrganizerDashboardDto(

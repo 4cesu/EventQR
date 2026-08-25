@@ -16,7 +16,18 @@ open class EventManagementHubActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
+    }
+
+    // Reload on every return to this screen (e.g., after saving edits in
+    // EditEventDetailsActivity) so the Registered/Capacity/Available summary never shows
+    // stale numbers.
+    override fun onResume() {
+        super.onResume()
         val eventId = intentEventId() ?: return showMissingEventScreen("Event Management")
+        renderEvent(eventId)
+    }
+
+    private fun renderEvent(eventId: String) {
         val content = organizerShell("Event Management", showBack = true)
         content.addView(loadingState("Loading event details..."))
 
@@ -98,6 +109,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
             })
 
             val menuItems = listOf(
+                Triple("Edit Event Details", com.thedavelopers.eventqr.R.drawable.ic_fileedit, EditEventDetailsActivity::class.java),
                 Triple("Staff Assignment", com.thedavelopers.eventqr.R.drawable.ic_admin_users, ManageUsersActivity::class.java),
                 Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java),
                 Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_qr_scan, ManageScanPurposesActivity::class.java),
@@ -107,13 +119,16 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 Triple("Point Rules", com.thedavelopers.eventqr.R.drawable.ic_trend_up, PointRulesPlaceholderActivity::class.java),
             )
 
-            menuItems.forEachIndexed { index, (label, icon, target) ->
-                val (iconTint, iconBg) = when (index) {
-                    0 -> Color.parseColor("#4F46E5") to Color.parseColor("#E0E7FF")
-                    1 -> Color.parseColor("#7C3AED") to Color.parseColor("#EDE9FE")
-                    2 -> Color.parseColor("#06B6D4") to Color.parseColor("#CFFAFE")
-                    3 -> Color.parseColor("#F59E0B") to Color.parseColor("#FEF3C7")
-                    4 -> Color.parseColor("#10B981") to Color.parseColor("#D1FAE5")
+            // Colors keyed by label, not position: inserting/reordering rows must never
+            // reshuffle the visual identity of the existing entries.
+            menuItems.forEach { (label, icon, target) ->
+                val (iconTint, iconBg) = when (label) {
+                    "Edit Event Details" -> Color.parseColor("#2563EB") to Color.parseColor("#DBEAFE")
+                    "Staff Assignment" -> Color.parseColor("#4F46E5") to Color.parseColor("#E0E7FF")
+                    "Attendees" -> Color.parseColor("#7C3AED") to Color.parseColor("#EDE9FE")
+                    "Scan Purposes" -> Color.parseColor("#06B6D4") to Color.parseColor("#CFFAFE")
+                    "Transaction Rules" -> Color.parseColor("#F59E0B") to Color.parseColor("#FEF3C7")
+                    "ID Display Settings" -> Color.parseColor("#10B981") to Color.parseColor("#D1FAE5")
                     else -> Color.parseColor("#EF4444") to Color.parseColor("#FEE2E2")
                 }
                 body.addView(
