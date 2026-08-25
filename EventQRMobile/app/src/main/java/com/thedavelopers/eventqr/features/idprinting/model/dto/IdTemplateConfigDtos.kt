@@ -8,8 +8,8 @@ data class IdTemplateConfigRequest(
     val visibleFields: List<String> = emptyList(),
 )
 
-// Known limitation (scope-tracked decision): ATTENDEE_ID renders user_profiles.id (UUID,
-// 36 chars) because no other identifier column exists without deviating from the SDD.
+// ATTENDEE_ID renders event_registrations.registration_number (per-event sequence assigned by
+// a DB trigger, migration V13). Replaces the earlier user_profiles.id UUID source.
 data class IdTemplateConfigResponse(
     val eventId: String? = null,
     val visibleFields: List<String?> = emptyList(),

@@ -13,6 +13,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
+import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.StaffRepository
@@ -98,7 +99,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailAttendeeEmail).text = item.attendeeEmail.orUnknown()
         findViewById<TextView>(R.id.txtDetailAttendeePhone).text = item.attendeePhoneNumber?.takeIf { it.isNotBlank() } ?: "No phone number"
         findViewById<TextView>(R.id.txtDetailEventName).text = item.eventTitle.orUnknown("Assigned event")
-        findViewById<TextView>(R.id.txtDetailRegistrationId).text = shortRegistrationId(item.registrationId)
+        findViewById<TextView>(R.id.txtDetailRegistrationId).text =
+            RegistrationNumberFormatter.format(item.registrationNumber) ?: shortRegistrationId(item.registrationId)
         RegistrationStatusBadgeStyler.bind(findViewById(R.id.txtDetailRegistrationStatus), item.status)
         findViewById<TextView>(R.id.txtDetailCheckInTime).text = formatTime(item.enteredAt ?: item.attendedAt)
         findViewById<TextView>(R.id.txtDetailPointsBalance).text = "${item.pointsEarned} pts"

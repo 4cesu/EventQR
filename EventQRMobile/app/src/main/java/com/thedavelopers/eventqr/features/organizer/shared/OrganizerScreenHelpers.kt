@@ -76,12 +76,17 @@ internal fun AppCompatActivity.text(
     size: Int = 14,
     bold: Boolean = false,
     color: Int = TEXT,
+    align: Int? = null,
 ): TextView = TextView(this).apply {
     text = value
     textSize = size.toFloat()
     setTextColor(color)
     if (bold) setTypeface(typeface, Typeface.BOLD)
     includeFontPadding = true
+    // Vertical LinearLayouts hand children MATCH_PARENT width by default, so text inside a
+    // MATCH_PARENT TextView stays start-aligned no matter what gravity the parent declares.
+    // Callers that need centered rows must set it here, on the TextView itself.
+    align?.let { gravity = it }
 }
 
 internal fun AppCompatActivity.card(padding: Int = 16): LinearLayout =

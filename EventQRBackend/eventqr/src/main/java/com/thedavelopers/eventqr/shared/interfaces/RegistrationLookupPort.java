@@ -22,6 +22,6 @@ public interface RegistrationLookupPort {
     record RegistrationSnapshot(UUID registrationId, UUID eventId, UUID attendeeUserId, String attendeeEmail,
                                 String attendeeName, RegistrationStatus status, UUID qrCredentialId,
                                 Instant registeredAt, Instant enteredAt, Instant exitedAt, Instant attendedAt,
-                                Integer pointsEarned) {
+                                Integer pointsEarned, Integer registrationNumber) {
     }
 }
