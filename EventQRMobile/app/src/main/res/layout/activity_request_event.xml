@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/formScrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F7F7FA"
@@ -72,7 +73,14 @@
             <TextView style="@style/RequestEventLabel" android:text="Event Name *" />
             <EditText android:id="@+id/eventNameInput" style="@style/RequestEventInput" android:hint="Event name" />
             <TextView style="@style/RequestEventLabel" android:text="Event Category *" />
-            <EditText android:id="@+id/eventCategoryInput" style="@style/RequestEventInput" android:hint="Technology, business, education" />
+            <AutoCompleteTextView
+                android:id="@+id/eventCategoryInput"
+                style="@style/RequestEventInput"
+                android:hint="Select a category"
+                android:inputType="none"
+                android:focusableInTouchMode="true"
+                android:drawableEnd="@drawable/ic_arrow_drop_down"
+                android:drawablePadding="10dp" />
             <TextView style="@style/RequestEventLabel" android:text="Event Description *" />
             <EditText android:id="@+id/eventDescriptionInput" style="@style/RequestEventInput.Multi" android:hint="Describe the event" android:inputType="textMultiLine" />
             <TextView style="@style/RequestEventLabel" android:text="Target Audience *" />
