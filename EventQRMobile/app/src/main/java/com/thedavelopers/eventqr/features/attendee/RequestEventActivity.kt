@@ -8,11 +8,14 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,7 +43,8 @@ class RequestEventActivity : AppCompatActivity() {
 
     private lateinit var eventNameInput: EditText
     private lateinit var eventDescriptionInput: EditText
-    private lateinit var eventCategoryInput: EditText
+    // EventQR - Event Category constrained to predetermined list via AutoCompleteTextView, not in SRS/SDD Event Request Form spec (scope addition)
+    private lateinit var eventCategoryInput: android.widget.AutoCompleteTextView
     private lateinit var targetAudienceInput: EditText
     private lateinit var capacityInput: EditText
     private lateinit var venueInput: EditText
@@ -58,6 +62,9 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var formMessageText: TextView
     private lateinit var submitProgress: ProgressBar
     private lateinit var submitButton: Button
+    private lateinit var formScrollView: ScrollView
+    private var isCategoryDropdownOpen = false
+    private var lastDismissTimeMs = 0L
     private var successDialog: AlertDialog? = null
     private var isSubmitting = false
     private var selectedPosterFile: File? = null
@@ -172,6 +179,49 @@ class RequestEventActivity : AppCompatActivity() {
         eventNameInput = findViewById(R.id.eventNameInput)
         eventDescriptionInput = findViewById(R.id.eventDescriptionInput)
         eventCategoryInput = findViewById(R.id.eventCategoryInput)
+        val categoryOptions = listOf("Academic", "Seminar", "Workshop", "Sports", "Cultural", "Organizational", "Others")
+        eventCategoryInput.setAdapter(android.widget.ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, categoryOptions))
+        eventCategoryInput.threshold = 0
+        eventCategoryInput.setText("", false)
+        // EventQR - intercept touch event directly (onClickListener doesn't prevent default AutoCompleteTextView reopen behavior)
+        eventCategoryInput.setOnTouchListener { view, event ->
+            android.util.Log.d("CategoryDropdown", "TOUCH action=${event.action} isPopupShowing=${eventCategoryInput.isPopupShowing} flag=$isCategoryDropdownOpen")
+            if (event.action == MotionEvent.ACTION_UP) {
+                val now = System.currentTimeMillis()
+                if (now - lastDismissTimeMs < 250) {
+                    android.util.Log.d("CategoryDropdown", "IGNORED touch-passthrough after dismiss (now=$now, lastDismiss=$lastDismissTimeMs)")
+                    view.performClick()
+                    true
+                } else {
+                    if (isCategoryDropdownOpen) {
+                        android.util.Log.d("CategoryDropdown", "CALLING dismissDropDown")
+                        eventCategoryInput.dismissDropDown()
+                        isCategoryDropdownOpen = false
+                    } else {
+                        android.util.Log.d("CategoryDropdown", "CALLING showDropDown")
+                        eventCategoryInput.showDropDown()
+                        isCategoryDropdownOpen = true
+                    }
+                    view.performClick()
+                    true
+                }
+            } else {
+                false
+            }
+        }
+        eventCategoryInput.setOnDismissListener {
+            android.util.Log.d("CategoryDropdown", "DISMISS fired, flag was=$isCategoryDropdownOpen")
+            isCategoryDropdownOpen = false
+            lastDismissTimeMs = System.currentTimeMillis()
+            android.util.Log.d("CategoryDropdown", "DISMISS timestamp recorded: $lastDismissTimeMs")
+        }
+        // EventQR - suppress default AutoCompleteTextView auto-show-on-focus, manual touch listener has sole control
+        eventCategoryInput.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            android.util.Log.d("CategoryDropdown", "FOCUS changed, hasFocus=$hasFocus")
+        }
+        // EventQR - block manual text entry, dropdown-only selection + visual arrow indicator
+        eventCategoryInput.inputType = InputType.TYPE_NULL
+        eventCategoryInput.keyListener = null
         targetAudienceInput = findViewById(R.id.targetAudienceInput)
         capacityInput = findViewById(R.id.capacityInput)
         venueInput = findViewById(R.id.venueInput)
@@ -189,6 +239,7 @@ class RequestEventActivity : AppCompatActivity() {
         formMessageText = findViewById(R.id.formMessageText)
         submitProgress = findViewById(R.id.submitProgress)
         submitButton = findViewById(R.id.submitRequestButton)
+        formScrollView = findViewById(R.id.formScrollView)
     }
 
     private fun prefillRequester() {
@@ -296,91 +347,138 @@ class RequestEventActivity : AppCompatActivity() {
         }
     }
 
+    // EventQR - scroll-to-error + specific toast, not explicit SRS/SDD spec (UX safeguard)
+    // Collect-all validation: every failing field gets its .error set simultaneously,
+    // checks run in visual/XML top-to-bottom order so the first failure is the topmost
+    // one, the form scrolls to it, and the Toast lists all issues (capped at 4).
     private fun buildValidatedRequest(eventPosterFileId: String?): EventCreationRequestDto? {
         clearFieldErrors()
+        val failures = mutableListOf<Pair<View, String>>()
 
-        val eventName = eventNameInput.required("Event name is required") ?: return null
-        val eventDescription = eventDescriptionInput.required("Event description is required") ?: return null
-        val eventCategory = eventCategoryInput.required("Event category is required") ?: return null
-        val targetAudience = targetAudienceInput.required("Target audience is required") ?: return null
-        val venue = venueInput.required("Venue/location is required") ?: return null
-        val startDateTime = startDateTimeValue ?: run {
-            startDateTimeInput.error = "Start date/time is required"
-            return null
+        fun EditText.requiredValue(message: String): String? {
+            val value = text.toString().trim()
+            if (value.isEmpty()) {
+                error = message
+                failures += this to message
+                return null
+            }
+            return value
         }
-        val endDateTime = endDateTimeValue ?: run {
-            endDateTimeInput.error = "End date/time is required"
-            return null
-        }
-        val capacity = capacityInput.positiveInt("Capacity must be a positive number") ?: return null
-        val requesterName = requesterNameInput.required("Requester name is required") ?: return null
-        val contactEmail = contactEmailInput.required("Contact email is required") ?: return null
-        val contactNumber = contactNumberInput.required("Contact number is required") ?: return null
-        val reason = reasonForRequestInput.required("Reason for request is required") ?: return null
 
-        if (!Validators.isValidEmail(contactEmail)) {
-            contactEmailInput.error = "Enter a valid email address"
-            contactEmailInput.requestFocus()
-            return null
+        fun EditText.positiveIntValue(message: String): Int? {
+            val value = text.toString().trim().toIntOrNull()
+            if (value == null || value <= 0) {
+                error = message
+                failures += this to message
+                return null
+            }
+            return value
         }
-        if (startDateTime.isBefore(currentLocalDateTime())) {
+
+        fun failIfNull(view: EditText, value: LocalDateTime?, message: String) {
+            if (value == null) {
+                view.error = message
+                failures += view to message
+            }
+        }
+
+        val eventName = eventNameInput.requiredValue("Event name is required")
+        val eventCategory = eventCategoryInput.requiredValue("Event category is required")
+        val eventDescription = eventDescriptionInput.requiredValue("Event description is required")
+        val targetAudience = targetAudienceInput.requiredValue("Target audience is required")
+        val capacity = capacityInput.positiveIntValue("Capacity must be a positive number")
+        val venue = venueInput.requiredValue("Venue/location is required")
+
+        val startDateTime = startDateTimeValue
+        failIfNull(startDateTimeInput, startDateTime, "Start date/time is required")
+        val endDateTime = endDateTimeValue
+        failIfNull(endDateTimeInput, endDateTime, "End date/time is required")
+
+        if (startDateTime != null && startDateTime.isBefore(currentLocalDateTime())) {
             startDateTimeInput.error = "Start date/time cannot be in the past"
-            return null
+            failures += startDateTimeInput to "Start date/time cannot be in the past"
         }
-        if (!endDateTime.isAfter(startDateTime)) {
+        if (startDateTime != null && endDateTime != null && !endDateTime.isAfter(startDateTime)) {
             endDateTimeInput.error = "End date/time must be after the start"
-            return null
+            failures += endDateTimeInput to "End date/time must be after the start"
         }
 
-        val registrationStart = registrationStartDateTimeValue ?: run {
-            registrationStartDateTimeInput.error = "Registration start date/time is required"
-            return null
-        }
-        val registrationEnd = registrationEndDateTimeValue ?: run {
-            registrationEndDateTimeInput.error = "Registration end date/time is required"
-            return null
-        }
+        val registrationStart = registrationStartDateTimeValue
+        failIfNull(registrationStartDateTimeInput, registrationStart, "Registration start date/time is required")
+        val registrationEnd = registrationEndDateTimeValue
+        failIfNull(registrationEndDateTimeInput, registrationEnd, "Registration end date/time is required")
 
-        if (registrationStart.isBefore(currentLocalDateTime())) {
+        if (registrationStart != null && registrationStart.isBefore(currentLocalDateTime())) {
             registrationStartDateTimeInput.error = "Registration start cannot be in the past"
-            return null
+            failures += registrationStartDateTimeInput to "Registration start cannot be in the past"
         }
-        if (!registrationEnd.isAfter(registrationStart)) {
+        if (registrationStart != null && registrationEnd != null && !registrationEnd.isAfter(registrationStart)) {
             registrationEndDateTimeInput.error = "Registration end must be after registration start"
-            return null
+            failures += registrationEndDateTimeInput to "Registration end must be after registration start"
         }
-        if (registrationEnd.isBefore(currentLocalDateTime())) {
+        if (registrationEnd != null && registrationEnd.isBefore(currentLocalDateTime())) {
             registrationEndDateTimeInput.error = "Registration end cannot be in the past"
-            return null
+            failures += registrationEndDateTimeInput to "Registration end cannot be in the past"
         }
-        if (registrationEnd.isAfter(endDateTime)) {
+        if (registrationEnd != null && endDateTime != null && registrationEnd.isAfter(endDateTime)) {
             registrationEndDateTimeInput.error = "Registration end must not be after event end"
-            return null
+            failures += registrationEndDateTimeInput to "Registration end must not be after event end"
         }
-        if (!registrationEnd.isBefore(startDateTime)) {
+        if (registrationEnd != null && startDateTime != null && !registrationEnd.isBefore(startDateTime)) {
             registrationEndDateTimeInput.error = "Registration end must be before event start"
+            failures += registrationEndDateTimeInput to "Registration end must be before event start"
+        }
+
+        val requesterName = requesterNameInput.requiredValue("Requester name is required")
+
+        val contactEmail = contactEmailInput.requiredValue("Contact email is required")
+        if (contactEmail != null && !Validators.isValidEmail(contactEmail)) {
+            contactEmailInput.error = "Enter a valid email address"
+            failures += contactEmailInput to "Enter a valid email address"
+        }
+        val contactNumber = contactNumberInput.requiredValue("Contact number is required")
+        val reason = reasonForRequestInput.requiredValue("Reason for request is required")
+
+        if (failures.isNotEmpty()) {
+            reportValidationFailures(failures)
             return null
         }
 
         return EventCreationRequestDto(
-            eventName = eventName,
-            eventDescription = eventDescription,
-            eventCategory = eventCategory,
-            targetAudience = targetAudience,
-            capacity = capacity,
-            venue = venue,
-            startDateTime = startDateTime.atZone(zoneId).toInstant().toString(),
-            endDateTime = endDateTime.atZone(zoneId).toInstant().toString(),
-            registrationStartDateTime = registrationStart.atZone(zoneId).toInstant().toString(),
-            registrationEndDateTime = registrationEnd.atZone(zoneId).toInstant().toString(),
-            requesterName = requesterName,
-            contactEmail = contactEmail,
-            contactNumber = contactNumber,
+            eventName = eventName ?: "",
+            eventDescription = eventDescription ?: "",
+            eventCategory = eventCategory ?: "",
+            targetAudience = targetAudience ?: "",
+            capacity = capacity ?: 0,
+            venue = venue ?: "",
+            startDateTime = requireNotNull(startDateTime).atZone(zoneId).toInstant().toString(),
+            endDateTime = requireNotNull(endDateTime).atZone(zoneId).toInstant().toString(),
+            registrationStartDateTime = requireNotNull(registrationStart).atZone(zoneId).toInstant().toString(),
+            registrationEndDateTime = requireNotNull(registrationEnd).atZone(zoneId).toInstant().toString(),
+            requesterName = requesterName ?: "",
+            contactEmail = contactEmail ?: "",
+            contactNumber = contactNumber ?: "",
             requestedFeatures = null,
             eventLogoUrl = eventPosterFileId,
             additionalNotes = null,
-            reasonForRequest = reason,
+            reasonForRequest = reason ?: "",
         )
+    }
+
+    private fun reportValidationFailures(failures: List<Pair<View, String>>) {
+        val firstFailingView = failures.first().first
+        formScrollView.smoothScrollTo(0, firstFailingView.top.coerceAtLeast(0))
+        firstFailingView.requestFocus()
+
+        val maxShownMessages = 4
+        val shown = failures.take(maxShownMessages).joinToString("\n") { "• ${it.second}" }
+        val hiddenCount = failures.size - maxShownMessages
+        val message = if (hiddenCount > 0) {
+            "$shown\nand $hiddenCount more issue${if (hiddenCount == 1) "" else "s"}"
+        } else {
+            shown
+        }
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     private fun setLoading(loading: Boolean) {
@@ -473,8 +571,9 @@ class RequestEventActivity : AppCompatActivity() {
                 val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
                 val initialTime = if (selectedDate == initialValue.toLocalDate()) {
                     initialValue.toLocalTime().withSecond(0).withNano(0)
-                } else if (selectedDate == now.toLocalDate()) {
-                    now.toLocalTime().withSecond(0).withNano(0)
+            } else if (selectedDate == now.toLocalDate()) {
+                // EventQR - default time suggestion rounds to next valid minute (removes reject-then-repick friction)
+                now.plusMinutes(1).toLocalTime().withSecond(0).withNano(0)
                 } else {
                     LocalTime.of(9, 0)
                 }
@@ -504,26 +603,5 @@ class RequestEventActivity : AppCompatActivity() {
 
     private fun formatForDisplay(value: LocalDateTime): String = value.format(displayDateTimeFormatter)
     private fun currentLocalDateTime(): LocalDateTime = LocalDateTime.ofInstant(Instant.now(), zoneId)
-
-    private fun EditText.required(errorMessage: String): String? {
-        val value = textString()
-        if (value.isBlank()) {
-            error = errorMessage
-            requestFocus()
-            return null
-        }
-        return value
-    }
-
-    private fun EditText.positiveInt(errorMessage: String): Int? {
-        val value = textString().toIntOrNull()
-        if (value == null || value <= 0) {
-            error = errorMessage
-            requestFocus()
-            return null
-        }
-        return value
-    }
-
     private fun EditText.textString(): String = text?.toString()?.trim().orEmpty()
 }

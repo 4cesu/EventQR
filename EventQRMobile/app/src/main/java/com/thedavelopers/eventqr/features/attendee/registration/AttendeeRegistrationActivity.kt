@@ -153,6 +153,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         })
     }
 
+    // EventQR - registrant info display-only, pulled from account profile (edit profile handled separately, not here)
     private fun applyInitialPrefill() {
         val fullName = intent.getStringExtra(EXTRA_PREFILL_FULL_NAME).orEmpty().ifBlank { sessionManager.getFullName().orEmpty() }
         val email = intent.getStringExtra(EXTRA_PREFILL_EMAIL).orEmpty().ifBlank { sessionManager.getEmail().orEmpty() }

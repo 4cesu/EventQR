@@ -125,13 +125,18 @@
                         style="@style/RequestEventLabel"
                         android:text="Full Name *" />
 
+                    <!-- EventQR - registrant info display-only, pulled from account profile (edit profile handled separately, not here) -->
                     <EditText
                         android:id="@+id/edtRegistrationFullName"
                         style="@style/RequestEventInput"
+                        android:enabled="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
                         android:hint="Full name"
                         android:imeOptions="actionNext"
                         android:inputType="textPersonName"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:textColor="@color/display_text_color" />
 
                     <TextView
                         style="@style/RequestEventLabel"
@@ -142,10 +147,14 @@
                         style="@style/RequestEventInput"
                         android:drawableStart="@drawable/email_icon"
                         android:drawablePadding="8dp"
+                        android:enabled="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
                         android:hint="john.doe@university.edu"
                         android:imeOptions="actionNext"
                         android:inputType="textEmailAddress"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:textColor="@color/display_text_color" />
 
                     <TextView
                         style="@style/RequestEventLabel"
@@ -156,10 +165,14 @@
                         style="@style/RequestEventInput"
                         android:drawableStart="@drawable/phone_icon"
                         android:drawablePadding="8dp"
+                        android:enabled="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
                         android:hint="+63 912 345 6789"
                         android:imeOptions="actionDone"
                         android:inputType="phone"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:textColor="@color/display_text_color" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
