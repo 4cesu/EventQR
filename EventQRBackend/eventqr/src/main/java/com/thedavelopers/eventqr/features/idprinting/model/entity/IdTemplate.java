@@ -27,4 +27,7 @@ public class IdTemplate extends BaseEntity {
 
     @Column(length = 4000)
     private String templateJson;
+
+    @Column(name = "created_by_user_id")
+    private UUID createdByUserId;
 }

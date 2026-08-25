@@ -20,6 +20,8 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigRequest
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRequest
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
@@ -224,6 +226,15 @@ interface ApiService {
 
     @GET("events/{eventId}/reports/summary")
     suspend fun getEventReportSummary(@Path("eventId") eventId: String): ApiResponse<EventReportSummaryDto>
+
+    @GET("events/{eventId}/id-template")
+    suspend fun getIdTemplateConfig(@Path("eventId") eventId: String): ApiResponse<IdTemplateConfigResponse>
+
+    @PUT("events/{eventId}/id-template")
+    suspend fun saveIdTemplateConfig(
+        @Path("eventId") eventId: String,
+        @Body request: IdTemplateConfigRequest,
+    ): ApiResponse<IdTemplateConfigResponse>
 
     @GET("events/{eventId}/reports/{reportType}")
     suspend fun getEventReportByType(
