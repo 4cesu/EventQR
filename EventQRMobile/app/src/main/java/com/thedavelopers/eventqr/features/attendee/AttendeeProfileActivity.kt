@@ -10,6 +10,7 @@ import android.graphics.Shader
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
 import android.util.Log
 import android.util.Patterns
@@ -197,6 +198,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
+    private lateinit var txtPhoneCounter: TextView
     private lateinit var imgAvatar: ImageView
     private lateinit var imgAvatarPlaceholder: ImageView
     private lateinit var txtChangePhoto: TextView
@@ -251,6 +253,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)
+        txtPhoneCounter = findViewById(R.id.txtPhoneCounter)
         imgAvatar = findViewById(R.id.imgAvatar)
         imgAvatarPlaceholder = findViewById(R.id.imgAvatarPlaceholder)
         txtChangePhoto = findViewById(R.id.txtChangePhoto)
@@ -270,6 +273,9 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
         btnSaveChanges.setOnClickListener { attemptSave() }
 
+        // EventQR - phone update only, matches Register screen prefix/validation pattern
+        configurePhoneInput()
+
         val formWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
@@ -281,15 +287,16 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
             }
         }
 
-        edtFullName.addTextChangedListener(formWatcher)
-        edtEmail.addTextChangedListener(formWatcher)
         edtPhone.addTextChangedListener(formWatcher)
     }
 
     private fun prefillFromSession() {
         edtFullName.setText(sessionManager.getFullName().orEmpty())
         edtEmail.setText(sessionManager.getEmail().orEmpty())
-        edtPhone.setText(sessionManager.getPhone().orEmpty())
+        // EventQR - phone update only, matches Register screen prefix/validation pattern
+        val rawPhone = sessionManager.getPhone().orEmpty()
+        edtPhone.setText(normalizePhoneDigits(rawPhone))
+        txtPhoneCounter.text = "${edtPhone.text.length}/10"
 
         initialAvatarFileId = sessionManager.getAvatarFileId()
         renderAvatar(imgAvatar, imgAvatarPlaceholder, loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()))
@@ -306,7 +313,10 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                     val user = profileResult.data
                     edtFullName.setText(user.fullName)
                     edtEmail.setText(user.email)
-                    edtPhone.setText(user.phoneNumber.orEmpty())
+                    // EventQR - phone update only, matches Register screen prefix/validation pattern
+                    val phoneDigits = normalizePhoneDigits(user.phoneNumber.orEmpty())
+                    edtPhone.setText(phoneDigits)
+                    txtPhoneCounter.text = "${phoneDigits.length}/10"
 
                     sessionManager.updateProfile(
                         fullName = user.fullName,
@@ -344,19 +354,15 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
         if (!validateForm()) return
 
-        if (sanitizeEmail() != initialEmail) {
-            edtEmail.error = "Email updates are not supported."
-            showApiError("Email updates are not supported by this account endpoint.")
-            return
-        }
-
         if (!hasChanges()) return
 
         isSavingProfile = true
         updateSaveButtonState()
 
+        // EventQR - name/email locked (display-only), only phone is updatable
         val fullName = sanitizeName()
-        val phone = sanitizePhone().ifBlank { null }
+        val phoneDigits = sanitizePhone()
+        val phone = if (phoneDigits.length == 10) "+63$phoneDigits" else null
 
         lifecycleScope.launch {
             when (val updateResult = repository.updateProfile(fullName, phone)) {
@@ -419,33 +425,18 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         }
     }
 
+    // EventQR - name/email locked (display-only, always valid from profile), only phone needs validation
     private fun validateForm(): Boolean {
-        var isValid = true
-
-        if (sanitizeName().isBlank()) {
-            edtFullName.error = "Full name is required."
-            isValid = false
-        }
-
-        val email = sanitizeEmail()
-        if (email.isBlank()) {
-            edtEmail.error = "Email address is required."
-            isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            edtEmail.error = "Enter a valid email address."
-            isValid = false
-        }
-
         val phone = sanitizePhone()
         if (phone.isBlank()) {
             edtPhone.error = "Phone number is required."
-            isValid = false
-        } else if (!isPhoneValid(phone)) {
-            edtPhone.error = "Enter a valid phone number."
-            isValid = false
+            return false
         }
-
-        return isValid
+        if (phone.length != 10 || !phone.all { it.isDigit() }) {
+            edtPhone.error = "Enter a valid 10-digit mobile number"
+            return false
+        }
+        return true
     }
 
     private fun isPhoneValid(phone: String): Boolean {
@@ -454,17 +445,47 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         return pattern.matches(phone) && digits in 7..15
     }
 
+    // EventQR - name/email locked (display-only), only phone digits + avatar are updatable
     private fun hasChanges(): Boolean {
-        return sanitizeName() != initialFullName ||
-            sanitizeEmail() != initialEmail ||
-            sanitizePhone() != initialPhone ||
-            avatarChanged
+        return sanitizePhone() != initialPhone || avatarChanged
     }
 
     private fun captureInitialFormSnapshot() {
         initialFullName = sanitizeName()
         initialEmail = sanitizeEmail()
         initialPhone = sanitizePhone()
+    }
+
+    // EventQR - phone update only, matches Register screen prefix/validation pattern
+    private fun configurePhoneInput() {
+        edtPhone.inputType = InputType.TYPE_CLASS_NUMBER
+        edtPhone.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(editable: Editable?) {
+                val current = editable ?: return
+                val normalized = normalizePhoneDigits(current.toString())
+                txtPhoneCounter.text = "${normalized.length}/10"
+                if (normalized != current.toString()) {
+                    current.replace(0, current.length, normalized)
+                    edtPhone.error = null
+                }
+            }
+        })
+    }
+
+    private fun normalizePhoneDigits(input: String): String {
+        var digits = input.filter { it.isDigit() }
+        while (digits.length > 10 && digits.startsWith("0")) {
+            digits = digits.removePrefix("0")
+        }
+        while (digits.length > 10 && digits.startsWith("63")) {
+            digits = digits.removePrefix("63")
+        }
+        if (digits.startsWith("0")) {
+            digits = digits.removePrefix("0")
+        }
+        return digits.take(10)
     }
 
     private fun sanitizeName(): String = edtFullName.text.toString().trim()
@@ -495,8 +516,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         isLoadingProfile = loading
         progressLoading.visibility = if (loading) View.VISIBLE else View.GONE
 
-        edtFullName.isEnabled = !loading
-        edtEmail.isEnabled = !loading
+        // EventQR - name/email locked (display-only), only phone and avatar respond to loading state
         edtPhone.isEnabled = !loading
         txtChangePhoto.isEnabled = !loading
 

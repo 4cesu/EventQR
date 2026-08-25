@@ -110,15 +110,19 @@
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
+                <!-- EventQR - locked, not editable here (identity/login field) -->
                 <EditText
                     android:id="@+id/edtFullName"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_edit_profile_input"
+                    android:enabled="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
                     android:inputType="textPersonName"
                     android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
+                    android:textColor="@color/display_text_color"
                     android:textColorHint="#98A2B3"
                     android:textSize="16sp" />
 
@@ -131,15 +135,19 @@
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
+                <!-- EventQR - locked, not editable here (identity/login field) -->
                 <EditText
                     android:id="@+id/edtEmail"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_edit_profile_input"
+                    android:enabled="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
                     android:inputType="textEmailAddress"
                     android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
+                    android:textColor="@color/display_text_color"
                     android:textColorHint="#98A2B3"
                     android:textSize="16sp" />
 
@@ -152,17 +160,53 @@
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
-                <EditText
-                    android:id="@+id/edtPhone"
+                <!-- EventQR - phone update only, matches Register screen prefix/validation pattern -->
+                <LinearLayout
+                    android:id="@+id/layoutPhoneField"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_edit_profile_input"
-                    android:inputType="phone"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
-                    android:textColorHint="#98A2B3"
-                    android:textSize="16sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:drawableStart="@drawable/phone_icon"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="6dp"
+                        android:text="+63"
+                        android:textColor="@color/eventqr_text"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edtPhone"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="9123456789"
+                        android:inputType="number"
+                        android:maxLength="10"
+                        android:paddingEnd="14dp"
+                        android:textColor="@color/eventqr_text"
+                        android:textColorHint="#98A2B3"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtPhoneCounter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="0/10"
+                    android:textAlignment="viewEnd"
+                    android:textColor="#98A2B3"
+                    android:textSize="11sp" />
             </LinearLayout>
 
             <TextView
