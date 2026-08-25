@@ -29,6 +29,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var currentEvent: AttendeeEventResponse? = null
     private var isAlreadyRegistered = false
     private var isOwnedByCurrentOrganizer = false
+    private var isFirstResume = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +81,19 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         } else {
             showMessage("Missing event information.")
         }
+    }
+
+    // EventQR - registration status re-sync on resume (fixes stale button state after QR dismiss)
+    override fun onResume() {
+        super.onResume()
+        // Skip the very first resume: onCreate's initial load already performs this check,
+        // so firing here too would duplicate the network call on first open.
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
+        if (!this::eventId.isInitialized || eventId.isBlank()) return
+        presenter.refreshRegistrationStatus(eventId)
     }
 
     override fun renderEvent(event: AttendeeEventResponse) {

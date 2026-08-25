@@ -35,6 +35,12 @@ class EventDetailPresenter(
         }
     }
 
+    // Public re-entry point so the View can re-sync registration state on resume without
+    // reloading the whole event payload.
+    fun refreshRegistrationStatus(eventId: String) {
+        checkRegistrationStatus(eventId)
+    }
+
     private fun checkRegistrationStatus(eventId: String) {
         val userId = view?.getSessionUserId().orEmpty()
         if (userId.isBlank()) {
