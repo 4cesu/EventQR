@@ -46,11 +46,30 @@ class ProfileActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity() {
             startActivity(android.content.Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEditProfileActivity::class.java))
         }
 
+        // EventQR - UI safeguard beyond SRS/SDD explicit spec (no confirm-dialog requirement stated for sign out)
         findViewById<android.widget.Button>(R.id.btnProfileLogout)?.setOnClickListener {
-            sessionManager.clearSession()
-            startActivity(android.content.Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
-            finish()
+            showSignOutConfirmation()
         }
+    }
+
+    private fun showSignOutConfirmation() {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out?")
+            .setPositiveButton("Sign Out") { dialog, _ ->
+                dialog.dismiss()
+                performSignOut()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun performSignOut() {
+        sessionManager.clearSession()
+        startActivity(android.content.Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
     }
 
     override fun onResume() {

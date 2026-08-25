@@ -36,15 +36,34 @@ open class StaffProfileActivity : AppCompatActivity() {
 
         setupStaffBottomNav()
 
+        // EventQR - UI safeguard beyond SRS/SDD explicit spec (no confirm-dialog requirement stated for sign out)
         findViewById<Button>(R.id.btnProfileLogout).setOnClickListener {
-            sessionManager.clearSession()
-            startActivity(Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
-            finish()
+            showSignOutConfirmation()
         }
 
         findViewById<Button>(R.id.btnEditProfile)?.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEditProfileActivity::class.java))
         }
+    }
+
+    private fun showSignOutConfirmation() {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out?")
+            .setPositiveButton("Sign Out") { dialog, _ ->
+                dialog.dismiss()
+                performSignOut()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun performSignOut() {
+        sessionManager.clearSession()
+        startActivity(Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
     }
 
     override fun onResume() {
