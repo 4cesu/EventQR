@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -108,63 +109,102 @@ class IdDisplaySettingsActivity : AppCompatActivity() {
     private fun renderPreview() {
         previewContainer.removeAllViews()
 
+        // Vertical (portrait) card, CR80 lanyard proportions: 2.125in x 3.375in -> height = width x 1.588.
         val cardView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dp(18), dp(18), dp(18), dp(18))
+            // Ink-saving palette: majority white card, black text, thin border — no solid
+            // dark fill blocks, since solid fills are the expensive part on printed output.
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#25215F"))
+                setColor(Color.WHITE)
                 cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), Color.BLACK)
             }
             layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, dp(10), 0, dp(4)) }
+                dp(PREVIEW_WIDTH_DP),
+                dp(PREVIEW_HEIGHT_DP),
+            ).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                setMargins(0, dp(10), 0, dp(4))
+            }
         }
 
-        cardView.addView(text("ID Preview", 11, true, Color.parseColor("#9B8CF5")).apply {
+        cardView.addView(text("ID Preview", 11, true, TEXT).apply {
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(10))
         })
 
-        // Locked fields first: QR code placeholder box, then attendee name.
+        // Portrait stacking order: QR code first (locked), then event name banner,
+        // attendee name, role, attendee id, event date.
         cardView.addView(qrPlaceholder())
-        cardView.addView(previewValue("Attendee Name", "Juan Dela Cruz"))
-
-        OPTIONAL_FIELDS.forEach { field ->
-            if (fieldStates.getValue(field)) {
-                cardView.addView(previewValue(displayName(field), sampleValue(field)))
-            }
+        if (fieldStates.getValue(FIELD_EVENT_NAME)) {
+            cardView.addView(previewBanner(displayName(FIELD_EVENT_NAME), sampleValue(FIELD_EVENT_NAME)))
+        }
+        cardView.addView(previewValue("Attendee Name", "Juan Dela Cruz", valueSizeSp = 20))
+        if (fieldStates.getValue(FIELD_ROLE)) {
+            cardView.addView(previewValue(displayName(FIELD_ROLE), sampleValue(FIELD_ROLE), valueSizeSp = 13))
+        }
+        if (fieldStates.getValue(FIELD_ATTENDEE_ID)) {
+            cardView.addView(
+                previewValue(
+                    displayName(FIELD_ATTENDEE_ID),
+                    RegistrationNumberFormatter.format(sampleValue(FIELD_ATTENDEE_ID).toIntOrNull()) ?: "N/A",
+                    valueSizeSp = 11,
+                ),
+            )
+        }
+        if (fieldStates.getValue(FIELD_EVENT_DATE)) {
+            cardView.addView(previewValue(displayName(FIELD_EVENT_DATE), sampleValue(FIELD_EVENT_DATE), valueSizeSp = 11))
         }
 
         previewContainer.addView(cardView)
+    }
+
+    private fun previewBanner(label: String, value: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER_HORIZONTAL
+        setPadding(0, 0, 0, dp(10))
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+        addView(text(label.uppercase(), 9, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(value, 15, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
     }
 
     private fun qrPlaceholder(): TextView = TextView(this).apply {
         text = "QR CODE"
         gravity = Gravity.CENTER
         setTypeface(typeface, android.graphics.Typeface.BOLD)
-        setTextColor(Color.parseColor("#25215F"))
+        setTextColor(Color.BLACK)
         textSize = 15f
         background = GradientDrawable().apply {
             setColor(Color.WHITE)
             cornerRadius = dp(10).toFloat()
+            setStroke(dp(1), Color.BLACK)
         }
+        // Square placeholder, centered horizontally; QR scannability is functional (NFR):
+        // this area keeps a fixed generous size regardless of how many fields are shown.
         layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(84),
-        ).apply { setMargins(0, 0, 0, dp(12)) }
+            dp(120),
+            dp(120),
+        ).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            setMargins(0, 0, 0, dp(12))
+        }
     }
 
-    private fun previewValue(label: String, value: String): LinearLayout = LinearLayout(this).apply {
+    private fun previewValue(label: String, value: String, valueSizeSp: Int = 16): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(0, 0, 0, dp(10))
+        gravity = Gravity.CENTER_HORIZONTAL
+        setPadding(0, 0, 0, dp(8))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        addView(text(label.uppercase(), 10, true, Color.parseColor("#9B8CF5")))
-        addView(text(value, 16, true, Color.WHITE))
+        addView(text(label.uppercase(), 9, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(value, valueSizeSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
     }
 
     private fun loadConfig() {
@@ -234,8 +274,8 @@ class IdDisplaySettingsActivity : AppCompatActivity() {
 
     // Sample values only; the Module 2.3 print flow renders real data from these same field keys.
     private fun sampleValue(field: String): String = when (field) {
-        // Known limitation: ATTENDEE_ID is a full UUID from user_profiles.id (36 chars on a printed card).
-        FIELD_ATTENDEE_ID -> "b7e23ec2-9f4a-4d01-8c3d-1a2b3c4d5e6f"
+        // ATTENDEE_ID renders event_registrations.registration_number (per-event sequence, V13).
+        FIELD_ATTENDEE_ID -> "12"
         FIELD_ROLE -> "STAFF"
         FIELD_EVENT_NAME -> "Freshman Orientation"
         FIELD_EVENT_DATE -> "Aug 25, 2026"
@@ -251,5 +291,10 @@ class IdDisplaySettingsActivity : AppCompatActivity() {
         val OPTIONAL_FIELDS: List<String> = listOf(FIELD_ATTENDEE_ID, FIELD_ROLE, FIELD_EVENT_NAME, FIELD_EVENT_DATE)
         val LOCKED_FIELDS: List<String> = listOf("QR_CODE", "ATTENDEE_NAME")
         private const val TOGGLES_TAG = "id_display_toggles"
+
+        // CR80 portrait ratio 2.125in x 3.375in (height = width x 1.588), applied to the preview
+        // card mock. The print-side renderer must mirror this orientation when it is implemented.
+        private const val PREVIEW_WIDTH_DP = 270
+        private const val PREVIEW_HEIGHT_DP = 429
     }
 }
