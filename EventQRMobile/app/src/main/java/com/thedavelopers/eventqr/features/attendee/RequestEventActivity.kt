@@ -569,11 +569,11 @@ class RequestEventActivity : AppCompatActivity() {
             this,
             { _, year, month, dayOfMonth ->
                 val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
-                val initialTime = if (selectedDate == initialValue.toLocalDate()) {
+                val initialTime = if (selectedDate == now.toLocalDate()) {
+                    // EventQR - default time suggestion rounds to next valid minute (removes reject-then-repick friction)
+                    now.plusMinutes(1).toLocalTime().withSecond(0).withNano(0)
+                } else if (selectedDate == initialValue.toLocalDate()) {
                     initialValue.toLocalTime().withSecond(0).withNano(0)
-            } else if (selectedDate == now.toLocalDate()) {
-                // EventQR - default time suggestion rounds to next valid minute (removes reject-then-repick friction)
-                now.plusMinutes(1).toLocalTime().withSecond(0).withNano(0)
                 } else {
                     LocalTime.of(9, 0)
                 }
@@ -597,7 +597,20 @@ class RequestEventActivity : AppCompatActivity() {
             initialValue.monthValue - 1,
             initialValue.dayOfMonth,
         ).apply {
-            datePicker.minDate = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant().toEpochMilli()
+            // EventQR - fixed to Philippine Time (Asia/Manila), not device-local, since system is PH-based
+            // Get today's date fields as seen in Manila
+            val manilaCal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Asia/Manila"))
+            val manilaYear = manilaCal.get(java.util.Calendar.YEAR)
+            val manilaMonth = manilaCal.get(java.util.Calendar.MONTH)
+            val manilaDay = manilaCal.get(java.util.Calendar.DAY_OF_MONTH)
+
+            // Build minDate using DEVICE'S default timezone calendar, but with Manila's date fields —
+            // this ensures DatePicker's internal (device-timezone) day-boundary comparison greys correctly
+            val todayCal = java.util.Calendar.getInstance()
+            todayCal.set(manilaYear, manilaMonth, manilaDay, 0, 0, 0)
+            todayCal.set(java.util.Calendar.MILLISECOND, 0)
+
+            datePicker.minDate = todayCal.timeInMillis
         }.show()
     }
 
