@@ -328,6 +328,8 @@ class OrganizerRepository(private val context: Context) {
     suspend fun getEvents() = safeApiCall { apiService.getEvents() }
     suspend fun fetchOrganizerEvents() = safeApiCall { apiService.getOrganizerEvents() }
     suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
+    suspend fun updateOrganizerEvent(eventId: String, request: com.thedavelopers.eventqr.features.events.model.dto.EventRequest) =
+        safeApiCall { apiService.updateOrganizerEvent(eventId, request) }
     suspend fun fetchOrganizerDashboardSummary() = safeApiCall { apiService.getOrganizerDashboardSummary() }
     suspend fun fetchOrganizerDashboard(eventId: String) = safeApiCall { apiService.getOrganizerDashboard(eventId) }
     suspend fun fetchOrganizerAttendees(eventId: String) = safeApiCall { apiService.getOrganizerAttendees(eventId) }

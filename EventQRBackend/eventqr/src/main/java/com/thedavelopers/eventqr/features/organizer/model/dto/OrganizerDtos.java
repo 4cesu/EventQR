@@ -26,7 +26,8 @@ public final class OrganizerDtos {
                                          long totalTransactions, long successfulScans, long rejectedScans,
                                          long benefitClaims, long boothSessionVisits, long rewardRedemptions,
                                          long totalPointsAwarded, String idTemplateStatus, String rewardsStatus,
-                                         long staffCount, long scanPurposesCount) {
+                                         long staffCount, long scanPurposesCount, boolean rewardsEnabled,
+                                         UUID organizerUserId, String eventLogoUrl) {
     }
 
     public record OrganizerDashboardResponse(UUID organizerUserId, String organizerName, String organizerEmail,

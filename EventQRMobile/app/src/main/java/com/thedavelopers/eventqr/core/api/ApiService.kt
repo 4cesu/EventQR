@@ -203,6 +203,12 @@ interface ApiService {
     @GET("organizer/events/{eventId}")
     suspend fun getOrganizerEvent(@Path("eventId") eventId: String): ApiResponse<OrganizerEventDto>
 
+    @PATCH("organizer/events/{eventId}")
+    suspend fun updateOrganizerEvent(
+        @Path("eventId") eventId: String,
+        @Body request: EventRequest,
+    ): ApiResponse<EventResponse>
+
     @GET("organizer/dashboard")
     suspend fun getOrganizerDashboardSummary(): ApiResponse<OrganizerDashboardDto>
 
