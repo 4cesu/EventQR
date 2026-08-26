@@ -16,7 +16,7 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     private lateinit var presenter: ForgotPasswordPresenter
     private lateinit var emailInput: EditText
     private lateinit var sendButton: Button
-    private lateinit var backButton: Button
+    private lateinit var backButton: android.widget.ImageButton
     private lateinit var formLayout: LinearLayout
     private lateinit var confirmationLayout: LinearLayout
 
