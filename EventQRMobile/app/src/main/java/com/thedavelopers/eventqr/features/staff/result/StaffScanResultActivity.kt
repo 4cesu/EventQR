@@ -19,6 +19,8 @@ import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
@@ -74,8 +76,11 @@ open class StaffScanResultActivity : AppCompatActivity() {
     }
 
     private fun applyActionLabels() {
+        val purposeCode = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE).orEmpty()
         val purposeName = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME).orUnknown("Entry")
-        findViewById<Button>(R.id.btnContinueTransaction).text = "Log $purposeName Transaction"
+        findViewById<Button>(R.id.btnContinueTransaction).text =
+            if (purposeCode == ScanPurposeCode.ID_PRINT.name) "Print ID"
+            else "Log $purposeName Transaction"
     }
 
     private fun bindStaticFields(isValid: Boolean) {
@@ -118,6 +123,13 @@ open class StaffScanResultActivity : AppCompatActivity() {
         val qrCredentialId = intent.getStringExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID).orEmpty()
         val purposeLabel = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME).orUnknown("Scan Purpose")
 
+        val parsedPurposeCode = runCatching { ScanPurposeCode.valueOf(purposeCode) }.getOrNull()
+
+        if (parsedPurposeCode == ScanPurposeCode.ID_PRINT) {
+            triggerPrint(eventId, attendeeId)
+            return
+        }
+
         if (eventId.isBlank() || purposeId.isBlank() || qrValue.isBlank() || staffUserId.isBlank() || purposeCode.isBlank()) {
             Toast.makeText(this, "Transaction failed: Missing scan context", Toast.LENGTH_SHORT).show()
             return
@@ -126,7 +138,6 @@ open class StaffScanResultActivity : AppCompatActivity() {
         val parsedEventId = runCatching { UUID.fromString(eventId) }.getOrNull()
         val parsedPurposeId = runCatching { UUID.fromString(purposeId) }.getOrNull()
         val parsedStaffUserId = runCatching { UUID.fromString(staffUserId) }.getOrNull()
-        val parsedPurposeCode = runCatching { ScanPurposeCode.valueOf(purposeCode) }.getOrNull()
         if (parsedEventId == null || parsedPurposeId == null || parsedStaffUserId == null || parsedPurposeCode == null) {
             Toast.makeText(this, "Transaction failed: Invalid scan context", Toast.LENGTH_SHORT).show()
             Log.w(
@@ -172,6 +183,111 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.GONE
             findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
         }
+    }
+
+    private fun triggerPrint(eventId: String, attendeeId: String) {
+        if (eventId.isBlank() || attendeeId.isBlank()) {
+            Toast.makeText(this, "Print failed: Missing attendee context", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        savingTransaction = true
+        findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.VISIBLE
+        findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
+
+        MainScope().launch {
+            val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffScanResultActivity)
+            val eventName = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orEmpty()
+            val attendeeName = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orEmpty()
+
+            // Fetch template config (visible fields) and attendee details in parallel
+            var visibleFields = emptyList<String>()
+            var registrationNumber: Int? = null
+            var role = ""
+
+            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                apiService.getIdTemplateConfig(eventId)
+            }
+            if (configResult is NetworkResult.Success) {
+                visibleFields = configResult.data.visibleFields.filterNotNull()
+            }
+
+            val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)
+            if (attendeeResult is NetworkResult.Success) {
+                registrationNumber = attendeeResult.data.registrationNumber
+            }
+
+            // Call backend print endpoint
+            when (val result = repository.printAttendeeId(eventId, attendeeId)) {
+                is NetworkResult.Success -> {
+                    Log.d(tag, "printResult success=true message=${result.data.message}")
+
+                    // Open system print dialog with rendered ID card
+                    val cardData = AndroidIdPrinter.CardData(
+                        attendeeName = attendeeName,
+                        eventName = eventName,
+                        registrationNumber = registrationNumber,
+                        role = role,
+                        visibleFields = visibleFields,
+                    )
+                    AndroidIdPrinter.print(
+                        this@StaffScanResultActivity,
+                        "EventQR ID — $attendeeName",
+                        cardData,
+                    )
+
+                    showPrintSuccessDialog(result.data.message)
+                }
+                is NetworkResult.Error -> {
+                    val message = "Print failed: ${result.message}"
+                    Log.w(tag, "printResult success=false message=${result.message}")
+                    Toast.makeText(this@StaffScanResultActivity, message, Toast.LENGTH_SHORT).show()
+                    bindRejectedResult(message)
+                }
+                NetworkResult.Loading -> Unit
+            }
+            savingTransaction = false
+            findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.GONE
+            findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
+        }
+    }
+
+    private fun showPrintSuccessDialog(message: String) {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(24), dp(24), dp(24))
+            setBackgroundResource(R.drawable.bg_card)
+        }
+
+        container.addView(TextView(this).apply {
+            text = "ID Print Sent"
+            textSize = 28f
+            setTextColor(0xFF111827.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+        })
+        container.addView(TextView(this).apply {
+            text = message.ifBlank { "Print request sent to printer." }
+            textSize = 16f
+            setTextColor(0xFF6B7280.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setPadding(0, dp(12), 0, dp(20))
+        })
+        val doneButton = Button(this).apply {
+            text = "Done"
+            setBackgroundResource(R.drawable.bg_scanner_button)
+            setTextColor(0xFFFFFFFF.toInt())
+        }
+        container.addView(doneButton)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(container)
+            .setCancelable(false)
+            .create()
+        doneButton.setOnClickListener {
+            dialog.dismiss()
+            openAttendeeDetails()
+        }
+        dialog.show()
     }
 
     private fun bindRejectedResult(message: String) {

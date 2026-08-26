@@ -12,6 +12,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -35,6 +36,9 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private var registrationId: String = ""
     private var qrCredentialId: String = ""
     private var hasPrintedId: Boolean = false
+    private var cachedAttendeeName: String = ""
+    private var cachedEventName: String = ""
+    private var cachedRegistrationNumber: Int? = null
 
     private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
         .withZone(ZoneId.of("Asia/Manila"))
@@ -91,6 +95,9 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private fun renderRegistration(item: RegistrationResponse) {
         registrationId = item.registrationId.toString()
         qrCredentialId = item.qrCredentialId?.toString().orEmpty()
+        cachedAttendeeName = item.attendeeName.orUnknown()
+        cachedEventName = item.eventTitle.orUnknown("Assigned event")
+        cachedRegistrationNumber = item.registrationNumber
 
         val attendeeName = item.attendeeName.orUnknown()
         findViewById<TextView>(R.id.txtDetailAvatar).text = attendeeName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "A"
@@ -153,13 +160,36 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         MainScope().launch {
+            // Fetch template config for visible fields
+            var visibleFields = emptyList<String>()
+            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
+                    .getIdTemplateConfig(eventId)
+            }
+            if (configResult is NetworkResult.Success) {
+                visibleFields = configResult.data.visibleFields.filterNotNull()
+            }
+
             val result = if (hasPrintedId) {
                 repository.reprintAttendeeId(eventId, attendeeId)
             } else {
                 repository.printAttendeeId(eventId, attendeeId)
             }
             when (result) {
-                is NetworkResult.Success -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.data.message, Toast.LENGTH_SHORT).show()
+                is NetworkResult.Success -> {
+                    val cardData = AndroidIdPrinter.CardData(
+                        attendeeName = cachedAttendeeName,
+                        eventName = cachedEventName,
+                        registrationNumber = cachedRegistrationNumber,
+                        visibleFields = visibleFields,
+                    )
+                    AndroidIdPrinter.print(
+                        this@StaffAttendeeDetailsActivity,
+                        "EventQR ID — $cachedAttendeeName",
+                        cardData,
+                    )
+                    Toast.makeText(this@StaffAttendeeDetailsActivity, result.data.message, Toast.LENGTH_SHORT).show()
+                }
                 is NetworkResult.Error -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
                 NetworkResult.Loading -> Unit
             }
