@@ -199,6 +199,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffScanResultActivity)
             val eventName = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orEmpty()
             val attendeeName = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orEmpty()
+            val qrValue = intent.getStringExtra(StaffScreenExtras.EXTRA_QR_VALUE).orEmpty()
 
             // Fetch template config (visible fields) and attendee details in parallel
             var visibleFields = emptyList<String>()
@@ -236,6 +237,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                         role = role,
                         eventDate = eventDate,
                         visibleFields = visibleFields,
+                        qrValue = qrValue,
                     )
                     AndroidIdPrinter.print(
                         this@StaffScanResultActivity,

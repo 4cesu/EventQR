@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.idprinting
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
@@ -17,6 +18,8 @@ import android.print.PrintAttributes
 import android.print.PrintDocumentAdapter
 import android.print.PrintDocumentInfo
 import android.print.PrintManager
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import java.io.FileOutputStream
 
@@ -62,6 +65,7 @@ object AndroidIdPrinter {
         val role: String = "",
         val eventDate: String = "",
         val visibleFields: List<String> = emptyList(),
+        val qrValue: String = "",
     )
 
     fun print(context: Context, jobName: String, data: CardData) {
@@ -170,17 +174,24 @@ object AndroidIdPrinter {
             val textColor = 0xFF111827.toInt()
             var y = cardTop + CARD_MARGIN_PT + 12f
 
-            // QR placeholder
+            // QR code
             val qrSize = 48f
             val qrLeft = cardLeft + (CARD_W_PT - qrSize) / 2f
-            val qrBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
-            val qrBorder = Paint().apply { color = Color.BLACK; style = Paint.Style.STROKE; strokeWidth = 0.7f }
-            canvas.drawRoundRect(RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), 3f, 3f, qrBg)
-            canvas.drawRoundRect(RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), 3f, 3f, qrBorder)
-            val qrText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = textColor; textSize = 6.5f; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+            if (data.qrValue.isNotBlank()) {
+                val qrBitmap = renderQrBitmap(data.qrValue, qrSize.toInt())
+                val src = android.graphics.Rect(0, 0, qrBitmap.width, qrBitmap.height)
+                val dst = RectF(qrLeft, y, qrLeft + qrSize, y + qrSize)
+                canvas.drawBitmap(qrBitmap, src, dst, null)
+            } else {
+                val qrBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+                val qrBorder = Paint().apply { color = Color.BLACK; style = Paint.Style.STROKE; strokeWidth = 0.7f }
+                canvas.drawRoundRect(RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), 3f, 3f, qrBg)
+                canvas.drawRoundRect(RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), 3f, 3f, qrBorder)
+                val qrText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = textColor; textSize = 6.5f; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+                }
+                canvas.drawText("QR CODE", centerX, y + qrSize / 2f + 2.2f, qrText)
             }
-            canvas.drawText("QR CODE", centerX, y + qrSize / 2f + 2.2f, qrText)
             y += qrSize + 7f
 
             // Event Name (optional)
@@ -236,6 +247,17 @@ object AndroidIdPrinter {
             } else text
             canvas.drawText(truncated, centerX, y + sizeSp, paint)
             return y + sizeSp + 2.5f
+        }
+
+        private fun renderQrBitmap(value: String, size: Int): Bitmap {
+            val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, size, size)
+            val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
+            for (x in 0 until matrix.width) {
+                for (y in 0 until matrix.height) {
+                    bitmap.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+            return bitmap
         }
     }
 }
