@@ -204,6 +204,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             var visibleFields = emptyList<String>()
             var registrationNumber: Int? = null
             var role = ""
+            var eventDate = ""
 
             val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
                 apiService.getIdTemplateConfig(eventId)
@@ -215,6 +216,11 @@ open class StaffScanResultActivity : AppCompatActivity() {
             val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)
             if (attendeeResult is NetworkResult.Success) {
                 registrationNumber = attendeeResult.data.registrationNumber
+                role = attendeeResult.data.attendeeRole.orEmpty()
+                eventDate = attendeeResult.data.eventStartAt?.let {
+                    java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", java.util.Locale.ENGLISH)
+                        .withZone(java.time.ZoneId.of("Asia/Manila")).format(it)
+                }.orEmpty()
             }
 
             // Call backend print endpoint
@@ -228,6 +234,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                         eventName = eventName,
                         registrationNumber = registrationNumber,
                         role = role,
+                        eventDate = eventDate,
                         visibleFields = visibleFields,
                     )
                     AndroidIdPrinter.print(

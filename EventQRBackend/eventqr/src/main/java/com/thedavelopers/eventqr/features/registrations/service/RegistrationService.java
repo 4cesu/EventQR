@@ -267,15 +267,19 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private RegistrationResponse toResponse(EventRegistration registration) {
         EventSnapshot eventSnapshot = eventLookupPort.findById(registration.getEventId())
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + registration.getEventId()));
-        String attendeePhoneNumber = attendeeDirectoryPort.findById(registration.getAttendeeUserId())
+        var attendeeSnapshot = attendeeDirectoryPort.findById(registration.getAttendeeUserId());
+        String attendeePhoneNumber = attendeeSnapshot
                 .map(AttendeeDirectoryPort.AttendeeSnapshot::phoneNumber)
+                .orElse(null);
+        String attendeeRole = attendeeSnapshot
+                .map(s -> s.role() != null ? s.role().name() : null)
                 .orElse(null);
         return new RegistrationResponse(registration.getId(), registration.getEventId(), registration.getAttendeeUserId(),
                 registration.getAttendeeEmail(), registration.getAttendeeName(), registration.getStatus(),
             registration.getQrCredentialId(), registration.getRegisteredAt(), eventSnapshot.title(),
             eventSnapshot.location(), eventSnapshot.eventStartAt(), eventSnapshot.eventEndAt(), attendeePhoneNumber,
             registration.getEnteredAt(), registration.getExitedAt(), registration.getAttendedAt(),
-            registration.getPointsEarned(), registration.getRegistrationNumber());
+            registration.getPointsEarned(), registration.getRegistrationNumber(), attendeeRole);
     }
 
     private RegistrationSnapshot toSnapshot(EventRegistration registration) {

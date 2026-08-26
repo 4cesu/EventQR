@@ -39,6 +39,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private var cachedAttendeeName: String = ""
     private var cachedEventName: String = ""
     private var cachedRegistrationNumber: Int? = null
+    private var cachedRole: String = ""
+    private var cachedEventDate: String = ""
 
     private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
         .withZone(ZoneId.of("Asia/Manila"))
@@ -98,6 +100,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         cachedAttendeeName = item.attendeeName.orUnknown()
         cachedEventName = item.eventTitle.orUnknown("Assigned event")
         cachedRegistrationNumber = item.registrationNumber
+        cachedRole = item.attendeeRole.orEmpty()
+        cachedEventDate = item.eventStartAt?.let { formatEventDate(it) }.orEmpty()
 
         val attendeeName = item.attendeeName.orUnknown()
         findViewById<TextView>(R.id.txtDetailAvatar).text = attendeeName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "A"
@@ -181,6 +185,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                         attendeeName = cachedAttendeeName,
                         eventName = cachedEventName,
                         registrationNumber = cachedRegistrationNumber,
+                        role = cachedRole,
+                        eventDate = cachedEventDate,
                         visibleFields = visibleFields,
                     )
                     AndroidIdPrinter.print(
@@ -199,6 +205,12 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     }
 
     private fun formatTime(value: Instant?): String = value?.let { timeFormatter.format(it) } ?: "--"
+
+    private fun formatEventDate(value: Instant): String {
+        val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
+            .withZone(ZoneId.of("Asia/Manila"))
+        return formatter.format(value)
+    }
 
     private fun shortRegistrationId(value: UUID): String = "reg-${value.toString().take(8)}"
 }
