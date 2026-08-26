@@ -28,7 +28,6 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
     private lateinit var attendeeEmailText: TextView
     private lateinit var credentialIdText: TextView
     private lateinit var eventNameText: TextView
-    private lateinit var attendeeIdText: TextView
     private var currentQrCredentialId: String? = null
     private var currentQrBitmap: Bitmap? = null
     private var currentEventTitle: String? = null
@@ -47,7 +46,6 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         attendeeEmailText = findViewById(R.id.txtQrAttendeeEmail)
         credentialIdText = findViewById(R.id.txtQrCredentialValue)
         eventNameText = findViewById(R.id.txtQrEventName)
-        attendeeIdText = findViewById(R.id.txtQrAttendeeId)
 
         findViewById<View>(R.id.btnCloseQr)?.setOnClickListener { finish() }
 
@@ -108,16 +106,10 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         currentQrBitmap = bitmap
         qrImage.setImageBitmap(bitmap)
 
-        credentialIdText.text = "QR-${snapshot.eventId.toString().take(4).uppercase()}-${snapshot.qrCredentialId.toString().take(8).uppercase()}"
+        credentialIdText.text = RegistrationNumberFormatter.format(registration?.registrationNumber) ?: "-"
         attendeeNameText.text = registration?.attendeeName ?: "Attendee"
         attendeeEmailText.text = registration?.attendeeEmail ?: "-"
         eventNameText.text = eventTitle ?: "Event"
-
-        val formattedId = RegistrationNumberFormatter.format(registration?.registrationNumber)
-        if (formattedId != null) {
-            attendeeIdText.text = "Your Attendee ID: $formattedId"
-            attendeeIdText.visibility = View.VISIBLE
-        }
     }
 
     private fun renderQrBitmap(value: String): Bitmap {
