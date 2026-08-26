@@ -30,4 +30,5 @@ data class RegistrationResponse(
     val attendedAt: Instant? = null,
     val pointsEarned: Int = 0,
     val registrationNumber: Int? = null,
+    val attendeeRole: String? = null,
 )
