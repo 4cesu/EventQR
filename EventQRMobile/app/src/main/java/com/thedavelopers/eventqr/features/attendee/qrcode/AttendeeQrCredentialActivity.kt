@@ -15,6 +15,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.BitmapSaver
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
+import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 
 open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContract.View {
@@ -27,6 +28,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
     private lateinit var attendeeEmailText: TextView
     private lateinit var credentialIdText: TextView
     private lateinit var eventNameText: TextView
+    private lateinit var attendeeIdText: TextView
     private var currentQrCredentialId: String? = null
     private var currentQrBitmap: Bitmap? = null
     private var currentEventTitle: String? = null
@@ -45,6 +47,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         attendeeEmailText = findViewById(R.id.txtQrAttendeeEmail)
         credentialIdText = findViewById(R.id.txtQrCredentialValue)
         eventNameText = findViewById(R.id.txtQrEventName)
+        attendeeIdText = findViewById(R.id.txtQrAttendeeId)
 
         findViewById<View>(R.id.btnCloseQr)?.setOnClickListener { finish() }
 
@@ -109,6 +112,12 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         attendeeNameText.text = registration?.attendeeName ?: "Attendee"
         attendeeEmailText.text = registration?.attendeeEmail ?: "-"
         eventNameText.text = eventTitle ?: "Event"
+
+        val formattedId = RegistrationNumberFormatter.format(registration?.registrationNumber)
+        if (formattedId != null) {
+            attendeeIdText.text = "Your Attendee ID: $formattedId"
+            attendeeIdText.visibility = View.VISIBLE
+        }
     }
 
     private fun renderQrBitmap(value: String): Bitmap {

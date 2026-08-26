@@ -67,22 +67,35 @@ class ScannerPresenter(
             return
         }
         if (!Validators.isNonEmpty(qrValue)) {
-            view?.showMessage("QR value is required")
+            view?.showMessage("Input is required")
             return
         }
+
+        val trimmed = qrValue.trim()
+        val isShortId = trimmed.startsWith("#") || trimmed.all { it.isDigit() }
+
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            android.util.Log.d(
-                tag,
-                "Submitting scan verify eventId=$eventId scanPurposeId=${purpose.scanPurposeId} scanPurposeCode=${purpose.code} qrValue=${qrValue.trim()}"
-            )
-            val request = TransactionRequest(
-                eventId = UUID.fromString(eventId),
-                scanPurposeId = purpose.scanPurposeId,
-                qrValue = qrValue.trim(),
-                staffUserId = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString),
-                notes = notes.ifBlank { null },
-            )
+            val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString)
+            val request = if (isShortId) {
+                android.util.Log.d(tag, "Submitting scan via short ID eventId=$eventId scanPurposeId=${purpose.scanPurposeId} scanPurposeCode=${purpose.code} shortId=$trimmed")
+                TransactionRequest(
+                    eventId = UUID.fromString(eventId),
+                    scanPurposeId = purpose.scanPurposeId,
+                    shortId = trimmed,
+                    staffUserId = staffUuid,
+                    notes = notes.ifBlank { null },
+                )
+            } else {
+                android.util.Log.d(tag, "Submitting scan via QR value eventId=$eventId scanPurposeId=${purpose.scanPurposeId} scanPurposeCode=${purpose.code} qrValue=$trimmed")
+                TransactionRequest(
+                    eventId = UUID.fromString(eventId),
+                    scanPurposeId = purpose.scanPurposeId,
+                    qrValue = trimmed,
+                    staffUserId = staffUuid,
+                    notes = notes.ifBlank { null },
+                )
+            }
             when (val result = repository.verifyScan(request)) {
                 is NetworkResult.Success -> {
                     android.util.Log.d(

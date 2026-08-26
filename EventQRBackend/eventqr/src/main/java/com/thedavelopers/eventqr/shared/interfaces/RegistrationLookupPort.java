@@ -17,6 +17,8 @@ public interface RegistrationLookupPort {
 
     Optional<RegistrationSnapshot> findByEventIdAndAttendeeEmail(UUID eventId, String attendeeEmail);
 
+    Optional<RegistrationSnapshot> findByEventIdAndRegistrationNumber(UUID eventId, Integer registrationNumber);
+
     List<RegistrationSnapshot> listByEventId(UUID eventId);
 
     record RegistrationSnapshot(UUID registrationId, UUID eventId, UUID attendeeUserId, String attendeeEmail,

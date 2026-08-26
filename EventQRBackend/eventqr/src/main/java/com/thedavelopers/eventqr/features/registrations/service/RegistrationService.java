@@ -218,6 +218,11 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     }
 
     @Override
+    public java.util.Optional<RegistrationSnapshot> findByEventIdAndRegistrationNumber(UUID eventId, Integer registrationNumber) {
+        return registrationRepository.findByEventIdAndRegistrationNumber(eventId, registrationNumber).map(this::toSnapshot);
+    }
+
+    @Override
     public List<RegistrationSnapshot> listByEventId(UUID eventId) {
         return registrationRepository.findByEventId(eventId).stream().map(this::toSnapshot).toList();
     }
