@@ -31,12 +31,16 @@ data class ForgotPasswordRequest(
 )
 
 data class ResetPasswordRequest(
-    val email: String,
-    val resetCode: String,
-    val newPassword: String
+    val token: String,
+    val newPassword: String,
+    val confirmPassword: String
 )
 
 data class PasswordChangeRequest(
     val currentPassword: String,
     val newPassword: String
+)
+
+data class ResetTokenValidationResponse(
+    val valid: Boolean
 )

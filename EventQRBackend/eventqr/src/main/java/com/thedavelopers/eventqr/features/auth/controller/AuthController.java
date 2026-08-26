@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.auth.controller;
 
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
@@ -73,15 +75,25 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Logout processed", null));
     }
 
+    // TODO: add rate limiting on forgot-password (e.g. Bucket4j or a simple in-memory counter) to prevent email-spam abuse
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        PasswordResetService.PasswordResetResponse response = passwordResetService.requestReset(request.email());
-        return ResponseEntity.accepted().body(ApiResponse.success("Password reset token generated", response.resetToken()));
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestReset(request.email());
+        return ResponseEntity.ok(ApiResponse.success("If an account with that email exists, a reset link has been sent", null));
+    }
+
+    @GetMapping("/reset-password/validate")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> validateResetToken(@RequestParam String token) {
+        boolean valid = passwordResetService.validateToken(token);
+        if (!valid) {
+            return ResponseEntity.badRequest().body(ApiResponse.success("Token is invalid or expired", Map.of("valid", false)));
+        }
+        return ResponseEntity.ok(ApiResponse.success(Map.of("valid", true)));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordResetService.resetPassword(request.email(), request.resetToken(), request.newPassword());
-        return ResponseEntity.ok(ApiResponse.success("Password reset completed", null));
+        passwordResetService.resetPassword(request.token(), request.newPassword(), request.confirmPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password has been reset", null));
     }
 }

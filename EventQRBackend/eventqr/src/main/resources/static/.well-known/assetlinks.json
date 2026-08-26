@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.thedavelopers.eventqr",
+    "sha256_cert_fingerprints": ["07:A2:C7:BF:7B:2B:D4:14:65:81:41:89:7B:89:C9:A0:87:EA:8E:33:47:FD:1D:C0:29:7B:B0:21:27:41:41:08"]
+  }
+}]
