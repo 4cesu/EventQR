@@ -66,6 +66,14 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
             override fun afterTextChanged(s: Editable?) = Unit
         })
 
+        confirmPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                updatePasswordRequirements(newPasswordInput.text.toString())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+
         resetButton.setOnClickListener {
             presenter.submitReset(
                 newPasswordInput.text.toString(),
@@ -74,6 +82,10 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         }
 
         findViewById<Button>(R.id.btnGoToLogin).setOnClickListener {
+            presenter.navigateToLogin()
+        }
+
+        findViewById<Button>(R.id.btnGoToLoginSuccess).setOnClickListener {
             presenter.navigateToLogin()
         }
 
@@ -144,7 +156,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
 
-        resetButton.isEnabled = requirements.isValid && confirmPasswordInput.text.isNotBlank()
+        resetButton.isEnabled = requirements.isValid && newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
     }
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
