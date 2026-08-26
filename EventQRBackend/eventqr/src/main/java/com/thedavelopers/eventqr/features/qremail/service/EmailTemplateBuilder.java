@@ -31,10 +31,8 @@ public class EmailTemplateBuilder {
                 %s
                 <p>Here is your EventQR credential. Present this QR code at the event when requested.</p>
                 <p><img src="cid:qrImage.png" alt="EventQR credential" style="max-width: 250px;" /></p>
-                <p>Your credential value: <strong>%s</strong></p>
-                <p>Keep this email available as your backup QR access.</p>
                 </body></html>
-                """.formatted(safeName, idLine, HtmlUtils.htmlEscape(qrValue));
+                """.formatted(safeName, idLine);
     }
 
     public record EmailContent(String subject, String html, byte[] qrImageBytes) {
