@@ -11,7 +11,7 @@ class EmailTemplateBuilderTest {
         byte[] qrImageBytes = { 1, 2, 3 };
 
         EmailTemplateBuilder.EmailContent content = new EmailTemplateBuilder()
-                .build("Attendee", "credential-value", qrImageBytes);
+                .build("Attendee", "credential-value", qrImageBytes, null);
 
         assertThat(content.html()).contains("cid:qrImage.png");
         assertThat(content.html()).doesNotContain("data:image");
