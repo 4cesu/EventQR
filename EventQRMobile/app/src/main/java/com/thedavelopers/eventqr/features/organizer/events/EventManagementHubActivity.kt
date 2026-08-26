@@ -114,7 +114,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java),
                 Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_qr_scan, ManageScanPurposesActivity::class.java),
                 Triple("Transaction Rules", com.thedavelopers.eventqr.R.drawable.ic_admin_shield, TransactionRulesActivity::class.java),
-                Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_file, com.thedavelopers.eventqr.features.organizer.idtemplate.IdDisplaySettingsActivity::class.java),
+                Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_file, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java),
                 Triple("Rewards", com.thedavelopers.eventqr.R.drawable.ic_gift, ManageRewardsActivity::class.java),
                 Triple("Point Rules", com.thedavelopers.eventqr.R.drawable.ic_trend_up, PointRulesPlaceholderActivity::class.java),
             )

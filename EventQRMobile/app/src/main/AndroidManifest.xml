@@ -36,7 +36,6 @@
         <activity android:name=".features.attendee.AttendeeEventsActivity" android:exported="false" />
         <activity android:name=".features.staff.EventRegistrationsActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffAssignedEventsActivity" android:exported="false" />
-        <activity android:name=".features.staff.IdPrintingActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffTransactionsActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffCameraScannerActivity" android:exported="false" />
         <activity android:name=".features.staff.scanner.ScannerActivity" android:exported="false" />
@@ -50,7 +49,7 @@
         <activity android:name=".features.organizer.OrganizerOverallReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.rewards.ManageRewardsActivity" android:exported="false" />
         <activity android:name=".features.organizer.rewards.PointRulesPlaceholderActivity" android:exported="false" />
-        <activity android:name=".features.organizer.idtemplate.IdDisplaySettingsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.idtemplate.IdTemplateSettingsActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.EventManagementHubActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.EditEventDetailsActivity" android:exported="false" />
         <activity android:name=".features.organizer.transactions.TransactionRulesActivity" android:exported="false" />

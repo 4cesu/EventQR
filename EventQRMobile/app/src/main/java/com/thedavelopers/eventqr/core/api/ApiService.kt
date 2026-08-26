@@ -18,7 +18,6 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestDecisionRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
-import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
@@ -411,11 +410,20 @@ interface ApiService {
     @GET("transactions/event/{eventId}")
     suspend fun getTransactionsByEvent(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
 
-    @POST("id-printing")
-    suspend fun printId(@Body request: IdPrintRequest): ApiResponse<IdPrintResponse>
+    @POST("staff/events/{eventId}/attendees/{attendeeId}/print-id")
+    suspend fun printAttendeeId(
+        @Path("eventId") eventId: String,
+        @Path("attendeeId") attendeeId: String,
+    ): ApiResponse<IdPrintResponse>
 
-    @GET("id-printing/event/{eventId}")
-    suspend fun getIdPrintsByEvent(@Path("eventId") eventId: String): ApiResponse<List<IdPrintResponse>>
+    @POST("staff/events/{eventId}/attendees/{attendeeId}/reprint-id")
+    suspend fun reprintAttendeeId(
+        @Path("eventId") eventId: String,
+        @Path("attendeeId") attendeeId: String,
+    ): ApiResponse<IdPrintResponse>
+
+    @GET("staff/events/{eventId}/print-logs")
+    suspend fun getStaffPrintLogs(@Path("eventId") eventId: String): ApiResponse<List<IdPrintResponse>>
 
     @GET("dashboard")
     suspend fun getDashboard(): ApiResponse<DashboardSummary>

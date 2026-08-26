@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
  * Architecture note: implemented with the programmatic View toolkit used by every other
  * organizer screen (team decision), not Compose as the SDD text implies.
  */
-class IdDisplaySettingsActivity : AppCompatActivity() {
+class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private lateinit var repository: IdTemplateConfigRepository
     private lateinit var eventId: String
@@ -89,7 +89,7 @@ class IdDisplaySettingsActivity : AppCompatActivity() {
         tag = TOGGLES_TAG
         addView(sectionLabel("Show on printed ID"))
         OPTIONAL_FIELDS.forEach { field ->
-            addView(CheckBox(this@IdDisplaySettingsActivity).apply {
+            addView(CheckBox(this@IdTemplateSettingsActivity).apply {
                 text = displayName(field)
                 textSize = 15f
                 isChecked = fieldStates.getValue(field)

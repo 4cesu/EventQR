@@ -74,6 +74,13 @@ public class OrganizerIdTemplateController {
         return ResponseEntity.ok(ApiResponse.success("Logo stored", fileStorageService.store(eventId, "id-template-logo", file)));
     }
 
+    @GetMapping("/staff/events/{eventId}/print-logs")
+    public ResponseEntity<ApiResponse<List<IdPrintResponse>>> printLogs(HttpServletRequest request,
+                                                                         @PathVariable UUID eventId) {
+        requireNonAttendee(request);
+        return ResponseEntity.ok(ApiResponse.success(idPrintingService.findByEvent(eventId)));
+    }
+
     @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/id-preview")
     public ResponseEntity<ApiResponse<IdPrintResponse>> previewForAttendee(HttpServletRequest request,
                                                                            @PathVariable UUID eventId,
