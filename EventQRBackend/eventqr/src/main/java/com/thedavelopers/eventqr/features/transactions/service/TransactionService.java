@@ -90,7 +90,31 @@ public class TransactionService {
         }
         TransactionRule rule = loadRule(request.eventId(), request.scanPurposeId());
         validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
-        var qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
+
+        // Resolve QR credential — either by short Attendee ID or by raw QR value
+        QrCredentialPort.QrCredentialSnapshot qrSnapshot;
+        if (request.hasShortId()) {
+            Integer regNum = request.parsedShortId();
+            var registration = registrationLookupPort.findByEventIdAndRegistrationNumber(eventSnapshot.eventId(), regNum)
+                    .orElseThrow(() -> new ResourceNotFoundException("Attendee ID #" + regNum + " not found for this event"));
+            if (registration.qrCredentialId() == null) {
+                throw new ResourceNotFoundException("No QR credential assigned to Attendee ID #" + regNum);
+            }
+            qrSnapshot = qrCredentialPort.findById(registration.qrCredentialId())
+                    .orElseThrow(() -> new ResourceNotFoundException("QR credential not found for Attendee ID #" + regNum));
+            if (!eventSnapshot.eventId().equals(qrSnapshot.eventId())) {
+                throw new ForbiddenException("Wrong event QR");
+            }
+            return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
+                    qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
+                    registration.status(), purpose.scanPurposeId(), purpose.code(), qrSnapshot.active(),
+                    "Attendee ID #" + regNum + " verified", Instant.now());
+        }
+
+        if (request.qrValue() == null || request.qrValue().isBlank()) {
+            throw new ResourceNotFoundException("QR value or Attendee ID is required");
+        }
+        qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid QR credential"));
         if (!qrSnapshot.active()) {
             throw new ForbiddenException("Inactive QR credential");

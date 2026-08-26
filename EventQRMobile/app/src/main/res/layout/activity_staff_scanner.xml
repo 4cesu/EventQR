@@ -289,7 +289,7 @@
                         android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_soft_input_no_stroke"
-                        android:hint="Enter or paste QR code..."
+                        android:hint="Attendee ID (e.g. #001) or scan QR"
                         android:inputType="text"
                         android:paddingHorizontal="16dp"
                         android:singleLine="true"

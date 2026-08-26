@@ -85,7 +85,7 @@ public class QREmailService {
         }
 
         try {
-            sendMessage(recipientEmail, registration.getAttendeeName(), credential.getQrValue());
+            sendMessage(recipientEmail, registration.getAttendeeName(), credential.getQrValue(), registration.getRegistrationNumber());
             return sent(registration, credential, deliveryLog);
         } catch (Exception firstFailure) {
             log.warn("QR email first attempt failed registrationId={} reason={}",
@@ -93,7 +93,7 @@ public class QREmailService {
             updateLog(deliveryLog, EmailDeliveryStatus.RETRY_PENDING, firstFailure.getMessage());
             sleepBeforeRetry();
             try {
-                sendMessage(recipientEmail, registration.getAttendeeName(), credential.getQrValue());
+                sendMessage(recipientEmail, registration.getAttendeeName(), credential.getQrValue(), registration.getRegistrationNumber());
                 return sent(registration, credential, deliveryLog);
             } catch (Exception secondFailure) {
                 String error = secondFailure.getMessage() == null ? firstFailure.getMessage() : secondFailure.getMessage();
@@ -103,10 +103,11 @@ public class QREmailService {
         }
     }
 
-    private void sendMessage(String recipientEmail, String attendeeName, String qrValue) {
+    private void sendMessage(String recipientEmail, String attendeeName, String qrValue, Integer registrationNumber) {
         byte[] qrImageBytes = qrCredentialPort.renderQrImage(qrValue);
+        String attendeeId = registrationNumber != null ? String.format("#%03d", registrationNumber) : null;
         log.debug("QR image bytes retrieved registrationEmail={} byteCount={}", recipientEmail, qrImageBytes.length);
-        emailGatewayService.send(recipientEmail, templateBuilder.build(attendeeName, qrValue, qrImageBytes));
+        emailGatewayService.send(recipientEmail, templateBuilder.build(attendeeName, qrValue, qrImageBytes, attendeeId));
     }
 
     private DeliveryResult sent(EventRegistration registration, QrCredential credential, EmailDeliveryLog deliveryLog) {

@@ -8,7 +8,8 @@ import java.util.UUID
 data class TransactionRequest(
     val eventId: UUID,
     val scanPurposeId: UUID,
-    val qrValue: String,
+    val qrValue: String? = null,
+    val shortId: String? = null,
     val staffUserId: UUID? = null,
     val notes: String? = null,
 )
