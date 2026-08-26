@@ -164,14 +164,26 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         MainScope().launch {
+            val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
+
             // Fetch template config for visible fields
             var visibleFields = emptyList<String>()
             val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
-                com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
-                    .getIdTemplateConfig(eventId)
+                apiService.getIdTemplateConfig(eventId)
             }
             if (configResult is NetworkResult.Success) {
                 visibleFields = configResult.data.visibleFields.filterNotNull()
+            }
+
+            // Fetch QR credential value for the printed QR code
+            var qrValue = ""
+            if (qrCredentialId.isNotBlank()) {
+                val qrResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                    apiService.getQrCredentialById(qrCredentialId)
+                }
+                if (qrResult is NetworkResult.Success) {
+                    qrValue = qrResult.data.qrValue
+                }
             }
 
             val result = if (hasPrintedId) {
@@ -188,6 +200,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                         role = cachedRole,
                         eventDate = cachedEventDate,
                         visibleFields = visibleFields,
+                        qrValue = qrValue,
                     )
                     AndroidIdPrinter.print(
                         this@StaffAttendeeDetailsActivity,
