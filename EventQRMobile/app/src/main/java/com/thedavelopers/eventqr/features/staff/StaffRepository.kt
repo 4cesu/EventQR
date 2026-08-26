@@ -5,7 +5,6 @@ import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.api.safeApiCall
-import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
@@ -52,9 +51,11 @@ class StaffRepository(context: Context) {
 
     suspend fun getLatestScan(eventId: String) = safeApiCall { apiService.getLatestScan(eventId) }
 
-    suspend fun printId(request: IdPrintRequest) = safeApiCall { apiService.printId(request) }
+    suspend fun printAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.printAttendeeId(eventId, attendeeId) }
 
-    suspend fun getIdPrintsByEvent(eventId: String) = safeApiCall { apiService.getIdPrintsByEvent(eventId) }
+    suspend fun reprintAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.reprintAttendeeId(eventId, attendeeId) }
+
+    suspend fun getStaffPrintLogs(eventId: String) = safeApiCall { apiService.getStaffPrintLogs(eventId) }
 
     suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
 

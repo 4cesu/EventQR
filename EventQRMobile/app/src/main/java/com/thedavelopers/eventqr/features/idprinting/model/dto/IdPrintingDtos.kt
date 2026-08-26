@@ -3,13 +3,6 @@ package com.thedavelopers.eventqr.features.idprinting.model.dto
 import java.time.Instant
 import java.util.UUID
 
-data class IdPrintRequest(
-    val eventId: UUID,
-    val qrCredentialId: UUID,
-    val staffUserId: UUID,
-    val reprint: Boolean = false,
-)
-
 data class IdPrintResponse(
     val printLogId: UUID,
     val eventId: UUID,

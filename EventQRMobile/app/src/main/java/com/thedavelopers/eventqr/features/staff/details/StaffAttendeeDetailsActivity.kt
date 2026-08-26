@@ -12,7 +12,6 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -135,7 +134,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         }
 
         MainScope().launch {
-            when (val result = repository.getIdPrintsByEvent(eventId)) {
+            when (val result = repository.getStaffPrintLogs(eventId)) {
                 is NetworkResult.Success -> {
                     hasPrintedId = result.data.any { it.attendeeUserId.toString() == attendeeId }
                     findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = if (hasPrintedId) "Reprint ID" else "Print ID"
@@ -147,20 +146,19 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     }
 
     private fun printId() {
-        if (eventId.isBlank() || qrCredentialId.isBlank()) {
-            Toast.makeText(this, "QR credential is required for printing", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val staffUserId = sessionManager.getUserId().orEmpty()
-        if (staffUserId.isBlank()) {
-            Toast.makeText(this, "Staff profile is missing", Toast.LENGTH_SHORT).show()
+        if (eventId.isBlank() || attendeeId.isBlank()) {
+            Toast.makeText(this, "Attendee context is required for printing", Toast.LENGTH_SHORT).show()
             return
         }
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         MainScope().launch {
-            when (val result = repository.printId(IdPrintRequest(UUID.fromString(eventId), UUID.fromString(qrCredentialId), UUID.fromString(staffUserId), hasPrintedId))) {
+            val result = if (hasPrintedId) {
+                repository.reprintAttendeeId(eventId, attendeeId)
+            } else {
+                repository.printAttendeeId(eventId, attendeeId)
+            }
+            when (result) {
                 is NetworkResult.Success -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.data.message, Toast.LENGTH_SHORT).show()
                 is NetworkResult.Error -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
                 NetworkResult.Loading -> Unit
