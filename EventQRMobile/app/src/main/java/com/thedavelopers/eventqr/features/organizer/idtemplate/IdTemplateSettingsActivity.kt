@@ -11,10 +11,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.features.idprinting.IdCardLayoutConfig
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * SDD Module 3.7 — Configure ID Display Fields.
@@ -27,6 +29,9 @@ import kotlinx.coroutines.launch
  *
  * Architecture note: implemented with the programmatic View toolkit used by every other
  * organizer screen (team decision), not Compose as the SDD text implies.
+ *
+ * Layout proportions are driven by [IdCardLayoutConfig] so this preview stays
+ * in sync with the print output from [com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter].
  */
 class IdTemplateSettingsActivity : AppCompatActivity() {
 
@@ -38,11 +43,22 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
 
     private val fieldStates = linkedMapOf(
-        FIELD_ATTENDEE_ID to false,
-        FIELD_ROLE to false,
-        FIELD_EVENT_NAME to false,
-        FIELD_EVENT_DATE to false,
+        IdCardLayoutConfig.FIELD_ATTENDEE_ID to false,
+        IdCardLayoutConfig.FIELD_ROLE to false,
+        IdCardLayoutConfig.FIELD_EVENT_NAME to false,
+        IdCardLayoutConfig.FIELD_EVENT_DATE to false,
     )
+
+    // Preview sizes derived from shared config ratios × preview card dimensions
+    private val previewQrSizeDp = (IdCardLayoutConfig.PREVIEW_WIDTH_DP * IdCardLayoutConfig.QR_SIZE_RATIO).roundToInt()
+    private val previewQrSpacingDp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.QR_SPACING_RATIO).roundToInt()
+    private val previewMarginDp = (IdCardLayoutConfig.PREVIEW_WIDTH_DP * IdCardLayoutConfig.MARGIN_RATIO).roundToInt()
+    private val previewFieldSpacingDp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.FIELD_SPACING_RATIO).roundToInt()
+    private val previewLabelFontSp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.LABEL_FONT_RATIO).roundToInt()
+    private val previewNameFontSp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.NAME_FONT_RATIO).roundToInt()
+    private val previewEventNameFontSp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.EVENT_NAME_FONT_RATIO).roundToInt()
+    private val previewRoleFontSp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.ROLE_FONT_RATIO).roundToInt()
+    private val previewIdFontSp = (IdCardLayoutConfig.PREVIEW_HEIGHT_DP * IdCardLayoutConfig.ID_FONT_RATIO).roundToInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +90,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private fun lockedFieldsCard(): LinearLayout = card(14).apply {
         addView(sectionLabel("Always included"))
-        LOCKED_FIELDS.forEach { addView(lockedRow(displayName(it))) }
+        IdCardLayoutConfig.LOCKED_FIELDS.forEach { addView(lockedRow(IdCardLayoutConfig.displayName(it))) }
     }
 
     private fun lockedRow(label: String): LinearLayout = row().apply {
@@ -88,9 +104,9 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     private fun toggleCard(): LinearLayout = card(14).apply {
         tag = TOGGLES_TAG
         addView(sectionLabel("Show on printed ID"))
-        OPTIONAL_FIELDS.forEach { field ->
+        IdCardLayoutConfig.OPTIONAL_FIELDS.forEach { field ->
             addView(CheckBox(this@IdTemplateSettingsActivity).apply {
-                text = displayName(field)
+                text = IdCardLayoutConfig.displayName(field)
                 textSize = 15f
                 isChecked = fieldStates.getValue(field)
                 setPadding(dp(4), dp(6), dp(4), dp(6))
@@ -109,21 +125,18 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     private fun renderPreview() {
         previewContainer.removeAllViews()
 
-        // Vertical (portrait) card, CR80 lanyard proportions: 2.125in x 3.375in -> height = width x 1.588.
         val cardView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(18), dp(18), dp(18), dp(18))
-            // Ink-saving palette: majority white card, black text, thin border — no solid
-            // dark fill blocks, since solid fills are the expensive part on printed output.
+            setPadding(dp(previewMarginDp), dp(previewMarginDp), dp(previewMarginDp), dp(previewMarginDp))
             background = GradientDrawable().apply {
                 setColor(Color.WHITE)
                 cornerRadius = dp(20).toFloat()
                 setStroke(dp(1), Color.BLACK)
             }
             layoutParams = LinearLayout.LayoutParams(
-                dp(PREVIEW_WIDTH_DP),
-                dp(PREVIEW_HEIGHT_DP),
+                dp(IdCardLayoutConfig.PREVIEW_WIDTH_DP),
+                dp(IdCardLayoutConfig.PREVIEW_HEIGHT_DP),
             ).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
                 setMargins(0, dp(10), 0, dp(4))
@@ -135,27 +148,35 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             setPadding(0, 0, 0, dp(10))
         })
 
-        // Portrait stacking order: QR code first (locked), then event name banner,
-        // attendee name, role, attendee id, event date.
+        // QR code (locked) — size from shared config ratio
         cardView.addView(qrPlaceholder())
-        if (fieldStates.getValue(FIELD_EVENT_NAME)) {
-            cardView.addView(previewBanner(displayName(FIELD_EVENT_NAME), sampleValue(FIELD_EVENT_NAME)))
+        if (fieldStates.getValue(IdCardLayoutConfig.FIELD_EVENT_NAME)) {
+            cardView.addView(previewBanner(
+                IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_EVENT_NAME),
+                IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_EVENT_NAME),
+            ))
         }
-        cardView.addView(previewValue("Attendee Name", "Juan Dela Cruz", valueSizeSp = 20))
-        if (fieldStates.getValue(FIELD_ROLE)) {
-            cardView.addView(previewValue(displayName(FIELD_ROLE), sampleValue(FIELD_ROLE), valueSizeSp = 13))
+        cardView.addView(previewValue("Attendee Name", "Juan Dela Cruz", valueSizeSp = previewNameFontSp))
+        if (fieldStates.getValue(IdCardLayoutConfig.FIELD_ROLE)) {
+            cardView.addView(previewValue(
+                IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_ROLE),
+                IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_ROLE),
+                valueSizeSp = previewRoleFontSp,
+            ))
         }
-        if (fieldStates.getValue(FIELD_ATTENDEE_ID)) {
-            cardView.addView(
-                previewValue(
-                    displayName(FIELD_ATTENDEE_ID),
-                    RegistrationNumberFormatter.format(sampleValue(FIELD_ATTENDEE_ID).toIntOrNull()) ?: "N/A",
-                    valueSizeSp = 11,
-                ),
-            )
+        if (fieldStates.getValue(IdCardLayoutConfig.FIELD_ATTENDEE_ID)) {
+            cardView.addView(previewValue(
+                IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_ATTENDEE_ID),
+                RegistrationNumberFormatter.format(IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_ATTENDEE_ID).toIntOrNull()) ?: "N/A",
+                valueSizeSp = previewIdFontSp,
+            ))
         }
-        if (fieldStates.getValue(FIELD_EVENT_DATE)) {
-            cardView.addView(previewValue(displayName(FIELD_EVENT_DATE), sampleValue(FIELD_EVENT_DATE), valueSizeSp = 11))
+        if (fieldStates.getValue(IdCardLayoutConfig.FIELD_EVENT_DATE)) {
+            cardView.addView(previewValue(
+                IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_EVENT_DATE),
+                IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_EVENT_DATE),
+                valueSizeSp = previewIdFontSp,
+            ))
         }
 
         previewContainer.addView(cardView)
@@ -164,13 +185,13 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     private fun previewBanner(label: String, value: String): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
-        setPadding(0, 0, 0, dp(10))
+        setPadding(0, 0, 0, dp(previewFieldSpacingDp))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        addView(text(label.uppercase(), 9, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
-        addView(text(value, 15, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(label.uppercase(), previewLabelFontSp, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(value, previewEventNameFontSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
     }
 
     private fun qrPlaceholder(): TextView = TextView(this).apply {
@@ -178,32 +199,30 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         gravity = Gravity.CENTER
         setTypeface(typeface, android.graphics.Typeface.BOLD)
         setTextColor(Color.BLACK)
-        textSize = 15f
+        textSize = previewIdFontSp.toFloat()
         background = GradientDrawable().apply {
             setColor(Color.WHITE)
             cornerRadius = dp(10).toFloat()
             setStroke(dp(1), Color.BLACK)
         }
-        // Square placeholder, centered horizontally; QR scannability is functional (NFR):
-        // this area keeps a fixed generous size regardless of how many fields are shown.
         layoutParams = LinearLayout.LayoutParams(
-            dp(120),
-            dp(120),
+            dp(previewQrSizeDp),
+            dp(previewQrSizeDp),
         ).apply {
             gravity = Gravity.CENTER_HORIZONTAL
-            setMargins(0, 0, 0, dp(12))
+            setMargins(0, 0, 0, dp(previewQrSpacingDp))
         }
     }
 
     private fun previewValue(label: String, value: String, valueSizeSp: Int = 16): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
-        setPadding(0, 0, 0, dp(8))
+        setPadding(0, 0, 0, dp(previewFieldSpacingDp))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        addView(text(label.uppercase(), 9, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(label.uppercase(), previewLabelFontSp, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
         addView(text(value, valueSizeSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
     }
 
@@ -225,7 +244,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     }
 
     private fun saveConfig() {
-        val visibleFields = OPTIONAL_FIELDS.filter { fieldStates.getValue(it) }
+        val visibleFields = IdCardLayoutConfig.OPTIONAL_FIELDS.filter { fieldStates.getValue(it) }
         saveButton.isEnabled = false
         MainScope().launch {
             when (val result = repository.saveConfig(eventId, visibleFields)) {
@@ -238,13 +257,12 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     }
 
     private fun refreshCheckboxes() {
-        // Rebuild toggle rows so checkbox state reflects the server response after reload.
         content.findViewWithTag<LinearLayout>(TOGGLES_TAG)?.let { togglesCard ->
             togglesCard.removeAllViews()
             togglesCard.addView(sectionLabel("Show on printed ID"))
-            OPTIONAL_FIELDS.forEach { field ->
+            IdCardLayoutConfig.OPTIONAL_FIELDS.forEach { field ->
                 togglesCard.addView(CheckBox(this).apply {
-                    text = displayName(field)
+                    text = IdCardLayoutConfig.displayName(field)
                     textSize = 15f
                     isChecked = fieldStates.getValue(field)
                     setPadding(dp(4), dp(6), dp(4), dp(6))
@@ -262,39 +280,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         statusView.setTextColor(if (isError) ERROR else SUCCESS)
     }
 
-    private fun displayName(field: String): String = when (field) {
-        FIELD_ATTENDEE_ID -> "Attendee ID"
-        FIELD_ROLE -> "Role/Type"
-        FIELD_EVENT_NAME -> "Event Name"
-        FIELD_EVENT_DATE -> "Event Date"
-        "QR_CODE" -> "QR Code"
-        "ATTENDEE_NAME" -> "Attendee Name"
-        else -> field
-    }
-
-    // Sample values only; the Module 2.3 print flow renders real data from these same field keys.
-    private fun sampleValue(field: String): String = when (field) {
-        // ATTENDEE_ID renders event_registrations.registration_number (per-event sequence, V13).
-        FIELD_ATTENDEE_ID -> "12"
-        FIELD_ROLE -> "STAFF"
-        FIELD_EVENT_NAME -> "Freshman Orientation"
-        FIELD_EVENT_DATE -> "Aug 25, 2026"
-        else -> ""
-    }
-
     companion object {
-        const val FIELD_ATTENDEE_ID = "ATTENDEE_ID"
-        const val FIELD_ROLE = "ROLE"
-        const val FIELD_EVENT_NAME = "EVENT_NAME"
-        const val FIELD_EVENT_DATE = "EVENT_DATE"
-
-        val OPTIONAL_FIELDS: List<String> = listOf(FIELD_ATTENDEE_ID, FIELD_ROLE, FIELD_EVENT_NAME, FIELD_EVENT_DATE)
-        val LOCKED_FIELDS: List<String> = listOf("QR_CODE", "ATTENDEE_NAME")
         private const val TOGGLES_TAG = "id_display_toggles"
-
-        // CR80 portrait ratio 2.125in x 3.375in (height = width x 1.588), applied to the preview
-        // card mock. The print-side renderer must mirror this orientation when it is implemented.
-        private const val PREVIEW_WIDTH_DP = 270
-        private const val PREVIEW_HEIGHT_DP = 429
     }
 }

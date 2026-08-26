@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -27,36 +27,20 @@ import java.io.FileOutputStream
  * Renders a CR80-ratio ID card onto an A4 bond-paper page and opens the
  * system print dialog via [PrintManager].
  *
- * The ID block is sized at actual CR80 dimensions (2.125in x 3.375in) and
- * centered on the A4 sheet. A dashed cut-guide border surrounds the card
- * so staff can trim with scissors and insert into an ID holder.
+ * Layout proportions are driven by [IdCardLayoutConfig] so both the print
+ * output and the Organizer Preview remain in sync.
  *
- * Locked fields (always shown): QR_CODE, ATTENDEE_NAME.
- * Optional fields (toggled by organizer): ATTENDEE_ID, ROLE, EVENT_NAME, EVENT_DATE.
+ * Rendering strategy: card content is rasterised onto an offscreen bitmap
+ * at [IdCardLayoutConfig.RENDER_SCALE]× to produce crisp text when the
+ * PDF is printed, then composited onto the final PDF page at CR80 physical
+ * dimensions.
  */
 object AndroidIdPrinter {
 
-    // A4 at 72 pt/in: 210mm = 8.268in, 297mm = 11.693in
-    private const val PAGE_W_PT = 595
-    private const val PAGE_H_PT = 842
-
-    // CR80 actual dimensions: 2.125in x 3.375in
-    private const val CARD_W_PT = 153f  // 2.125 * 72
-    private const val CARD_H_PT = 243f  // 3.375 * 72
-
-    // Cut-guide: 6pt bleed outside the card border
-    private const val CUT_BLEED_PT = 6f
-    private const val CUT_W = CARD_W_PT + 2 * CUT_BLEED_PT
-    private const val CUT_H = CARD_H_PT + 2 * CUT_BLEED_PT
-
-    // Card content margin (inside the card border)
-    private const val CARD_MARGIN_PT = 12f
-    private const val CARD_INNER_W = CARD_W_PT - 2 * CARD_MARGIN_PT
-
-    private const val FIELD_ATTENDEE_ID = "ATTENDEE_ID"
-    private const val FIELD_ROLE = "ROLE"
-    private const val FIELD_EVENT_NAME = "EVENT_NAME"
-    private const val FIELD_EVENT_DATE = "EVENT_DATE"
+    private const val FIELD_ATTENDEE_ID = IdCardLayoutConfig.FIELD_ATTENDEE_ID
+    private const val FIELD_ROLE = IdCardLayoutConfig.FIELD_ROLE
+    private const val FIELD_EVENT_NAME = IdCardLayoutConfig.FIELD_EVENT_NAME
+    private const val FIELD_EVENT_DATE = IdCardLayoutConfig.FIELD_EVENT_DATE
 
     data class CardData(
         val attendeeName: String,
@@ -73,6 +57,38 @@ object AndroidIdPrinter {
         printManager.print(jobName, IdCardPrintAdapter(data), null)
     }
 
+    // ------------------------------------------------------------------
+    // Physical dimensions derived from IdCardLayoutConfig
+    // ------------------------------------------------------------------
+
+    private val cardW = IdCardLayoutConfig.CR80_WIDTH_IN * 72f // 153pt
+    private val cardH = IdCardLayoutConfig.CR80_HEIGHT_IN * 72f // 243pt
+    private val margin = cardW * IdCardLayoutConfig.MARGIN_RATIO // ~10.2pt
+    private val innerW = cardW - 2 * margin // ~129pt
+    private val bleed = cardW * IdCardLayoutConfig.CUT_BLEED_RATIO // ~6pt
+    private val cutW = cardW + 2 * bleed
+    private val cutH = cardH + 2 * bleed
+
+    // Font sizes derived from ratios × card height
+    private val labelFont = cardH * IdCardLayoutConfig.LABEL_FONT_RATIO
+    private val nameFont = cardH * IdCardLayoutConfig.NAME_FONT_RATIO
+    private val eventNameFont = cardH * IdCardLayoutConfig.EVENT_NAME_FONT_RATIO
+    private val roleFont = cardH * IdCardLayoutConfig.ROLE_FONT_RATIO
+    private val idFont = cardH * IdCardLayoutConfig.ID_FONT_RATIO
+
+    // Spacing derived from ratios × card height
+    private val qrSpacing = cardH * IdCardLayoutConfig.QR_SPACING_RATIO
+    private val fieldSpacing = cardH * IdCardLayoutConfig.FIELD_SPACING_RATIO
+    private val qrSize = cardW * IdCardLayoutConfig.QR_SIZE_RATIO
+
+    private val textMuted = IdCardLayoutConfig.COLOR_MUTED
+    private val textDark = IdCardLayoutConfig.COLOR_TEXT
+    private val lineLight = IdCardLayoutConfig.COLOR_BORDER_LIGHT
+
+    // ------------------------------------------------------------------
+    // Print adapter
+    // ------------------------------------------------------------------
+
     private class IdCardPrintAdapter(private val data: CardData) : PrintDocumentAdapter() {
 
         override fun onWrite(
@@ -82,7 +98,11 @@ object AndroidIdPrinter {
             callback: WriteResultCallback,
         ) {
             val doc = PdfDocument()
-            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_W_PT, PAGE_H_PT, 1).create()
+            val pageInfo = PdfDocument.PageInfo.Builder(
+                IdCardLayoutConfig.PAGE_W_PT,
+                IdCardLayoutConfig.PAGE_H_PT,
+                1,
+            ).create()
             val page = doc.startPage(pageInfo)
             drawPage(page.canvas)
             doc.finishPage(page)
@@ -113,148 +133,160 @@ object AndroidIdPrinter {
             callback.onLayoutFinished(info, true)
         }
 
-        private fun drawPage(canvas: Canvas) {
-            // Center the cut-guide box on the A4 page
-            val cutLeft = (PAGE_W_PT - CUT_W) / 2f
-            val cutTop = (PAGE_H_PT - CUT_H) / 2f
+        // ------------------------------------------------------------------
+        // Page composition: cut guides + high-res card bitmap
+        // ------------------------------------------------------------------
 
-            // Dashed cut-guide border
+        private fun drawPage(canvas: Canvas) {
+            val cutLeft = (IdCardLayoutConfig.PAGE_W_PT - cutW) / 2f
+            val cutTop = (IdCardLayoutConfig.PAGE_H_PT - cutH) / 2f
+            val cardLeft = cutLeft + bleed
+            val cardTop = cutTop + bleed
+
+            drawCutGuides(canvas, cutLeft, cutTop)
+
+            // Render card content at RENDER_SCALE× onto an offscreen bitmap
+            val scale = IdCardLayoutConfig.RENDER_SCALE.toFloat()
+            val bmpW = (cardW * scale).toInt()
+            val bmpH = (cardH * scale).toInt()
+            val bitmap = Bitmap.createBitmap(bmpW, bmpH, Bitmap.Config.ARGB_8888)
+            val offCanvas = Canvas(bitmap)
+            offCanvas.scale(scale, scale)
+            drawCardContent(offCanvas)
+
+            // Composite the high-res bitmap into the PDF page at physical CR80 size
+            canvas.drawBitmap(bitmap, Rect(0, 0, bmpW, bmpH), RectF(cardLeft, cardTop, cardLeft + cardW, cardTop + cardH), null)
+            bitmap.recycle()
+        }
+
+        // ------------------------------------------------------------------
+        // Cut guides (drawn at PDF native resolution — thin strokes only)
+        // ------------------------------------------------------------------
+
+        private fun drawCutGuides(canvas: Canvas, cutLeft: Float, cutTop: Float) {
             val dashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFF9CA3AF.toInt()
+                color = lineLight
                 style = Paint.Style.STROKE
                 strokeWidth = 0.6f
                 pathEffect = DashPathEffect(floatArrayOf(4f, 3f), 0f)
             }
-            canvas.drawRect(cutLeft, cutTop, cutLeft + CUT_W, cutTop + CUT_H, dashPaint)
+            canvas.drawRect(cutLeft, cutTop, cutLeft + cutW, cutTop + cutH, dashPaint)
 
-            // Small corner ticks for scissor alignment
             val tickLen = 8f
             val tickPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFF9CA3AF.toInt()
+                color = lineLight
                 style = Paint.Style.STROKE
                 strokeWidth = 0.5f
             }
-            // Top-left
+            // Corner ticks
             canvas.drawLine(cutLeft, cutTop - tickLen, cutLeft, cutTop + tickLen, tickPaint)
             canvas.drawLine(cutLeft - tickLen, cutTop, cutLeft + tickLen, cutTop, tickPaint)
-            // Top-right
-            canvas.drawLine(cutLeft + CUT_W, cutTop - tickLen, cutLeft + CUT_W, cutTop + tickLen, tickPaint)
-            canvas.drawLine(cutLeft + CUT_W - tickLen, cutTop, cutLeft + CUT_W + tickLen, cutTop, tickPaint)
-            // Bottom-left
-            canvas.drawLine(cutLeft, cutTop + CUT_H - tickLen, cutLeft, cutTop + CUT_H + tickLen, tickPaint)
-            canvas.drawLine(cutLeft - tickLen, cutTop + CUT_H, cutLeft + tickLen, cutTop + CUT_H, tickPaint)
-            // Bottom-right
-            canvas.drawLine(cutLeft + CUT_W, cutTop + CUT_H - tickLen, cutLeft + CUT_W, cutTop + CUT_H + tickLen, tickPaint)
-            canvas.drawLine(cutLeft + CUT_W - tickLen, cutTop + CUT_H, cutLeft + CUT_W + tickLen, cutTop + CUT_H, tickPaint)
-
-            // Card background + solid border
-            val cardLeft = cutLeft + CUT_BLEED_PT
-            val cardTop = cutTop + CUT_BLEED_PT
-            val cardRect = RectF(cardLeft, cardTop, cardLeft + CARD_W_PT, cardTop + CARD_H_PT)
-
-            val cardBg = Paint().apply {
-                color = Color.WHITE
-                style = Paint.Style.FILL
-            }
-            val cardBorder = Paint().apply {
-                color = Color.BLACK
-                style = Paint.Style.STROKE
-                strokeWidth = 1f
-            }
-            canvas.drawRoundRect(cardRect, 5f, 5f, cardBg)
-            canvas.drawRoundRect(cardRect, 5f, 5f, cardBorder)
-
-            // Draw card content inside the card rect
-            drawCardContent(canvas, cardLeft, cardTop)
+            canvas.drawLine(cutLeft + cutW, cutTop - tickLen, cutLeft + cutW, cutTop + tickLen, tickPaint)
+            canvas.drawLine(cutLeft + cutW - tickLen, cutTop, cutLeft + cutW + tickLen, cutTop, tickPaint)
+            canvas.drawLine(cutLeft, cutTop + cutH - tickLen, cutLeft, cutTop + cutH + tickLen, tickPaint)
+            canvas.drawLine(cutLeft - tickLen, cutTop + cutH, cutLeft + tickLen, cutTop + cutH, tickPaint)
+            canvas.drawLine(cutLeft + cutW, cutTop + cutH - tickLen, cutLeft + cutW, cutTop + cutH + tickLen, tickPaint)
+            canvas.drawLine(cutLeft + cutW - tickLen, cutTop + cutH, cutLeft + cutW + tickLen, cutTop + cutH, tickPaint)
         }
 
-        private fun drawCardContent(canvas: Canvas, cardLeft: Float, cardTop: Float) {
-            val centerX = cardLeft + CARD_W_PT / 2f
-            val mutedColor = 0xFF6B7280.toInt()
-            val textColor = 0xFF111827.toInt()
-            var y = cardTop + CARD_MARGIN_PT + 12f
+        // ------------------------------------------------------------------
+        // Card content (drawn onto the scaled offscreen canvas)
+        // ------------------------------------------------------------------
 
-            // QR code
-            val qrSize = 48f
-            val qrLeft = cardLeft + (CARD_W_PT - qrSize) / 2f
+        private fun drawCardContent(canvas: Canvas) {
+            // Card background + border
+            val cardBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+            val cardBorder = Paint().apply { color = Color.BLACK; style = Paint.Style.STROKE; strokeWidth = 1f }
+            canvas.drawRoundRect(RectF(0f, 0f, cardW, cardH), 5f, 5f, cardBg)
+            canvas.drawRoundRect(RectF(0f, 0f, cardW, cardH), 5f, 5f, cardBorder)
+
+            val centerX = cardW / 2f
+            var y = margin
+
+            // QR code (locked)
+            val qrLeft = (cardW - qrSize) / 2f
             if (data.qrValue.isNotBlank()) {
-                val qrBitmap = renderQrBitmap(data.qrValue, qrSize.toInt())
-                val src = android.graphics.Rect(0, 0, qrBitmap.width, qrBitmap.height)
-                val dst = RectF(qrLeft, y, qrLeft + qrSize, y + qrSize)
-                canvas.drawBitmap(qrBitmap, src, dst, null)
+                val qrBitmap = renderQrBitmap(data.qrValue, (qrSize * IdCardLayoutConfig.RENDER_SCALE).toInt())
+                val src = Rect(0, 0, qrBitmap.width, qrBitmap.height)
+                canvas.drawBitmap(qrBitmap, src, RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), null)
+                qrBitmap.recycle()
             } else {
                 val qrBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
                 val qrBorder = Paint().apply { color = Color.BLACK; style = Paint.Style.STROKE; strokeWidth = 0.7f }
                 canvas.drawRoundRect(RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), 3f, 3f, qrBg)
                 canvas.drawRoundRect(RectF(qrLeft, y, qrLeft + qrSize, y + qrSize), 3f, 3f, qrBorder)
                 val qrText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = textColor; textSize = 6.5f; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+                    color = textDark; textSize = idFont; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
                 }
-                canvas.drawText("QR CODE", centerX, y + qrSize / 2f + 2.2f, qrText)
+                canvas.drawText("QR CODE", centerX, y + qrSize / 2f + idFont / 2f, qrText)
             }
-            y += qrSize + 7f
+            y += qrSize + qrSpacing
 
             // Event Name (optional)
             if (data.visibleFields.contains(FIELD_EVENT_NAME) && data.eventName.isNotBlank()) {
-                y = drawLabel(canvas, "EVENT NAME", mutedColor, centerX, y)
-                y = drawValue(canvas, data.eventName.uppercase(), 7.5f, textColor, centerX, y)
-                y += 3f
+                y = drawLabel(canvas, "EVENT NAME", centerX, y)
+                y = drawValue(canvas, data.eventName.uppercase(), eventNameFont, centerX, y)
+                y += fieldSpacing
             }
 
             // Attendee Name (locked)
-            y = drawLabel(canvas, "ATTENDEE NAME", mutedColor, centerX, y)
-            y = drawValue(canvas, data.attendeeName, 10f, textColor, centerX, y)
-            y += 2f
+            y = drawLabel(canvas, "ATTENDEE NAME", centerX, y)
+            y = drawValue(canvas, data.attendeeName, nameFont, centerX, y)
+            y += fieldSpacing
 
             // Role (optional)
             if (data.visibleFields.contains(FIELD_ROLE) && data.role.isNotBlank()) {
-                y = drawLabel(canvas, "ROLE", mutedColor, centerX, y)
-                y = drawValue(canvas, data.role, 6.5f, textColor, centerX, y)
-                y += 2f
+                y = drawLabel(canvas, "ROLE", centerX, y)
+                y = drawValue(canvas, data.role, roleFont, centerX, y)
+                y += fieldSpacing
             }
 
             // Attendee ID (optional)
             if (data.visibleFields.contains(FIELD_ATTENDEE_ID) && data.registrationNumber != null) {
                 val formatted = RegistrationNumberFormatter.format(data.registrationNumber) ?: "N/A"
-                y = drawLabel(canvas, "ATTENDEE ID", mutedColor, centerX, y)
-                y = drawValue(canvas, formatted, 6f, textColor, centerX, y)
-                y += 2f
+                y = drawLabel(canvas, "ATTENDEE ID", centerX, y)
+                y = drawValue(canvas, formatted, idFont, centerX, y)
+                y += fieldSpacing
             }
 
             // Event Date (optional)
             if (data.visibleFields.contains(FIELD_EVENT_DATE) && data.eventDate.isNotBlank()) {
-                y = drawLabel(canvas, "EVENT DATE", mutedColor, centerX, y)
-                y = drawValue(canvas, data.eventDate, 6f, textColor, centerX, y)
+                y = drawLabel(canvas, "EVENT DATE", centerX, y)
+                y = drawValue(canvas, data.eventDate, idFont, centerX, y)
             }
         }
 
-        private fun drawLabel(canvas: Canvas, text: String, color: Int, centerX: Float, y: Float): Float {
+        // ------------------------------------------------------------------
+        // Drawing helpers
+        // ------------------------------------------------------------------
+
+        private fun drawLabel(canvas: Canvas, text: String, centerX: Float, y: Float): Float {
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                this.color = color; textSize = 4.8f; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+                color = textMuted; textSize = labelFont; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
             }
-            canvas.drawText(text.uppercase(), centerX, y + 4.8f, paint)
-            return y + 6.5f
+            canvas.drawText(text.uppercase(), centerX, y + labelFont, paint)
+            return y + labelFont + labelFont * 0.3f
         }
 
-        private fun drawValue(canvas: Canvas, text: String, sizeSp: Float, color: Int, centerX: Float, y: Float): Float {
+        private fun drawValue(canvas: Canvas, text: String, size: Float, centerX: Float, y: Float): Float {
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                this.color = color; textSize = sizeSp; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+                color = textDark; textSize = size; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
             }
-            val truncated = if (paint.measureText(text) > CARD_INNER_W) {
+            val truncated = if (paint.measureText(text) > innerW) {
                 var end = text.length
-                while (end > 0 && paint.measureText(text.substring(0, end) + "...") > CARD_INNER_W) end--
+                while (end > 0 && paint.measureText(text.substring(0, end) + "...") > innerW) end--
                 text.substring(0, end) + "..."
             } else text
-            canvas.drawText(truncated, centerX, y + sizeSp, paint)
-            return y + sizeSp + 2.5f
+            canvas.drawText(truncated, centerX, y + size, paint)
+            return y + size + size * 0.25f
         }
 
-        private fun renderQrBitmap(value: String, size: Int): Bitmap {
-            val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, size, size)
+        private fun renderQrBitmap(value: String, pixelSize: Int): Bitmap {
+            val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, pixelSize, pixelSize)
             val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
             for (x in 0 until matrix.width) {
-                for (y in 0 until matrix.height) {
-                    bitmap.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
+                for (row in 0 until matrix.height) {
+                    bitmap.setPixel(x, row, if (matrix[x, row]) Color.BLACK else Color.WHITE)
                 }
             }
             return bitmap
