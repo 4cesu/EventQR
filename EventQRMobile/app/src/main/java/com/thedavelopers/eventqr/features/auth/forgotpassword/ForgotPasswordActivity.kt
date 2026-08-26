@@ -2,8 +2,11 @@ package com.thedavelopers.eventqr.features.auth.forgotpassword
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
@@ -14,23 +17,31 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     private lateinit var emailInput: EditText
     private lateinit var sendButton: Button
     private lateinit var backButton: Button
+    private lateinit var formLayout: LinearLayout
+    private lateinit var confirmationLayout: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_forgot_password)
 
-        presenter = ForgotPasswordPresenter(this)
-        presenter.attach(this)
+        presenter = ForgotPasswordPresenter()
+        presenter.attach(this, this)
 
         emailInput = findViewById(R.id.editEmail)
         sendButton = findViewById(R.id.btnSendResetLink)
         backButton = findViewById(R.id.btnBackToSignIn)
+        formLayout = findViewById(R.id.layoutForm)
+        confirmationLayout = findViewById(R.id.layoutConfirmation)
 
         sendButton.setOnClickListener {
             presenter.submitRequest(emailInput.text.toString())
         }
 
         backButton.setOnClickListener {
+            presenter.backToSignIn()
+        }
+
+        findViewById<Button>(R.id.btnBackToSignInConfirmation).setOnClickListener {
             presenter.backToSignIn()
         }
     }
@@ -51,6 +62,11 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun showConfirmation() {
+        formLayout.visibility = View.GONE
+        confirmationLayout.visibility = View.VISIBLE
     }
 
     override fun navigateBackToSignIn() {

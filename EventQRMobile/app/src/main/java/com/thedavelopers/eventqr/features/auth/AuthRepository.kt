@@ -11,6 +11,7 @@ import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
+import com.thedavelopers.eventqr.features.auth.model.dto.ResetTokenValidationResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.PasswordChangeRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
@@ -49,8 +50,12 @@ class AuthRepository(context: Context) {
         apiService.forgotPassword(ForgotPasswordRequest(email))
     }
 
-    suspend fun resetPassword(email: String, code: String, newPassword: String) = safeApiCall {
-        apiService.resetPassword(ResetPasswordRequest(email, code, newPassword))
+    suspend fun validateResetToken(token: String) = safeApiCall {
+        apiService.validateResetToken(token)
+    }
+
+    suspend fun resetPassword(token: String, newPassword: String, confirmPassword: String) = safeApiCall {
+        apiService.resetPassword(ResetPasswordRequest(token, newPassword, confirmPassword))
     }
 
     suspend fun changePassword(current: String, new: String) = safeApiCall {

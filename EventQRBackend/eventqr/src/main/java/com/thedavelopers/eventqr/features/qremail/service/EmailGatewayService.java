@@ -45,4 +45,19 @@ public class EmailGatewayService {
             throw new IllegalStateException("QR email could not be sent through Brevo REST API", exception);
         }
     }
+
+    public void sendSimple(String recipientEmail, String subject, String htmlContent) {
+        try {
+            log.debug("Sending simple email through Brevo REST API recipient={}", recipientEmail);
+            SendSmtpEmail email = new SendSmtpEmail()
+                    .sender(new SendSmtpEmailSender().email(senderEmail).name("EventQR"))
+                    .addToItem(new SendSmtpEmailTo().email(recipientEmail))
+                    .subject(subject)
+                    .htmlContent(htmlContent);
+            transactionalEmailsApi.sendTransacEmail(email);
+            log.debug("Brevo REST API accepted simple email recipient={}", recipientEmail);
+        } catch (ApiException | RuntimeException exception) {
+            throw new IllegalStateException("Email could not be sent through Brevo REST API", exception);
+        }
+    }
 }
