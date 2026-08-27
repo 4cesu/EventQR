@@ -48,6 +48,9 @@ public class TransactionLog extends BaseEntity {
 
     private UUID staffUserId;
 
+    @Column(name = "reward_id")
+    private UUID rewardId;
+
     private Instant scannedAt;
 
     @Column(length = 2000)

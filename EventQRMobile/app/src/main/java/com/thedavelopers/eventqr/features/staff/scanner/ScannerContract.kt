@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
@@ -11,6 +12,7 @@ interface ScannerContract {
         fun showPurposes(items: List<ScanPurposeResponse>)
         fun appendScanResult(result: TransactionResponse)
         fun showVerificationResult(result: ScanVerificationResponse)
+        fun showRewardRedemptionScanResult(result: RewardRedemptionScanResponse)
         fun showScanError(message: String)
         fun showMessage(message: String)
         fun showLoading(isLoading: Boolean)

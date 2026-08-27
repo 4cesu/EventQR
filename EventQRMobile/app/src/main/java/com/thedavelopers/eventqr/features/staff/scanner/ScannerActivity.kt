@@ -43,6 +43,7 @@ import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
 import com.thedavelopers.eventqr.features.staff.StaffAssignedEventsActivity
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
@@ -50,6 +51,8 @@ import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
+import com.thedavelopers.eventqr.features.staff.reward.RewardRedemptionScanResultActivity
+import com.thedavelopers.eventqr.features.rewards.AppRewardExtras
 import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
@@ -251,6 +254,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
 
     override fun appendScanResult(result: TransactionResponse) { adapter.submitItems(listOf(result)) }
     override fun showVerificationResult(result: ScanVerificationResponse) { submitInFlight = false; resultText.text = result.message; openVerificationResult(result) }
+    override fun showRewardRedemptionScanResult(result: RewardRedemptionScanResponse) { submitInFlight = false; openRewardRedemptionScanResult(result) }
     override fun showScanError(message: String) { submitInFlight = false; resultText.text = message; showMessage(message); openRejectedResult(message) }
     override fun showMessage(message: String) { Toast.makeText(this, message, Toast.LENGTH_SHORT).show() }
     override fun showLoading(isLoading: Boolean) { findViewById<View>(R.id.progressScanner).visibility = if (isLoading) View.VISIBLE else View.GONE; findViewById<Button>(R.id.btnSubmitScan).isEnabled = !isLoading }
@@ -510,7 +514,25 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         submitInFlight = true
         lastSubmittedSignature = signature
         lastSubmittedAtMs = now
+        if (selectedPurpose.code == ScanPurposeCode.REWARD_REDEMPTION_SCAN
+            || selectedPurpose.code == ScanPurposeCode.REWARD_REDEMPTION) {
+            presenter.submitRewardRedemptionScan(selectedEvent.id, selectedPurpose, qrValue, staffUserId)
+            return
+        }
         presenter.submitScan(selectedEvent.id, selectedPurpose, qrValue, notesInput.text.toString(), staffUserId)
+    }
+
+    private fun openRewardRedemptionScanResult(result: RewardRedemptionScanResponse) {
+        startActivity(Intent(this, RewardRedemptionScanResultActivity::class.java).apply {
+            putExtra(StaffScreenExtras.EXTRA_EVENT_ID, result.eventId.toString())
+            putExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID, result.attendeeUserId.toString())
+            putExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME, result.attendeeName.orEmpty())
+            putExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL, result.attendeeEmail.orEmpty())
+            putExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_ID, result.scanPurposeId.toString())
+            putExtra(AppRewardExtras.EXTRA_REDEMPTION_SCAN_LOG_ID, result.redemptionScanLogId.toString())
+            putExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, result.pointsBalance)
+            putExtra(StaffScreenExtras.EXTRA_STAFF_USER_ID, staffUserId.orEmpty())
+        })
     }
 
     private fun openVerificationResult(result: ScanVerificationResponse) {

@@ -95,6 +95,7 @@ public class RewardService {
         reward.setName(request.name());
         reward.setPointsRequired(request.pointsRequired());
         reward.setStockQuantity(request.stockQuantity());
+        reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
         reward.setStatus(RewardStatus.ACTIVE);
         return toResponse(rewardRepository.save(reward));
     }
@@ -108,6 +109,7 @@ public class RewardService {
         reward.setName(request.name());
         reward.setPointsRequired(request.pointsRequired());
         reward.setStockQuantity(request.stockQuantity());
+        reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
         return toResponse(rewardRepository.save(reward));
     }
 
@@ -294,6 +296,6 @@ public class RewardService {
 
     private RewardResponse toResponse(Reward reward) {
         return new RewardResponse(reward.getId(), reward.getEventId(), reward.getName(), reward.getPointsRequired(),
-                reward.getStatus(), reward.getStockQuantity());
+                reward.getStatus(), reward.getStockQuantity(), reward.isAllowDuplicateClaims());
     }
 }

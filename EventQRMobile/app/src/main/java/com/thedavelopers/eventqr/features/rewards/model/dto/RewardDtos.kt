@@ -50,6 +50,7 @@ data class RewardRequest(
     val name: String,
     val pointsRequired: Int,
     val stockQuantity: Int? = null,
+    val allowDuplicateClaims: Boolean = false,
 )
 
 data class RewardResponse(
@@ -60,4 +61,5 @@ data class RewardResponse(
     val pointsRequired: Int,
     val status: RewardStatus,
     val stockQuantity: Int? = null,
+    val allowDuplicateClaims: Boolean = false,
 )

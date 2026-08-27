@@ -62,7 +62,7 @@ public class RewardRoutesController {
                                                                     @PathVariable UUID eventId,
                                                                     @Valid @RequestBody RewardRequest body) {
         requireNonAttendee(request);
-        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.pointsRequired(), body.stockQuantity());
+        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims());
         return ResponseEntity.ok(ApiResponse.success("Reward created", rewardService.saveReward(normalized)));
     }
 
@@ -72,7 +72,7 @@ public class RewardRoutesController {
                                                                     @PathVariable UUID rewardId,
                                                                     @Valid @RequestBody RewardRequest body) {
         requireNonAttendee(request);
-        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.pointsRequired(), body.stockQuantity());
+        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims());
         return ResponseEntity.ok(ApiResponse.success("Reward updated", rewardService.updateReward(eventId, rewardId, normalized)));
     }
 

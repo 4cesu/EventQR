@@ -40,4 +40,10 @@ public class RewardRedemption extends BaseEntity {
 
     @Column(length = 2000)
     private String reason;
+
+    @Column(name = "redemption_scan_log_id")
+    private UUID redemptionScanLogId;
+
+    @Column(name = "staff_user_id")
+    private UUID staffUserId;
 }

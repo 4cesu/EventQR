@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.staff.scanner
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
 import com.thedavelopers.eventqr.features.staff.StaffRepository
@@ -39,6 +40,38 @@ class ScannerPresenter(
                     view?.showEvents(selectable)
                 }
                 is NetworkResult.Error -> view?.showMessage(result.message)
+                NetworkResult.Loading -> Unit
+            }
+            view?.showLoading(false)
+        }
+    }
+
+    fun submitRewardRedemptionScan(eventId: String, purpose: ScanPurposeResponse, qrValue: String, staffUserId: String?) {
+        if (!Validators.isNonEmpty(eventId)) {
+            view?.showMessage("Select an assigned event")
+            return
+        }
+        if (!Validators.isNonEmpty(qrValue)) {
+            view?.showMessage("Input is required")
+            return
+        }
+
+        val trimmed = qrValue.trim()
+        val isShortId = trimmed.startsWith("#") || trimmed.all { it.isDigit() }
+
+        view?.showLoading(true)
+        job = kotlinx.coroutines.MainScope().launch {
+            val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString)
+            val request = RewardRedemptionScanRequest(
+                eventId = UUID.fromString(eventId),
+                scanPurposeId = purpose.scanPurposeId,
+                qrValue = if (isShortId) null else trimmed,
+                shortId = if (isShortId) trimmed else null,
+                staffUserId = staffUuid,
+            )
+            when (val result = repository.rewardRedemptionScan(request)) {
+                is NetworkResult.Success -> view?.showRewardRedemptionScanResult(result.data)
+                is NetworkResult.Error -> view?.showScanError(result.message)
                 NetworkResult.Loading -> Unit
             }
             view?.showLoading(false)
