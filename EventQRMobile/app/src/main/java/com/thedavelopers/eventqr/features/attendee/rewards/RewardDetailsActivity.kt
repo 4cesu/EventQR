@@ -33,7 +33,6 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         findViewById<TextView>(R.id.txtRewardDescription)?.text = "Redeem this reward at the event redemption booth using your points."
         findViewById<TextView>(R.id.txtPointsValue)?.text = pointsRequired.toString()
         findViewById<TextView>(R.id.txtRewardRemaining)?.text = formatRemainingStock()
-        findViewById<TextView>(R.id.txtRewardExpires)?.text = "At event end"
         findViewById<TextView>(R.id.txtUserPoints)?.text = "0 pts"
         updateAvailabilityUi()
 
