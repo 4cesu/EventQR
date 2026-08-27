@@ -273,6 +273,10 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
         btnSaveChanges.setOnClickListener { attemptSave() }
 
+        findViewById<Button>(R.id.btnChangePassword).setOnClickListener {
+            startActivity(com.thedavelopers.eventqr.core.navigation.AppNavigator.changePassword(this))
+        }
+
         // EventQR - phone update only, matches Register screen prefix/validation pattern
         configurePhoneInput()
 

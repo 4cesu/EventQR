@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse;
+import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest;
 import com.thedavelopers.eventqr.features.auth.service.AuthService;
+import com.thedavelopers.eventqr.features.auth.service.ChangePasswordService;
 import com.thedavelopers.eventqr.features.auth.service.PasswordResetService;
 import com.thedavelopers.eventqr.features.users.model.dto.PasswordChangeRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
@@ -37,13 +39,15 @@ public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
     private final PasswordResetService passwordResetService;
+    private final ChangePasswordService changePasswordService;
 
     public AuthController(AuthService authService, UserService userService, JwtService jwtService,
-                          PasswordResetService passwordResetService) {
+                          PasswordResetService passwordResetService, ChangePasswordService changePasswordService) {
         this.authService = authService;
         this.userService = userService;
         this.jwtService = jwtService;
         this.passwordResetService = passwordResetService;
+        this.changePasswordService = changePasswordService;
     }
 
     @PostMapping("/register")
@@ -68,6 +72,14 @@ public class AuthController {
                                                                     @Valid @RequestBody PasswordChangeRequest body) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
         return ResponseEntity.ok(ApiResponse.success("Password updated", userService.changePassword(userId, body.currentPassword(), body.newPassword())));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePasswordWithConfirm(HttpServletRequest request,
+                                                                       @Valid @RequestBody ChangePasswordRequest body) {
+        UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        changePasswordService.changePassword(userId, body.currentPassword(), body.newPassword(), body.confirmPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password has been changed", null));
     }
 
     @PostMapping("/logout")

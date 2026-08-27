@@ -36,6 +36,12 @@ data class ResetPasswordRequest(
     val confirmPassword: String
 )
 
+data class ChangePasswordRequest(
+    val currentPassword: String,
+    val newPassword: String,
+    val confirmPassword: String
+)
+
 data class PasswordChangeRequest(
     val currentPassword: String,
     val newPassword: String
