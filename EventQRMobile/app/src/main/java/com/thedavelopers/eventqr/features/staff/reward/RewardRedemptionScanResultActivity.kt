@@ -234,7 +234,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
 
     private fun openResult(result: RewardRedemptionResultResponse) {
         startActivity(Intent(this, RedemptionResultActivity::class.java).apply {
-            putExtra(StaffScreenExtras.EXTRA_IS_VALID, result.status.name == "REDEEMED")
+            putExtra(StaffScreenExtras.EXTRA_IS_VALID, result.status?.name == "REDEEMED")
             putExtra(StaffScreenExtras.EXTRA_REASON, result.reason.orEmpty())
             putExtra(StaffScreenExtras.EXTRA_POINTS_DELTA, result.pointsSpent)
             putExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, result.remainingBalance)
