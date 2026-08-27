@@ -6,6 +6,8 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanRequest
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
@@ -47,6 +49,18 @@ class StaffRepository(context: Context) {
 
     suspend fun getRewardBalance(eventId: String, attendeeUserId: String) = safeApiCall {
         apiService.getRewardBalance(eventId, attendeeUserId)
+    }
+
+    suspend fun getRewardsByEvent(eventId: String) = safeApiCall {
+        apiService.getRewardsByEvent(eventId)
+    }
+
+    suspend fun rewardRedemptionScan(request: RewardRedemptionScanRequest) = safeApiCall {
+        apiService.rewardRedemptionScan(request)
+    }
+
+    suspend fun redeemRewardStaff(request: RewardRedemptionGrantRequest) = safeApiCall {
+        apiService.redeemRewardStaff(request)
     }
 
     suspend fun getLatestScan(eventId: String) = safeApiCall { apiService.getLatestScan(eventId) }

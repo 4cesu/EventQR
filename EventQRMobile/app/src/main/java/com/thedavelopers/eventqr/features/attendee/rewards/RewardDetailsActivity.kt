@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +30,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
 
         val rewardName = intent.getStringExtra(EXTRA_REWARD_NAME).orEmpty().ifBlank { "Reward" }
         findViewById<TextView>(R.id.txtRewardTitle)?.text = rewardName
-        findViewById<TextView>(R.id.txtRewardDescription)?.text = "Redeem this reward using your event points."
+        findViewById<TextView>(R.id.txtRewardDescription)?.text = "Redeem this reward at the event redemption booth using your points."
         findViewById<TextView>(R.id.txtPointsValue)?.text = pointsRequired.toString()
         findViewById<TextView>(R.id.txtRewardRemaining)?.text = formatRemainingStock()
         findViewById<TextView>(R.id.txtRewardExpires)?.text = "At event end"
@@ -41,10 +40,6 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         val userId = SessionManager(this).getUserId()
         if (eventId.isNotBlank() && userId != null) {
             presenter.load(eventId, userId)
-        }
-
-        findViewById<Button>(R.id.btnRedeemReward)?.setOnClickListener {
-            presenter.redeem(eventId, userId, rewardId)
         }
     }
 
@@ -67,12 +62,9 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     override fun renderRewards(items: List<com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse>) = Unit
 
     private fun updateAvailabilityUi() {
-        val missingPoints = (pointsRequired - currentBalance).coerceAtLeast(0)
         val isOutOfStock = stockQuantity == 0
-        val canRedeem = missingPoints == 0 && !isOutOfStock
-        val redeemButton = findViewById<Button>(R.id.btnRedeemReward)
-        val warning = findViewById<TextView>(R.id.warningBox)
         val status = findViewById<TextView>(R.id.txtRewardStatus)
+        val warning = findViewById<TextView>(R.id.warningBox)
 
         if (isOutOfStock) {
             status?.text = "Out of Stock"
@@ -80,28 +72,13 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
             status?.setTextColor(0xFFB91C1C.toInt())
             warning?.visibility = View.VISIBLE
             warning?.text = "This reward is currently out of stock."
-            redeemButton?.isEnabled = false
-            redeemButton?.alpha = 0.65f
-            redeemButton?.text = "Out of Stock"
             return
         }
 
         status?.text = "Available"
         status?.setBackgroundResource(R.drawable.bg_green_pill)
         status?.setTextColor(0xFF065F46.toInt())
-
-        if (canRedeem) {
-            warning?.visibility = View.GONE
-            redeemButton?.isEnabled = true
-            redeemButton?.alpha = 1.0f
-            redeemButton?.text = "Redeem Reward"
-        } else {
-            warning?.visibility = View.VISIBLE
-            warning?.text = "You need $missingPoints more points to redeem this reward."
-            redeemButton?.isEnabled = false
-            redeemButton?.alpha = 0.65f
-            redeemButton?.text = "Need $missingPoints more points"
-        }
+        warning?.visibility = View.GONE
     }
 
     private fun formatRemainingStock(): String {

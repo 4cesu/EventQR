@@ -303,6 +303,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
             meta.addView(metaText(if (active) "Redemption open" else badgeText))
             addView(meta)
 
+            if (reward.allowDuplicateClaims) {
+                addView(text("Attendees may claim this reward more than once", 12, false, PURPLE).apply {
+                    setPadding(0, dp(8), 0, 0)
+                })
+            }
+
             val actions = LinearLayout(this@ManageRewardsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
@@ -358,12 +364,20 @@ open class ManageRewardsActivity : AppCompatActivity() {
             setText(reward?.stockQuantity?.toString().orEmpty())
             isSingleLine = true
         }
+        val duplicateSwitch = SwitchCompat(this).apply {
+            text = "Allow duplicate claims"
+            isChecked = reward?.allowDuplicateClaims == true
+            setTextColor(0xFF151A2D.toInt())
+            setPadding(dp(2), dp(8), dp(2), dp(8))
+        }
         form.addView(fieldLabel("Reward Title"))
         form.addView(titleInput)
         form.addView(fieldLabel("Points Cost"))
         form.addView(pointsInput)
         form.addView(fieldLabel("Total Quantity"))
         form.addView(quantityInput)
+        form.addView(fieldLabel("Settings"))
+        form.addView(duplicateSwitch)
 
         AlertDialog.Builder(this)
             .setTitle(if (isEdit) "Edit Reward" else "Create Reward")
@@ -377,7 +391,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     Toast.makeText(this, "Enter a valid reward title, points cost, and total quantity.", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                saveReward(reward, title, points, quantity)
+                saveReward(reward, title, points, quantity, duplicateSwitch.isChecked)
             }
             .show()
     }
@@ -386,9 +400,9 @@ open class ManageRewardsActivity : AppCompatActivity() {
         setPadding(0, dp(12), 0, dp(4))
     }
 
-    private fun saveReward(existingReward: RewardResponse?, title: String, points: Int, quantity: Int) {
+    private fun saveReward(existingReward: RewardResponse?, title: String, points: Int, quantity: Int, allowDuplicateClaims: Boolean) {
         val eventId = selectedEvent.id
-        val request = RewardRequest(UUID.fromString(eventId), title, points, quantity)
+        val request = RewardRequest(UUID.fromString(eventId), title, points, quantity, allowDuplicateClaims)
         lifecycleScope.launch {
             try {
                 val response = if (existingReward == null) {

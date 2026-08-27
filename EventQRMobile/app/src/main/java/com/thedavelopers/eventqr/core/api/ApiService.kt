@@ -53,6 +53,10 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResultResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanRequest
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
@@ -440,6 +444,12 @@ interface ApiService {
 
     @POST("rewards/redeem")
     suspend fun redeemReward(@Body request: RewardRedemptionRequest): ApiResponse<RewardRedemptionResponse>
+
+    @POST("rewards/redemption-scan")
+    suspend fun rewardRedemptionScan(@Body request: RewardRedemptionScanRequest): ApiResponse<RewardRedemptionScanResponse>
+
+    @POST("rewards/redeem-staff")
+    suspend fun redeemRewardStaff(@Body request: RewardRedemptionGrantRequest): ApiResponse<RewardRedemptionResultResponse>
 
     @GET("rewards/event/{eventId}")
     suspend fun getRewardsByEvent(@Path("eventId") eventId: String): ApiResponse<List<RewardResponse>>

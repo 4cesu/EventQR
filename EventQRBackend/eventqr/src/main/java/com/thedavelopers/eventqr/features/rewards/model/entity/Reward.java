@@ -33,4 +33,7 @@ public class Reward extends BaseEntity {
     private RewardStatus status = RewardStatus.ACTIVE;
 
     private Integer stockQuantity;
+
+    @Column(name = "allow_duplicate_claims")
+    private boolean allowDuplicateClaims;
 }
