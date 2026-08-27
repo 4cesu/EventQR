@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.rewards.AppRewardExtras
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 
@@ -22,66 +23,96 @@ class RedemptionResultActivity : AppCompatActivity() {
         val remaining = intent.getIntExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, 0)
         val rewardName = intent.getStringExtra(AppRewardExtras.EXTRA_REWARD_NAME).orEmpty()
 
-        val accent = if (approved) Color.parseColor("#065F46") else Color.parseColor("#B91C1C")
-
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setBackgroundColor(Color.parseColor("#F7F7FB"))
             setPadding(dp(24), dp(0), dp(24), dp(0))
 
-            addView(TextView(this@RedemptionResultActivity).apply {
-                text = if (approved) "✓" else "✕"
-                textSize = 54f
-                gravity = Gravity.CENTER
-                setTextColor(accent)
-            })
+            addView(LinearLayout(this@RedemptionResultActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(if (approved) R.drawable.bg_card else R.drawable.bg_red_warning)
+                setElevation(dp(4).toFloat())
+                setPadding(dp(0), dp(0), dp(0), dp(0))
 
-            addView(TextView(this@RedemptionResultActivity).apply {
-                text = if (approved) "REDEMPTION APPROVED" else "REDEMPTION REJECTED"
-                textSize = 18f
-                gravity = Gravity.CENTER
-                setTextColor(accent)
-                setTypeface(typeface, Typeface.BOLD)
-                setPadding(0, dp(12), 0, dp(10))
-            })
-
-            addView(TextView(this@RedemptionResultActivity).apply {
-                text = message
-                textSize = 15f
-                gravity = Gravity.CENTER
-                setTextColor(Color.parseColor("#374151"))
-            })
-
-            if (rewardName.isNotBlank() && approved) {
-                addView(TextView(this@RedemptionResultActivity).apply {
-                    text = "Reward: $rewardName"
-                    textSize = 14f
+                // Accent header block
+                addView(LinearLayout(this@RedemptionResultActivity).apply {
+                    orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER
-                    setTextColor(Color.parseColor("#5B25C9"))
-                    setTypeface(typeface, Typeface.BOLD)
-                    setPadding(0, dp(14), 0, 0)
-                })
-            }
+                    setBackgroundResource(if (approved) R.drawable.bg_reward_points else R.drawable.bg_red_warning)
+                    setPadding(dp(24), dp(24), dp(24), dp(24))
 
-            addView(TextView(this@RedemptionResultActivity).apply {
-                text = if (approved) {
-                    "${points} pts deducted · $remaining pts remaining"
-                } else {
-                    "No points were deducted"
-                }
-                textSize = 13f
-                gravity = Gravity.CENTER
-                setTextColor(Color.parseColor("#6B7280"))
-                setPadding(0, dp(8), 0, 0)
+                    addView(TextView(this@RedemptionResultActivity).apply {
+                        text = if (approved) "✓" else "✕"
+                        textSize = 30f
+                        gravity = Gravity.CENTER
+                        setTextColor(if (approved) Color.parseColor("#065F46") else Color.parseColor("#B91C1C"))
+                        setBackgroundResource(
+                            if (approved) R.drawable.bg_staff_success_circle else R.drawable.bg_transaction_redeemed_icon
+                        )
+                        setPadding(dp(16), dp(16), dp(16), dp(16))
+                    })
+
+                    addView(TextView(this@RedemptionResultActivity).apply {
+                        text = if (approved) "REDEMPTION APPROVED" else "REDEMPTION REJECTED"
+                        textSize = 18f
+                        gravity = Gravity.CENTER
+                        setTextColor(if (approved) Color.parseColor("#FFFFFF") else Color.parseColor("#B91C1C"))
+                        setTypeface(typeface, Typeface.BOLD)
+                        setPadding(0, dp(16), 0, 0)
+                    })
+                })
+
+                // Details body
+                addView(LinearLayout(this@RedemptionResultActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(24), dp(22), dp(24), dp(24))
+
+                    addView(TextView(this@RedemptionResultActivity).apply {
+                        text = message
+                        textSize = 15f
+                        gravity = Gravity.CENTER
+                        setTextColor(Color.parseColor("#374151"))
+                    })
+
+                    if (rewardName.isNotBlank() && approved) {
+                        addView(TextView(this@RedemptionResultActivity).apply {
+                            text = "Reward: $rewardName"
+                            textSize = 15f
+                            gravity = Gravity.CENTER
+                            setTextColor(Color.parseColor("#5B25C9"))
+                            setTypeface(typeface, Typeface.BOLD)
+                            setPadding(0, dp(16), 0, 0)
+                        })
+                    }
+
+                    addView(TextView(this@RedemptionResultActivity).apply {
+                        text = if (approved) {
+                            "${points} pts deducted · $remaining pts remaining"
+                        } else {
+                            "No points were deducted"
+                        }
+                        textSize = 13f
+                        gravity = Gravity.CENTER
+                        setTextColor(Color.parseColor("#6B7280"))
+                        setPadding(0, dp(10), 0, 0)
+                    })
+                })
             })
 
             addView(TextView(this@RedemptionResultActivity).apply {
                 text = "Tap to continue scanning"
-                textSize = 13f
+                textSize = 14f
                 gravity = Gravity.CENTER
                 setTextColor(Color.parseColor("#5B25C9"))
-                setPadding(0, dp(28), 0, 0)
+                setTypeface(typeface, Typeface.BOLD)
+                setBackgroundResource(R.drawable.bg_card)
+                setPadding(dp(0), dp(14), dp(0), dp(14))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ).also { it.topMargin = dp(18) }
                 setOnClickListener { finish() }
             })
         })
