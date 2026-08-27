@@ -11,7 +11,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.BitmapSaver
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
@@ -113,7 +115,8 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
     }
 
     private fun renderQrBitmap(value: String): Bitmap {
-        val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, 512, 512)
+        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.Q)
+        val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, 512, 512, hints)
         val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
         for (x in 0 until matrix.width) {
             for (y in 0 until matrix.height) {

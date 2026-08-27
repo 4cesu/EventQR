@@ -34,7 +34,7 @@ object IdCardLayoutConfig {
     const val MARGIN_RATIO = 0.0667f // 18dp / 270dp
 
     // -- QR code size as ratio of card width --
-    const val QR_SIZE_RATIO = 0.58f // ~58% of card width for reliable camera scanning
+    const val QR_SIZE_RATIO = 0.65f // ~65% of card width for reliable camera scanning
 
     // -- QR bottom spacing as ratio of card height --
     const val QR_SPACING_RATIO = 0.0280f // 12dp / 429dp
