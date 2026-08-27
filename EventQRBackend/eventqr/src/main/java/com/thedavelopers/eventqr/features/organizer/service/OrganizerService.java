@@ -163,10 +163,28 @@ public class OrganizerService {
     public EventResponse updateRewardSettings(UUID organizerUserId, UUID eventId, RewardSettingsRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         event.setRewardsEnabled(request.enabled());
+        if (request.enabled()) {
+            ensureRewardRedemptionScanPurpose(eventId);
+        }
         return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
                 event.getCapacity(), event.getCurrentAttendeeCount(), event.getStatus(), event.isRewardsEnabled(),
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
+    }
+
+    private void ensureRewardRedemptionScanPurpose(UUID eventId) {
+        if (scanPurposeRepository.findByEventIdAndCode(eventId, ScanPurposeCode.REWARD_REDEMPTION_SCAN).isPresent()) {
+            return;
+        }
+        ScanPurpose scanPurpose = new ScanPurpose();
+        scanPurpose.setEventId(eventId);
+        scanPurpose.setName("Reward Redemption");
+        scanPurpose.setCode(ScanPurposeCode.REWARD_REDEMPTION_SCAN);
+        scanPurpose.setActive(true);
+        scanPurpose.setTrackingOnly(false);
+        scanPurpose.setDescription("Staff-scan flow for redeeming attendee rewards");
+        scanPurposeRepository.save(scanPurpose);
+        log.info("Auto-provisioned REWARD_REDEMPTION_SCAN scan purpose for eventId={}", eventId);
     }
 
     @Transactional(readOnly = true)

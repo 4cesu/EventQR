@@ -21,13 +21,18 @@ import com.thedavelopers.eventqr.features.rewards.model.entity.PointRule;
 import com.thedavelopers.eventqr.features.rewards.model.entity.PointTransaction;
 import com.thedavelopers.eventqr.features.rewards.model.entity.Reward;
 import com.thedavelopers.eventqr.features.rewards.model.entity.RewardRedemption;
+import com.thedavelopers.eventqr.features.events.model.entity.Event;
+import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.AttendeePointBalanceRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.PointRuleRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRepository;
+import com.thedavelopers.eventqr.features.scanning.model.entity.ScanPurpose;
+import com.thedavelopers.eventqr.features.scanning.repository.ScanPurposeRepository;
 import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 import com.thedavelopers.eventqr.shared.constants.RewardStatus;
+import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
@@ -43,17 +48,23 @@ public class RewardService {
     private final PointTransactionRepository pointTransactionRepository;
     private final RewardRepository rewardRepository;
     private final RewardRedemptionRepository rewardRedemptionRepository;
+    private final EventRepository eventRepository;
+    private final ScanPurposeRepository scanPurposeRepository;
 
     public RewardService(PointRuleRepository pointRuleRepository,
                          AttendeePointBalanceRepository attendeePointBalanceRepository,
                          PointTransactionRepository pointTransactionRepository,
                          RewardRepository rewardRepository,
-                         RewardRedemptionRepository rewardRedemptionRepository) {
+                         RewardRedemptionRepository rewardRedemptionRepository,
+                         EventRepository eventRepository,
+                         ScanPurposeRepository scanPurposeRepository) {
         this.pointRuleRepository = pointRuleRepository;
         this.attendeePointBalanceRepository = attendeePointBalanceRepository;
         this.pointTransactionRepository = pointTransactionRepository;
         this.rewardRepository = rewardRepository;
         this.rewardRedemptionRepository = rewardRedemptionRepository;
+        this.eventRepository = eventRepository;
+        this.scanPurposeRepository = scanPurposeRepository;
     }
 
     public PointRuleRequest savePointRule(PointRuleRequest request) {
@@ -97,7 +108,27 @@ public class RewardService {
         reward.setStockQuantity(request.stockQuantity());
         reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
         reward.setStatus(RewardStatus.ACTIVE);
-        return toResponse(rewardRepository.save(reward));
+        Reward saved = rewardRepository.save(reward);
+        ensureRewardRedemptionScanPurposeForReward(request.eventId());
+        return toResponse(saved);
+    }
+
+    private void ensureRewardRedemptionScanPurposeForReward(UUID eventId) {
+        Event event = eventRepository.findById(eventId).orElse(null);
+        if (event == null || !event.isRewardsEnabled()) {
+            return;
+        }
+        if (scanPurposeRepository.findByEventIdAndCode(eventId, ScanPurposeCode.REWARD_REDEMPTION_SCAN).isPresent()) {
+            return;
+        }
+        ScanPurpose scanPurpose = new ScanPurpose();
+        scanPurpose.setEventId(eventId);
+        scanPurpose.setName("Reward Redemption");
+        scanPurpose.setCode(ScanPurposeCode.REWARD_REDEMPTION_SCAN);
+        scanPurpose.setActive(true);
+        scanPurpose.setTrackingOnly(false);
+        scanPurpose.setDescription("Staff-scan flow for redeeming attendee rewards");
+        scanPurposeRepository.save(scanPurpose);
     }
 
     public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
