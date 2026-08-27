@@ -41,7 +41,13 @@ public class RewardRedemptionScanService {
                 request.staffUserId(), null);
 
         ScanVerificationResponse verification = transactionService.verify(transactionRequest);
-        TransactionResponse scanLog = transactionService.record(transactionRequest);
+
+        // record() only resolves by raw QR value (not short/attendee ID), so use the QR value
+        // that verify() already resolved for a manually-entered attendee ID.
+        TransactionRequest recordRequest = new TransactionRequest(
+                request.eventId(), request.scanPurposeId(), verification.qrValue(), null,
+                request.staffUserId(), null);
+        TransactionResponse scanLog = transactionService.record(recordRequest);
 
         int pointsBalance = balanceFor(request.eventId(), verification.attendeeUserId()).getPointsBalance();
 
