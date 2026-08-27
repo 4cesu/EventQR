@@ -34,22 +34,22 @@ object IdCardLayoutConfig {
     const val MARGIN_RATIO = 0.0667f // 18dp / 270dp
 
     // -- QR code size as ratio of card width --
-    const val QR_SIZE_RATIO = 0.58f // ~58% of card width for reliable camera scanning
+    const val QR_SIZE_RATIO = 0.638f // 0.58 * 1.10 — ~64% of card width for reliable camera scanning
 
     // -- QR bottom spacing as ratio of card height --
     const val QR_SPACING_RATIO = 0.0280f // 12dp / 429dp
 
     // -- Label font size as ratio of card height --
-    const val LABEL_FONT_RATIO = 0.0210f // 9sp / 429dp
+    const val LABEL_FONT_RATIO = 0.02205f // 0.0210 * 1.05 — 9sp / 429dp
 
     // -- Value font sizes as ratio of card height --
-    const val NAME_FONT_RATIO = 0.0466f // 20sp / 429dp  (attendee name — largest)
-    const val EVENT_NAME_FONT_RATIO = 0.0350f // 15sp / 429dp  (event name value)
-    const val ROLE_FONT_RATIO = 0.0303f // 13sp / 429dp
-    const val ID_FONT_RATIO = 0.0256f // 11sp / 429dp  (attendee ID + event date)
+    const val NAME_FONT_RATIO = 0.04893f // 0.0466 * 1.05 — 21sp / 429dp  (attendee name — largest)
+    const val EVENT_NAME_FONT_RATIO = 0.03675f // 0.0350 * 1.05 — 15.75sp / 429dp  (event name value)
+    const val ROLE_FONT_RATIO = 0.031815f // 0.0303 * 1.05 — 13.65sp / 429dp
+    const val ID_FONT_RATIO = 0.02688f // 0.0256 * 1.05 — 11.55sp / 429dp  (attendee ID + event date)
 
     // -- Field bottom spacing as ratio of card height --
-    const val FIELD_SPACING_RATIO = 0.0186f // 8dp / 429dp
+    const val FIELD_SPACING_RATIO = 0.0117f // 0.0186 * 0.63 — 5dp / 429dp (trimmed to keep worst-case preview from clipping)
 
     // -- Color palette --
     const val COLOR_MUTED = 0xFF6B7280.toInt()
