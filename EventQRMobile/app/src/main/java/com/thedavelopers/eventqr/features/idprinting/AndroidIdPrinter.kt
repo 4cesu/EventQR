@@ -19,7 +19,9 @@ import android.print.PrintDocumentAdapter
 import android.print.PrintDocumentInfo
 import android.print.PrintManager
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import java.io.FileOutputStream
 
@@ -282,7 +284,8 @@ object AndroidIdPrinter {
         }
 
         private fun renderQrBitmap(value: String, pixelSize: Int): Bitmap {
-            val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, pixelSize, pixelSize)
+            val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.Q)
+            val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, pixelSize, pixelSize, hints)
             val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
             for (x in 0 until matrix.width) {
                 for (row in 0 until matrix.height) {
