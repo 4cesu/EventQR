@@ -50,7 +50,7 @@ class RedemptionResultActivity : AppCompatActivity() {
                         setBackgroundResource(
                             if (approved) R.drawable.bg_staff_success_circle else R.drawable.bg_transaction_redeemed_icon
                         )
-                        setPadding(dp(16), dp(16), dp(16), dp(16))
+                        layoutParams = LinearLayout.LayoutParams(dp(64), dp(64))
                     })
 
                     addView(TextView(this@RedemptionResultActivity).apply {
