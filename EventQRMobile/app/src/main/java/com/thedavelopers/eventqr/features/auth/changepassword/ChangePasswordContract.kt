@@ -7,6 +7,7 @@ interface ChangePasswordContract {
         fun showNewPasswordError(message: String?)
         fun showConfirmPasswordError(message: String?)
         fun showMessage(message: String)
-        fun navigateBackToSignIn()
+        fun showSuccess()
+        fun navigateBack()
     }
 }

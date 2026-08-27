@@ -1,39 +1,91 @@
 package com.thedavelopers.eventqr.features.auth.changepassword
 
-import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.InputType
+import android.text.TextWatcher
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.features.auth.login.LoginActivity
+import com.thedavelopers.eventqr.core.util.Validators
 
 open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.View {
     private lateinit var presenter: ChangePasswordPresenter
     private lateinit var currentPasswordInput: EditText
     private lateinit var newPasswordInput: EditText
     private lateinit var confirmPasswordInput: EditText
-    private lateinit var resetButton: Button
+    private lateinit var changeButton: Button
+    private lateinit var progressBar: ProgressBar
+    private lateinit var requirementsLayout: LinearLayout
+    private lateinit var passwordLengthRequirement: TextView
+    private lateinit var passwordCapitalRequirement: TextView
+    private lateinit var passwordNumberRequirement: TextView
+    private lateinit var passwordSpecialRequirement: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
 
-        presenter = ChangePasswordPresenter(this)
-        presenter.attach(this)
+        presenter = ChangePasswordPresenter()
+        presenter.attach(this, this)
 
-        currentPasswordInput = findViewById(R.id.edtCurrentPass)
-        newPasswordInput = findViewById(R.id.edtNewPass)
-        confirmPasswordInput = findViewById(R.id.edtConfirmPass)
-        resetButton = findViewById(R.id.btnResetPass)
+        currentPasswordInput = findViewById(R.id.edtCurrentPassword)
+        newPasswordInput = findViewById(R.id.edtNewPassword)
+        confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
+        changeButton = findViewById(R.id.btnChangePassword)
+        progressBar = findViewById(R.id.progressChange)
+        requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
+        passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
+        passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
+        passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
+        passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
 
-        resetButton.setOnClickListener {
+        configurePasswordToggle(currentPasswordInput)
+        configurePasswordToggle(newPasswordInput)
+        configurePasswordToggle(confirmPasswordInput)
+
+        newPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                updateRequirements(newPasswordInput.text.toString())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+
+        confirmPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                updateRequirements(newPasswordInput.text.toString())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+
+        currentPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                updateRequirements(newPasswordInput.text.toString())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+
+        changeButton.setOnClickListener {
             presenter.submitChange(
                 currentPasswordInput.text.toString(),
                 newPasswordInput.text.toString(),
-                confirmPasswordInput.text.toString(),
+                confirmPasswordInput.text.toString()
             )
+        }
+
+        findViewById<android.widget.ImageButton>(R.id.btnBack).setOnClickListener {
+            presenter.navigateBack()
         }
     }
 
@@ -43,8 +95,9 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     }
 
     override fun showLoading(isLoading: Boolean) {
-        resetButton.isEnabled = !isLoading
-        resetButton.text = if (isLoading) "Resetting..." else "Reset Password"
+        changeButton.isEnabled = !isLoading
+        changeButton.text = if (isLoading) "Changing..." else "Change Password"
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     override fun showCurrentPasswordError(message: String?) {
@@ -63,8 +116,61 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun navigateBackToSignIn() {
-        startActivity(Intent(this, LoginActivity::class.java))
+    override fun showSuccess() {
+        Toast.makeText(this, "Password changed successfully", Toast.LENGTH_SHORT).show()
         finish()
+    }
+
+    override fun navigateBack() {
+        finish()
+    }
+
+    private fun updateRequirements(password: String) {
+        requirementsLayout.visibility = View.VISIBLE
+
+        val requirements = Validators.passwordRequirements(password)
+        updateRequirement(passwordLengthRequirement, "At least 8 characters", requirements.hasMinLength)
+        updateRequirement(passwordCapitalRequirement, "One uppercase letter", requirements.hasCapital)
+        updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
+        updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
+
+        changeButton.isEnabled = requirements.isValid
+                && newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
+                && currentPasswordInput.text.toString().isNotBlank()
+    }
+
+    private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
+        view.text = "${if (isMet) "\u2713" else "\u25CB"} $label"
+        view.setTextColor(getColor(if (isMet) R.color.eventqr_success else R.color.eventqr_muted))
+    }
+
+    private fun configurePasswordToggle(input: EditText) {
+        input.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
+                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
+                if (isVisible) {
+                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    input.setCompoundDrawablesWithIntrinsicBounds(
+                        input.compoundDrawables[0],
+                        null,
+                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
+                        null
+                    )
+                } else {
+                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                    input.setCompoundDrawablesWithIntrinsicBounds(
+                        input.compoundDrawables[0],
+                        null,
+                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
+                        null
+                    )
+                }
+                input.setSelection(input.text.length)
+                view.performClick()
+                true
+            } else {
+                false
+            }
+        }
     }
 }

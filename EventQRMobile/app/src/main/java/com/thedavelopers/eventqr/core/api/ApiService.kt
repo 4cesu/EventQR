@@ -7,7 +7,7 @@ import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetTokenValidationResponse
-import com.thedavelopers.eventqr.features.auth.model.dto.PasswordChangeRequest
+import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogRequest
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
@@ -99,8 +99,8 @@ interface ApiService {
     @POST("auth/logout")
     suspend fun logout(): ApiResponse<Unit>
 
-    @PATCH("auth/me/password")
-    suspend fun changePassword(@Body request: PasswordChangeRequest): ApiResponse<UserResponse>
+    @POST("auth/change-password")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): ApiResponse<Unit>
 
     @GET("auth/me")
     suspend fun getAuthMe(): ApiResponse<UserResponse>
