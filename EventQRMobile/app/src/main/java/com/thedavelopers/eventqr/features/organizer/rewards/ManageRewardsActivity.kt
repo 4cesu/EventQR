@@ -26,6 +26,7 @@ import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.core.api.dto.RewardStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.organizer.BG
 import com.thedavelopers.eventqr.features.organizer.BORDER
 import com.thedavelopers.eventqr.features.organizer.ERROR
@@ -81,6 +82,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private var rewards: List<RewardResponse> = emptyList()
     private var redemptions: List<RewardRedemptionResponse> = emptyList()
     private var eventOptions: List<OrganizerMvpEvent> = emptyList()
+    private var rewardsEnabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,6 +92,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
         selectedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
             ?: return showMissingEventScreen("Organizer / Rewards")
+        rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
 
         val shell = organizerRefreshShell(
             title = "Organizer / Rewards",
@@ -103,6 +106,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         refreshLayout = shell.swipeRefreshLayout
         buildScreen()
         loadRewards()
+        refreshRewardsEnabledFromServer()
     }
 
     private fun buildScreen() {
@@ -132,10 +136,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     val event = eventOptions.getOrNull(position) ?: return
                     if (event.id == selectedEvent.id) return
                     selectedEvent = event
+                    rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)
                     repository.saveSelectedEventId(event.id)
                     saveSelectedEventId(event.id)
                     bindEventSummary()
                     loadRewards()
+                    refreshRewardsEnabledFromServer()
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -175,7 +181,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 })
             })
             rewardsEnabledSwitch = SwitchCompat(this@ManageRewardsActivity).apply {
-                isChecked = isRewardsEnabled()
+                isChecked = rewardsEnabled
                 setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
             }
             row.addView(rewardsEnabledSwitch)
@@ -194,7 +200,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         eventSummaryTitle.text = selectedEvent.title
         eventSummaryCount.text = if (rewards.size == 1) "1 reward" else "${rewards.size} rewards"
         rewardsEnabledSwitch.setOnCheckedChangeListener(null)
-        rewardsEnabledSwitch.isChecked = isRewardsEnabled()
+        rewardsEnabledSwitch.isChecked = rewardsEnabled
         rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
     }
 
@@ -236,7 +242,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private fun renderRewards() {
         bindEventSummary()
         rewardHost.removeAllViews()
-        val enabled = isRewardsEnabled()
+        val enabled = rewardsEnabled
         if (rewards.isEmpty()) {
             rewardHost.addView(emptyState("No rewards have been created yet.", "Add Reward") { showRewardDialog(null) })
             return
@@ -442,29 +448,64 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
     }
 
-    private fun isRewardsEnabled(): Boolean {
-        val defaultEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true) || rewards.isNotEmpty()
-        return getSharedPreferences("organizer_rewards_state", Context.MODE_PRIVATE)
-            .getBoolean("rewards_enabled_${selectedEvent.id}", defaultEnabled)
+    private fun refreshRewardsEnabledFromServer() {
+        val eventId = selectedEvent.id
+        lifecycleScope.launch {
+            try {
+                val response = rewardsService.getRewardSettings(eventId)
+                if (selectedEvent.id != eventId) return@launch
+                if (response.success && response.data != null) {
+                    rewardsEnabled = response.data
+                    bindEventSummary()
+                    renderRewards()
+                }
+            } catch (error: Exception) {
+                // Server truth will be re-synced on the next refresh; keep current local state.
+            }
+        }
     }
 
     private fun setRewardsEnabled(enabled: Boolean) {
-        getSharedPreferences("organizer_rewards_state", Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("rewards_enabled_${selectedEvent.id}", enabled)
-            .apply()
-        renderRewards()
-        Toast.makeText(
-            this,
-            if (enabled) "Reward redemption enabled for this event." else "Reward redemption disabled for this event.",
-            Toast.LENGTH_SHORT,
-        ).show()
+        val eventId = selectedEvent.id
+        lifecycleScope.launch {
+            try {
+                val response = rewardsService.updateRewardSettings(eventId, RewardSettingsRequest(enabled))
+                if (selectedEvent.id != eventId) return@launch
+                if (!response.success) throw IllegalStateException(response.message ?: "Could not update reward settings.")
+                response.data?.let { rewardsEnabled = it.rewardsEnabled }
+                bindEventSummary()
+                renderRewards()
+                Toast.makeText(
+                    this@ManageRewardsActivity,
+                    if (rewardsEnabled) "Reward redemption enabled for this event." else "Reward redemption disabled for this event.",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            } catch (error: Exception) {
+                rewardsEnabledSwitch.setOnCheckedChangeListener(null)
+                rewardsEnabledSwitch.isChecked = rewardsEnabled
+                rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
+                Toast.makeText(
+                    this@ManageRewardsActivity,
+                    "Could not update reward settings: ${error.message ?: "try again."}",
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+        }
     }
 }
 
 private interface OrganizerRewardsService {
     @GET("organizer/events/{eventId}/rewards")
     suspend fun getRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardResponse>>
+
+    @GET("organizer/events/{eventId}/reward-settings")
+    suspend fun getRewardSettings(@Path("eventId") eventId: String): ApiResponse<Boolean>
+
+    @PATCH("organizer/events/{eventId}/reward-settings")
+    suspend fun updateRewardSettings(
+        @Path("eventId") eventId: String,
+        @Body request: RewardSettingsRequest,
+    ): ApiResponse<EventResponse>
 
     @POST("organizer/events/{eventId}/rewards")
     suspend fun createReward(
@@ -488,6 +529,10 @@ private interface OrganizerRewardsService {
     @GET("organizer/events/{eventId}/claimed-rewards")
     suspend fun getClaimedRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardRedemptionResponse>>
 }
+
+data class RewardSettingsRequest(
+    val enabled: Boolean,
+)
 
 private object OrganizerRewardsApiProvider {
     @Volatile

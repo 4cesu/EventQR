@@ -124,20 +124,28 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 append(if (purpose.duplicateRule.lowercase().contains("allow")) "Allows duplicates" else "No duplicates")
             }
 
-            purposeHost.addView(purposeCard(
+            val purposeCard = purposeCard(
                 title = purpose.label,
                 subtitle = subtitle,
                 enabled = purpose.enabled,
-                onToggle = { isChecked ->
-                    togglePurpose(purpose, isChecked)
-                }
+                onToggle = { _ -> Unit }
             ).apply {
                 setOnClickListener { showAddEditDialog(purpose) }
-            })
+            }
+            val toggleSwitch = (purposeCard.getChildAt(0) as? LinearLayout)
+                ?.getChildAt(2) as? androidx.appcompat.widget.SwitchCompat
+            toggleSwitch?.setOnCheckedChangeListener { _, checked ->
+                togglePurpose(purpose, checked, toggleSwitch)
+            }
+            purposeHost.addView(purposeCard)
         }
     }
 
-    private fun togglePurpose(purpose: OrganizerMvpScanPurpose, enabled: Boolean) {
+    private fun togglePurpose(
+        purpose: OrganizerMvpScanPurpose,
+        enabled: Boolean,
+        toggle: androidx.appcompat.widget.SwitchCompat? = null,
+    ) {
         MainScope().launch {
             val purposeId = purpose.id?.takeIf { it.isNotBlank() }
             if (purposeId == null) {
@@ -158,6 +166,11 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     Log.w(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=ERROR message=${result.message}")
+                    toggle?.setOnCheckedChangeListener(null)
+                    toggle?.isChecked = purpose.enabled
+                    toggle?.setOnCheckedChangeListener { _, checked ->
+                        togglePurpose(purpose, checked, toggle)
+                    }
                     Toast.makeText(this@ManageScanPurposesActivity, "Failed to update: ${result.message}", Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Log.d(TAG, "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=LOADING")
