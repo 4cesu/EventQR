@@ -13,8 +13,6 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -306,8 +304,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     )
 
     private fun showBatchPrintPreview(cards: List<AndroidIdPrinter.CardData>, selected: List<RegistrationResponse>) {
-        val upCounts = AndroidIdPrinter.UpCount.entries
-        var selectedUp = AndroidIdPrinter.UpCount.EIGHT
+        val pages = AndroidIdPrinter.batchPageCount(cards.size)
         val previewWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt()
 
         val scroll = ScrollView(this)
@@ -325,6 +322,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             textAlignment = View.TEXT_ALIGNMENT_CENTER
         })
         container.addView(TextView(this).apply {
+            text = "${cards.size} attendees selected · $pages sheet${if (pages == 1) "" else "s"} (9 per page) · cut along dashed guides"
             textSize = 13f
             setTextColor(0xFF6B7280.toInt())
             textAlignment = View.TEXT_ALIGNMENT_CENTER
@@ -337,75 +335,35 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
         container.addView(previewHost)
 
-        val gridLabel = TextView(this).apply {
-            textSize = 13f
-            setTextColor(0xFF111827.toInt())
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, dp(8), 0, 0)
-        }
-        container.addView(gridLabel)
-
-        val radioGroup = RadioGroup(this).apply {
-            orientation = RadioGroup.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, dp(10), 0, 0)
-        }
-        val buttons = upCounts.mapIndexed { index, up ->
-            RadioButton(this).apply {
-                id = View.generateViewId()
-                text = up.label
-                textSize = 13f
-            }.also { radioGroup.addView(it) }
-        }
-        radioGroup.check(buttons[upCounts.indexOf(selectedUp)].id)
-        container.addView(radioGroup)
-
-        fun refresh() {
-            val pages = selectedUp.pagesFor(cards.size)
-            previewHost.removeAllViews()
-            for (p in 0 until pages) {
-                val pageBlock = LinearLayout(this@EventRegistrationsActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER_HORIZONTAL
-                    setPadding(0, 0, 0, dp(8))
-                }
-                pageBlock.addView(TextView(this@EventRegistrationsActivity).apply {
-                    text = "Page ${p + 1} of $pages"
-                    textSize = 12f
-                    setTextColor(0xFF6B7280.toInt())
-                    textAlignment = View.TEXT_ALIGNMENT_CENTER
-                })
-                pageBlock.addView(ImageView(this@EventRegistrationsActivity).apply {
-                    adjustViewBounds = true
-                    scaleType = ImageView.ScaleType.FIT_CENTER
-                    setImageBitmap(AndroidIdPrinter.renderGridPreview(cards, selectedUp, previewWidthPx, p))
-                })
-                previewHost.addView(pageBlock)
+        for (p in 0 until pages) {
+            val pageBlock = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                setPadding(0, 0, 0, dp(8))
             }
-            gridLabel.text = "${cards.size} attendees · ${selectedUp.label} · $pages sheet${if (pages == 1) "" else "s"} · cut along dashed guides"
-        }
-
-        buttons.forEachIndexed { index, button ->
-            button.setOnClickListener {
-                selectedUp = upCounts[index]
-                refresh()
-            }
+            pageBlock.addView(TextView(this).apply {
+                text = "Page ${p + 1} of $pages"
+                textSize = 12f
+                setTextColor(0xFF6B7280.toInt())
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
+            })
+            pageBlock.addView(ImageView(this).apply {
+                adjustViewBounds = true
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setImageBitmap(AndroidIdPrinter.renderGridPreview(cards, previewWidthPx, p))
+            })
+            previewHost.addView(pageBlock)
         }
 
         AlertDialog.Builder(this)
             .setTitle("Review Sheet Layout")
             .setView(scroll)
-            .setPositiveButton("Confirm & Print") { _, _ -> executeBatchPrint(cards, selected, selectedUp) }
+            .setPositiveButton("Confirm & Print") { _, _ -> executeBatchPrint(cards, selected) }
             .setNegativeButton("Cancel", null)
             .show()
-        refresh()
     }
 
-    private fun executeBatchPrint(
-        cards: List<AndroidIdPrinter.CardData>,
-        selected: List<RegistrationResponse>,
-        upCount: AndroidIdPrinter.UpCount,
-    ) {
+    private fun executeBatchPrint(cards: List<AndroidIdPrinter.CardData>, selected: List<RegistrationResponse>) {
         showLoading(true)
         MainScope().launch {
             val successes = mutableListOf<AndroidIdPrinter.CardData>()
@@ -426,7 +384,6 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                     this@EventRegistrationsActivity,
                     "EventQR IDs — batch (${successes.size})",
                     successes,
-                    upCount,
                 )
             }
 
