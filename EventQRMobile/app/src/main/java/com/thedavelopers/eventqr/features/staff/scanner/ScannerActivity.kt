@@ -532,6 +532,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             putExtra(AppRewardExtras.EXTRA_REDEMPTION_SCAN_LOG_ID, result.redemptionScanLogId.toString())
             putExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, result.pointsBalance)
             putExtra(StaffScreenExtras.EXTRA_STAFF_USER_ID, staffUserId.orEmpty())
+            putExtra(StaffScreenExtras.EXTRA_SCAN_REJECTED, result.rejected)
+            putExtra(StaffScreenExtras.EXTRA_SCAN_REJECTION_REASON, result.rejectionReason.orEmpty())
         })
     }
 

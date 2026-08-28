@@ -25,6 +25,7 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionRul
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
@@ -172,7 +173,8 @@ public class TransactionService {
                 transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
         }
 
-        String duplicateReason = determineDuplicateReason(registration, rule);
+        boolean rewardRedemptionScan = purpose.code() == ScanPurposeCode.REWARD_REDEMPTION_SCAN;
+        String duplicateReason = rewardRedemptionScan ? null : determineDuplicateReason(registration, rule);
         if (duplicateReason != null) {
             return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                     registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), duplicateReason,

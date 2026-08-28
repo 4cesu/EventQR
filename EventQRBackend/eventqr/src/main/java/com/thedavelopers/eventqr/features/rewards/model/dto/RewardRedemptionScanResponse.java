@@ -15,5 +15,26 @@ public record RewardRedemptionScanResponse(UUID eventId,
                                            int pointsBalance,
                                            UUID scanPurposeId,
                                            UUID redemptionScanLogId,
-                                           List<RewardResponse> eligibleRewards) {
+                                           List<RewardResponse> eligibleRewards,
+                                           boolean rejected,
+                                           String rejectionReason) {
+
+    public RewardRedemptionScanResponse {
+        eligibleRewards = eligibleRewards == null ? List.of() : eligibleRewards;
+    }
+
+    public RewardRedemptionScanResponse(UUID eventId,
+                                        UUID attendeeUserId,
+                                        UUID registrationId,
+                                        UUID qrCredentialId,
+                                        String attendeeName,
+                                        String attendeeEmail,
+                                        RegistrationStatus registrationStatus,
+                                        int pointsBalance,
+                                        UUID scanPurposeId,
+                                        UUID redemptionScanLogId,
+                                        List<RewardResponse> eligibleRewards) {
+        this(eventId, attendeeUserId, registrationId, qrCredentialId, attendeeName, attendeeEmail,
+                registrationStatus, pointsBalance, scanPurposeId, redemptionScanLogId, eligibleRewards, false, null);
+    }
 }
