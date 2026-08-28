@@ -1,14 +1,24 @@
 package com.thedavelopers.eventqr.features.staff
 
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,14 +29,20 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 
 open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsContract.View {
     private lateinit var presenter: EventRegistrationsPresenter
+    private lateinit var repository: StaffRepository
     private lateinit var adapter: RegistrationAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var searchInput: EditText
@@ -36,8 +52,22 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private lateinit var checkedInView: TextView
     private lateinit var registeredView: TextView
 
+    private lateinit var badgeSelection: TextView
+    private lateinit var btnSelectForPrint: ImageButton
+    private lateinit var batchPrintBar: View
+    private lateinit var btnPrintSelectedIds: Button
+    private lateinit var btnSelectAll: Button
+
     private var selectedEventId: String = ""
     private var allRegistrations: List<RegistrationResponse> = emptyList()
+    private var selectionMode = false
+
+    // Cached data used to build each attendee's CardData for the batch preview.
+    private var batchVisibleFields: List<String> = emptyList()
+    private val batchQrValues = mutableMapOf<String, String>()
+
+    private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
+        .withZone(ZoneId.of("Asia/Manila"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,18 +81,22 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
 
         setContentView(R.layout.activity_event_registrations)
 
-        presenter = EventRegistrationsPresenter(this, StaffRepository(this))
-        adapter = RegistrationAdapter { registration ->
-            startActivity(Intent(this, StaffAttendeeDetailsActivity::class.java).apply {
-                putExtra(StaffScreenExtras.EXTRA_EVENT_ID, registration.eventId.toString())
-                putExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID, registration.attendeeUserId.toString())
-                putExtra(StaffScreenExtras.EXTRA_REGISTRATION_ID, registration.registrationId.toString())
-                putExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID, registration.qrCredentialId?.toString().orEmpty())
-                putExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME, registration.attendeeName)
-                putExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL, registration.attendeeEmail)
-                putExtra(StaffScreenExtras.EXTRA_EVENT_TITLE, registration.eventTitle.orEmpty())
-            })
-        }
+        repository = StaffRepository(this)
+        presenter = EventRegistrationsPresenter(this, repository)
+        adapter = RegistrationAdapter(
+            onClick = { registration ->
+                startActivity(Intent(this, StaffAttendeeDetailsActivity::class.java).apply {
+                    putExtra(StaffScreenExtras.EXTRA_EVENT_ID, registration.eventId.toString())
+                    putExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID, registration.attendeeUserId.toString())
+                    putExtra(StaffScreenExtras.EXTRA_REGISTRATION_ID, registration.registrationId.toString())
+                    putExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID, registration.qrCredentialId?.toString().orEmpty())
+                    putExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME, registration.attendeeName)
+                    putExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL, registration.attendeeEmail)
+                    putExtra(StaffScreenExtras.EXTRA_EVENT_TITLE, registration.eventTitle.orEmpty())
+                })
+            },
+            onSelectionChanged = { count -> syncSelectionUi(count) },
+        )
 
         bindViews()
         findViewById<RecyclerView>(R.id.recyclerEventRegistrations).apply {
@@ -75,7 +109,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
             presenter.load(selectedEventId)
         } else {
-            kotlinx.coroutines.MainScope().launch {
+            MainScope().launch {
                 when (val eventsResult = StaffRepository(this@EventRegistrationsActivity).getEvents()) {
                     is NetworkResult.Success -> {
                         val firstEvent = eventsResult.data.firstOrNull()
@@ -114,7 +148,27 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         checkedInView = findViewById(R.id.txtAttendeeCheckedIn)
         registeredView = findViewById(R.id.txtAttendeeRegistered)
 
-        findViewById<View>(R.id.btnBackEventRegistrations).setOnClickListener { finish() }
+        badgeSelection = findViewById(R.id.badgeSelectionCount)
+        btnSelectForPrint = findViewById(R.id.btnSelectForPrint)
+        batchPrintBar = findViewById(R.id.batchPrintBar)
+        btnPrintSelectedIds = findViewById(R.id.btnPrintSelectedIds)
+        btnSelectAll = findViewById(R.id.btnSelectAllRegistrations)
+
+        findViewById<View>(R.id.btnBackEventRegistrations).setOnClickListener {
+            if (selectionMode) {
+                exitSelectionMode()
+            } else {
+                finish()
+            }
+        }
+        btnSelectForPrint.setOnClickListener {
+            if (selectionMode) exitSelectionMode() else enterSelectionMode()
+        }
+        btnSelectAll.setOnClickListener {
+            if (adapter.isAllSelected()) adapter.clearSelection() else adapter.toggleSelectAll()
+        }
+        btnPrintSelectedIds.setOnClickListener { printSelected() }
+
         swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener {
             if (selectedEventId.isNotBlank()) presenter.load(selectedEventId) else swipeRefresh.isRefreshing = false
@@ -155,6 +209,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         findViewById<RecyclerView>(R.id.recyclerEventRegistrations).visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         emptyState.text = if (allRegistrations.isEmpty()) "No attendees found." else "No attendees match your search."
+        if (selectionMode) syncSelectionUi(adapter.getSelectedItems().size)
     }
 
     override fun showMessage(message: String) {
@@ -166,4 +221,263 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         swipeRefresh.isRefreshing = isLoading && swipeRefresh.isRefreshing
         findViewById<View>(R.id.btnLoadEventRegistrations)?.isEnabled = !isLoading
     }
+
+    // ------------------------------------------------------------------
+    // Batch selection mode
+    // ------------------------------------------------------------------
+
+    private fun enterSelectionMode() {
+        selectionMode = true
+        adapter.setSelectionMode(true)
+        badgeSelection.visibility = View.VISIBLE
+        batchPrintBar.visibility = View.VISIBLE
+        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_indigo)
+        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
+        syncSelectionUi(adapter.getSelectedItems().size)
+    }
+
+    private fun exitSelectionMode() {
+        selectionMode = false
+        adapter.setSelectionMode(false)
+        badgeSelection.visibility = View.GONE
+        batchPrintBar.visibility = View.GONE
+        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_light)
+        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(0xFF111827.toInt())
+        syncSelectionUi(0)
+    }
+
+    private fun syncSelectionUi(count: Int) {
+        if (!::badgeSelection.isInitialized) return
+        badgeSelection.text = count.toString()
+        badgeSelection.visibility = if (selectionMode && count > 0) View.VISIBLE else if (selectionMode) View.VISIBLE else View.GONE
+        btnPrintSelectedIds.isEnabled = count > 0
+        btnSelectAll.text = if (adapter.isAllSelected()) "Clear All" else "Select All"
+    }
+
+    // ------------------------------------------------------------------
+    // Batch print flow
+    // ------------------------------------------------------------------
+
+    private fun printSelected() {
+        val selected = adapter.getSelectedItems().filter { it.qrCredentialId != null }
+        if (selected.isEmpty()) {
+            showMessage("Select at least one attendee with a QR credential.")
+            return
+        }
+
+        showLoading(true)
+        MainScope().launch {
+            val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@EventRegistrationsActivity)
+
+            var visibleFields = emptyList<String>()
+            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                apiService.getIdTemplateConfig(selectedEventId)
+            }
+            if (configResult is NetworkResult.Success) {
+                visibleFields = configResult.data.visibleFields.filterNotNull()
+            }
+
+            batchVisibleFields = visibleFields
+            batchQrValues.clear()
+            for (reg in selected) {
+                val credentialId = reg.qrCredentialId ?: continue
+                val qrResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                    apiService.getQrCredentialById(credentialId.toString())
+                }
+                if (qrResult is NetworkResult.Success) {
+                    batchQrValues[reg.attendeeUserId.toString()] = qrResult.data.qrValue
+                }
+            }
+
+            val cards = selected.map { cardFor(it) }
+            showLoading(false)
+            showBatchPrintPreview(cards, selected)
+        }
+    }
+
+    private fun cardFor(reg: RegistrationResponse): AndroidIdPrinter.CardData = AndroidIdPrinter.CardData(
+        attendeeName = reg.attendeeName,
+        eventName = reg.eventTitle.orEmpty(),
+        registrationNumber = reg.registrationNumber,
+        role = reg.attendeeRole.orEmpty(),
+        eventDate = reg.eventStartAt?.let { dateFormatter.format(it) }.orEmpty(),
+        visibleFields = batchVisibleFields,
+        qrValue = batchQrValues[reg.attendeeUserId.toString()].orEmpty(),
+    )
+
+    private fun showBatchPrintPreview(cards: List<AndroidIdPrinter.CardData>, selected: List<RegistrationResponse>) {
+        val upCounts = AndroidIdPrinter.UpCount.entries
+        var selectedUp = AndroidIdPrinter.UpCount.EIGHT
+        val previewWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt()
+
+        val scroll = ScrollView(this)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(16), dp(20), dp(8))
+        }
+        scroll.addView(container)
+
+        container.addView(TextView(this).apply {
+            text = "Print Selected IDs"
+            textSize = 22f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(0xFF111827.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+        })
+        container.addView(TextView(this).apply {
+            textSize = 13f
+            setTextColor(0xFF6B7280.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setPadding(0, dp(2), 0, dp(8))
+        }.also { it.id = View.generateViewId() })
+
+        val previewHost = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+        }
+        container.addView(previewHost)
+
+        val gridLabel = TextView(this).apply {
+            textSize = 13f
+            setTextColor(0xFF111827.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setPadding(0, dp(8), 0, 0)
+        }
+        container.addView(gridLabel)
+
+        val radioGroup = RadioGroup(this).apply {
+            orientation = RadioGroup.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(10), 0, 0)
+        }
+        val buttons = upCounts.mapIndexed { index, up ->
+            RadioButton(this).apply {
+                id = View.generateViewId()
+                text = up.label
+                textSize = 13f
+            }.also { radioGroup.addView(it) }
+        }
+        radioGroup.check(buttons[upCounts.indexOf(selectedUp)].id)
+        container.addView(radioGroup)
+
+        fun refresh() {
+            val pages = selectedUp.pagesFor(cards.size)
+            previewHost.removeAllViews()
+            for (p in 0 until pages) {
+                val pageBlock = LinearLayout(this@EventRegistrationsActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(0, 0, 0, dp(8))
+                }
+                pageBlock.addView(TextView(this@EventRegistrationsActivity).apply {
+                    text = "Page ${p + 1} of $pages"
+                    textSize = 12f
+                    setTextColor(0xFF6B7280.toInt())
+                    textAlignment = View.TEXT_ALIGNMENT_CENTER
+                })
+                pageBlock.addView(ImageView(this@EventRegistrationsActivity).apply {
+                    adjustViewBounds = true
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    setImageBitmap(AndroidIdPrinter.renderGridPreview(cards, selectedUp, previewWidthPx, p))
+                })
+                previewHost.addView(pageBlock)
+            }
+            gridLabel.text = "${cards.size} attendees · ${selectedUp.label} · $pages sheet${if (pages == 1) "" else "s"} · cut along dashed guides"
+        }
+
+        buttons.forEachIndexed { index, button ->
+            button.setOnClickListener {
+                selectedUp = upCounts[index]
+                refresh()
+            }
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Review Sheet Layout")
+            .setView(scroll)
+            .setPositiveButton("Confirm & Print") { _, _ -> executeBatchPrint(cards, selected, selectedUp) }
+            .setNegativeButton("Cancel", null)
+            .show()
+        refresh()
+    }
+
+    private fun executeBatchPrint(
+        cards: List<AndroidIdPrinter.CardData>,
+        selected: List<RegistrationResponse>,
+        upCount: AndroidIdPrinter.UpCount,
+    ) {
+        showLoading(true)
+        MainScope().launch {
+            val successes = mutableListOf<AndroidIdPrinter.CardData>()
+            val failures = mutableListOf<Pair<String, String>>()
+            var index = 0
+            for (reg in selected) {
+                val card = cards[index]
+                index++
+                when (val result = repository.printIdBatch(selectedEventId, listOf(reg.attendeeUserId), false)) {
+                    is NetworkResult.Success -> successes.add(card)
+                    is NetworkResult.Error -> failures.add(reg.attendeeName to result.message)
+                    NetworkResult.Loading -> Unit
+                }
+            }
+
+            if (successes.isNotEmpty()) {
+                AndroidIdPrinter.print(
+                    this@EventRegistrationsActivity,
+                    "EventQR IDs — batch (${successes.size})",
+                    successes,
+                    upCount,
+                )
+            }
+
+            showLoading(false)
+            showBatchPrintResult(successes.size, selected.size, failures)
+            exitSelectionMode()
+        }
+    }
+
+    private fun showBatchPrintResult(printed: Int, total: Int, failures: List<Pair<String, String>>) {
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(16), dp(24), dp(8))
+        }
+        body.addView(TextView(this).apply {
+            text = "$printed of $total IDs printed successfully."
+            textSize = 16f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(0xFF111827.toInt())
+        })
+        if (failures.isNotEmpty()) {
+            body.addView(TextView(this).apply {
+                text = "The following could not be printed:"
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(0xFF111827.toInt())
+                setPadding(0, dp(14), 0, dp(4))
+            })
+            for ((name, reason) in failures) {
+                body.addView(TextView(this).apply {
+                    text = "• $name — ${reason.ifBlank { "unknown error" }}"
+                    textSize = 13f
+                    setTextColor(0xFFDC2626.toInt())
+                    setPadding(dp(8), dp(2), 0, 0)
+                })
+            }
+        } else if (printed == 0) {
+            body.addView(TextView(this).apply {
+                text = "No IDs were printed."
+                textSize = 13f
+                setTextColor(0xFFDC2626.toInt())
+                setPadding(0, dp(6), 0, 0)
+            })
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Print Result")
+            .setView(body)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).roundToInt()
 }

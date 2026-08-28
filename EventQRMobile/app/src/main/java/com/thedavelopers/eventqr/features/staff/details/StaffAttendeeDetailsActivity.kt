@@ -1,18 +1,11 @@
 package com.thedavelopers.eventqr.features.staff.details
 
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.ProgressBar
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -34,7 +27,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
-import kotlin.math.roundToInt
 
 open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private lateinit var repository: StaffRepository
@@ -172,143 +164,50 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         MainScope().launch {
-            val cardData = buildCardData()
-            findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.GONE
-            showPrintPreview(cardData)
-        }
-    }
+            val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
 
-    private suspend fun buildCardData(): AndroidIdPrinter.CardData {
-        val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
-
-        // Fetch template config for visible fields
-        var visibleFields = emptyList<String>()
-        val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
-            apiService.getIdTemplateConfig(eventId)
-        }
-        if (configResult is NetworkResult.Success) {
-            visibleFields = configResult.data.visibleFields.filterNotNull()
-        }
-
-        // Fetch QR credential value for the printed QR code
-        var qrValue = ""
-        if (qrCredentialId.isNotBlank()) {
-            val qrResult = com.thedavelopers.eventqr.core.api.safeApiCall {
-                apiService.getQrCredentialById(qrCredentialId)
+            // Fetch template config for visible fields
+            var visibleFields = emptyList<String>()
+            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                apiService.getIdTemplateConfig(eventId)
             }
-            if (qrResult is NetworkResult.Success) {
-                qrValue = qrResult.data.qrValue
+            if (configResult is NetworkResult.Success) {
+                visibleFields = configResult.data.visibleFields.filterNotNull()
             }
-        }
 
-        return AndroidIdPrinter.CardData(
-            attendeeName = cachedAttendeeName,
-            eventName = cachedEventName,
-            registrationNumber = cachedRegistrationNumber,
-            role = cachedRole,
-            eventDate = cachedEventDate,
-            visibleFields = visibleFields,
-            qrValue = qrValue,
-        )
-    }
-
-    /**
-     * Print confirmation dialog: shows the full multi-up grid preview plus a
-     * 1/2/4/8-up chooser, matching the app's existing confirm-before-print pattern.
-     */
-    private fun showPrintPreview(cardData: AndroidIdPrinter.CardData) {
-        val upCounts = AndroidIdPrinter.UpCount.entries
-        var selected = AndroidIdPrinter.UpCount.EIGHT
-        val defaultIndex = upCounts.indexOf(selected)
-
-        val previewWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt()
-
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(4))
-        }
-
-        container.addView(TextView(this).apply {
-            text = if (hasPrintedId) "Reprint ID" else "Print ID"
-            textSize = 22f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(0xFF111827.toInt())
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, 0, 0, dp(8))
-        })
-
-        val previewImage = ImageView(this).apply {
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(0, 0, 0, dp(8))
-        }
-
-        val gridLabel = TextView(this).apply {
-            textSize = 13f
-            setTextColor(0xFF111827.toInt())
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, dp(8), 0, 0)
-        }
-
-        val radioGroup = RadioGroup(this).apply {
-            orientation = RadioGroup.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, dp(10), 0, 0)
-        }
-
-        val buttons = upCounts.mapIndexed { index, up ->
-            RadioButton(this).apply {
-                id = View.generateViewId()
-                text = up.label
-                textSize = 13f
-            }.also { radioGroup.addView(it) }
-        }
-        radioGroup.check(buttons[defaultIndex].id)
-
-        fun refresh() {
-            previewImage.setImageBitmap(AndroidIdPrinter.renderGridPreview(cardData, selected, previewWidthPx))
-            gridLabel.text = "${selected.label} · ${selected.copies} cards on one A4 sheet (${selected.cols}×${selected.rows} grid) · cut along the dashed guides"
-        }
-
-        buttons.forEachIndexed { index, button ->
-            button.setOnClickListener {
-                selected = upCounts[index]
-                refresh()
+            // Fetch QR credential value for the printed QR code
+            var qrValue = ""
+            if (qrCredentialId.isNotBlank()) {
+                val qrResult = com.thedavelopers.eventqr.core.api.safeApiCall {
+                    apiService.getQrCredentialById(qrCredentialId)
+                }
+                if (qrResult is NetworkResult.Success) {
+                    qrValue = qrResult.data.qrValue
+                }
             }
-        }
 
-        container.addView(previewImage)
-        container.addView(gridLabel)
-        container.addView(radioGroup)
-
-        AlertDialog.Builder(this)
-            .setView(container)
-            .setPositiveButton("Confirm Print") { _, _ -> submitPrint(cardData, selected) }
-            .setNegativeButton("Cancel", null)
-            .show()
-        refresh()
-    }
-
-    private fun submitPrint(cardData: AndroidIdPrinter.CardData, upCount: AndroidIdPrinter.UpCount) {
-        findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
-        MainScope().launch {
-            // Batch endpoint creates one ID Print Log entry per attendee entry —
-            // here the same attendee is repeated once per card to fill the sheet.
-            val result = repository.printIdBatch(
-                eventId,
-                List(upCount.copies) { UUID.fromString(attendeeId) },
-                hasPrintedId,
-            )
+            val result = if (hasPrintedId) {
+                repository.reprintAttendeeId(eventId, attendeeId)
+            } else {
+                repository.printAttendeeId(eventId, attendeeId)
+            }
             when (result) {
                 is NetworkResult.Success -> {
+                    val cardData = AndroidIdPrinter.CardData(
+                        attendeeName = cachedAttendeeName,
+                        eventName = cachedEventName,
+                        registrationNumber = cachedRegistrationNumber,
+                        role = cachedRole,
+                        eventDate = cachedEventDate,
+                        visibleFields = visibleFields,
+                        qrValue = qrValue,
+                    )
                     AndroidIdPrinter.print(
                         this@StaffAttendeeDetailsActivity,
                         "EventQR ID — $cachedAttendeeName",
                         cardData,
-                        upCount,
                     )
-                    val message = result.data.firstOrNull()?.message ?: "Print request sent"
-                    Toast.makeText(this@StaffAttendeeDetailsActivity, message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@StaffAttendeeDetailsActivity, result.data.message, Toast.LENGTH_SHORT).show()
                 }
                 is NetworkResult.Error -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
                 NetworkResult.Loading -> Unit
@@ -317,8 +216,6 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             loadPrintLogs()
         }
     }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).roundToInt()
 
     private fun formatTime(value: Instant?): String = value?.let { timeFormatter.format(it) } ?: "--"
 
