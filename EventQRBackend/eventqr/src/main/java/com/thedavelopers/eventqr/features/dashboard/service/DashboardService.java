@@ -18,6 +18,7 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionLog
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 
@@ -60,9 +61,10 @@ public class DashboardService {
         long availableEventsCount = eventRepository.countByStatusIn(PUBLIC_EVENT_STATUSES);
         long pointsCount = attendeePointBalanceRepository.sumPointsByAttendeeUserId(userId);
         List<DashboardUpcomingEvent> upcomingEvents = loadUpcomingEvents(now);
+        long unreadNotifications = notificationRepository.countByRecipientUserIdAndStatusNot(userId, NotificationStatus.READ);
 
         return new DashboardSummary(availableEventsCount, registeredCount, transactionLogRepository.count(),
-                pointsCount, notificationRepository.count(), profile.getFullName(), upcomingEvents);
+                pointsCount, unreadNotifications, profile.getFullName(), upcomingEvents);
     }
 
     private boolean isRegistered(EventRegistration registration) {
