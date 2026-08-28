@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestDecisionRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
@@ -432,6 +433,12 @@ interface ApiService {
 
     @GET("staff/events/{eventId}/print-logs")
     suspend fun getStaffPrintLogs(@Path("eventId") eventId: String): ApiResponse<List<IdPrintResponse>>
+
+    @POST("staff/events/{eventId}/print-id-batch")
+    suspend fun printIdBatch(
+        @Path("eventId") eventId: String,
+        @Body request: IdBatchPrintRequest,
+    ): ApiResponse<List<IdPrintResponse>>
 
     @GET("dashboard")
     suspend fun getDashboard(): ApiResponse<DashboardSummary>

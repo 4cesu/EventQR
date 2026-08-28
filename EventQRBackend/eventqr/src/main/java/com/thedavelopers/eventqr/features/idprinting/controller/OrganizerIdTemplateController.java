@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateRequest;
 import com.thedavelopers.eventqr.features.idprinting.model.entity.IdTemplate;
@@ -103,6 +104,14 @@ public class OrganizerIdTemplateController {
                                                                 @PathVariable UUID attendeeId) {
         requireNonAttendee(request);
         return ResponseEntity.ok(ApiResponse.success(idPrintingService.printForAttendee(eventId, attendeeId, true)));
+    }
+
+    @PostMapping("/staff/events/{eventId}/print-id-batch")
+    public ResponseEntity<ApiResponse<List<IdPrintResponse>>> printBatch(HttpServletRequest request,
+                                                                         @PathVariable UUID eventId,
+                                                                         @Valid @RequestBody IdBatchPrintRequest body) {
+        requireNonAttendee(request);
+        return ResponseEntity.ok(ApiResponse.success(idPrintingService.printBatch(eventId, body.attendeeUserIds(), body.reprint())));
     }
 
     private void requireNonAttendee(HttpServletRequest request) {
