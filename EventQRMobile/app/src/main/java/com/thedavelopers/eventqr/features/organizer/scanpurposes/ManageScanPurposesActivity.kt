@@ -13,6 +13,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -189,6 +190,27 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             ?: purpose?.label?.toScanPurposeCode()?.let { inferred -> purposeTypes.firstOrNull { it.code == inferred } }
             ?: purposeTypes.first { it.code == ScanPurposeCode.BOOTH_VISIT }
 
+        val duplicateHelper = TextView(this).apply {
+            text = "Always allowed for reward redemption — controlled per-reward on the Rewards page."
+            textSize = 12f
+            setTextColor(Color.parseColor("#6B7280"))
+            setPadding(dp(4), dp(2), dp(4), 0)
+            visibility = View.GONE
+        }
+        val duplicateCheck = CheckBox(this).apply {
+            text = "Allow duplicate scans"
+            isChecked = purpose?.duplicateRule?.lowercase()?.contains("allow") ?: false
+        }
+        val applyDuplicateLock: (ScanPurposeType) -> Unit = { type ->
+            val isReward = type.code == ScanPurposeCode.REWARD_REDEMPTION_SCAN
+            duplicateCheck.isEnabled = !isReward
+            duplicateCheck.alpha = if (isReward) 0.5f else 1f
+            if (isReward) {
+                duplicateCheck.isChecked = true
+            }
+            duplicateHelper.visibility = if (isReward) View.VISIBLE else View.GONE
+        }
+
         val typeSpinner = Spinner(this).apply {
             adapter = ArrayAdapter(
                 this@ManageScanPurposesActivity,
@@ -201,6 +223,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         typeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedType = purposeTypes.getOrElse(position) { selectedType }
+                applyDuplicateLock(selectedType)
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
@@ -221,10 +244,6 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             setText(purpose?.pointsValue?.takeIf { it > 0 }?.toString() ?: "0")
             setSingleLine(true)
         }
-        val duplicateCheck = CheckBox(this).apply {
-            text = "Allow duplicate scans"
-            isChecked = purpose?.duplicateRule?.lowercase()?.contains("allow") ?: false
-        }
         val trackingOnlyCheck = CheckBox(this).apply {
             text = "Tracking only (no points)"
             isChecked = purpose?.trackingOnly ?: ((purpose?.pointsValue ?: 0) <= 0 && purpose?.pointsEnabled != true)
@@ -244,6 +263,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         dialogView.addView(text("Points", 14, true).apply { setPadding(0, dp(12), 0, 0) })
         dialogView.addView(pointsInput)
         dialogView.addView(duplicateCheck)
+        dialogView.addView(duplicateHelper)
         dialogView.addView(trackingOnlyCheck)
 
         val dialogBuilder = AlertDialog.Builder(this)
