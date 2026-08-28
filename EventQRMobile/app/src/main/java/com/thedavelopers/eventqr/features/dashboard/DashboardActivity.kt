@@ -61,6 +61,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var discoverEventsSeeAll: TextView
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private var isSwipeRefreshing = false
+    private var refreshBadgeOnResume = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +101,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         }
 
         notificationBell.setOnClickListener {
+            refreshBadgeOnResume = true
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java))
         }
         discoverEventsSeeAll.setOnClickListener {
@@ -114,6 +116,14 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     override fun onDestroy() {
         presenter.detach()
         super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (refreshBadgeOnResume) {
+            refreshBadgeOnResume = false
+            presenter.loadDashboard()
+        }
     }
 
     override fun showLoading(isLoading: Boolean) {

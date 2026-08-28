@@ -78,6 +78,12 @@ enum class NotificationStatus {
     READ,
 }
 
+enum class NotificationType {
+    GENERAL,
+    SCAN_APPROVED,
+    SCAN_REJECTED,
+}
+
 enum class RewardStatus {
     ACTIVE,
     INACTIVE,

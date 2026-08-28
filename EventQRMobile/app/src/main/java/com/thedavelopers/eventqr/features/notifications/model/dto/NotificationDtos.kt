@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.notifications.model.dto
 
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
+import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import java.time.Instant
 import java.util.UUID
 
@@ -21,4 +22,5 @@ data class NotificationResponse(
     val relatedTransactionId: UUID? = null,
     val relatedRewardRedemptionId: UUID? = null,
     val readAt: Instant? = null,
+    val notificationType: NotificationType? = null,
 )

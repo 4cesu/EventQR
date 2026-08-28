@@ -13,6 +13,7 @@ import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRe
 import com.thedavelopers.eventqr.features.notifications.model.entity.Notification;
 import com.thedavelopers.eventqr.features.notifications.repository.NotificationRepository;
 import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
+import com.thedavelopers.eventqr.shared.constants.NotificationType;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
@@ -80,12 +81,14 @@ public class NotificationService {
         notification.setTitle(event.transactionResult() == TransactionResult.APPROVED ? "Scan approved" : "Scan rejected");
         notification.setMessage(event.reason() == null ? "Your QR transaction was processed." : event.reason());
         notification.setRelatedTransactionId(event.transactionId());
+        notification.setNotificationType(event.transactionResult() == TransactionResult.APPROVED
+                ? NotificationType.SCAN_APPROVED : NotificationType.SCAN_REJECTED);
         notificationRepository.save(notification);
     }
 
     private NotificationResponse toResponse(Notification notification) {
         return new NotificationResponse(notification.getId(), notification.getEventId(), notification.getRecipientUserId(),
                 notification.getTitle(), notification.getMessage(), notification.getStatus(), notification.getRelatedTransactionId(),
-                notification.getRelatedRewardRedemptionId(), notification.getReadAt());
+                notification.getRelatedRewardRedemptionId(), notification.getReadAt(), notification.getNotificationType());
     }
 }
