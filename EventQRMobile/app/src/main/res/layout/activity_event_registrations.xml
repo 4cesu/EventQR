@@ -35,6 +35,34 @@
             android:textColor="#111827"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/badgeSelectionCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_badge_selection"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:minWidth="22dp"
+            android:minHeight="22dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:text="0"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/btnSelectForPrint"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_circle_light"
+            android:contentDescription="Select attendees for batch printing"
+            android:padding="8dp"
+            android:src="@drawable/ic_select_multiple"
+            app:tint="#111827" />
     </LinearLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -217,4 +245,41 @@
                 android:visibility="gone" />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <LinearLayout
+        android:id="@+id/batchPrintBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnSelectAllRegistrations"
+            style="?attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#F3F4F6"
+            android:text="Select All"
+            android:textColor="#4F46E5"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnPrintSelectedIds"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:backgroundTint="#4F46E5"
+            android:enabled="false"
+            android:text="Print Selected"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+    </LinearLayout>
 </LinearLayout>

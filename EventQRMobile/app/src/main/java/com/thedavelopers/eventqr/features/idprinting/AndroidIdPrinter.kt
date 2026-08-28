@@ -55,6 +55,9 @@ object AndroidIdPrinter {
         FOUR(2, 2, 4, "4-up"),
         EIGHT(2, 4, 8, "8-up");
 
+        /** Number of A4 sheets needed to hold [totalCards] (paginates by capacity). */
+        fun pagesFor(totalCards: Int): Int = if (totalCards <= 0) 0 else (totalCards + copies - 1) / copies
+
         companion object {
             fun fromLabel(label: String): UpCount = entries.firstOrNull { it.label == label } ?: ONE
         }
@@ -70,25 +73,45 @@ object AndroidIdPrinter {
         val qrValue: String = "",
     )
 
-    fun print(context: Context, jobName: String, data: CardData, upCount: UpCount = UpCount.ONE) {
+    /** Single-attendee print — one card on the page (the reprint case). */
+    fun print(context: Context, jobName: String, data: CardData) {
         val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
-        printManager.print(jobName, IdCardPrintAdapter(data, upCount), null)
+        printManager.print(jobName, IdCardPrintAdapter(listOf(data), UpCount.ONE), null)
     }
 
     /**
-     * Renders a whole A4 sheet (grid) into a preview [Bitmap] for a print
-     * confirmation dialog. The same attendee fills every cell to approximate
-     * what a reprint-single-attendee sheet will look like.
+     * Multi-attendee print: [cards] holds each attendee's own [CardData]. The
+     * sheet(s) are laid out at [upCount] cards per A4 page, split across multiple
+     * pages as needed (last page blank-fills unused cells). Each attendee appears
+     * exactly once.
      */
-    fun renderGridPreview(data: CardData, upCount: UpCount, targetWidthPx: Int): Bitmap {
+    fun print(context: Context, jobName: String, cards: List<CardData>, upCount: UpCount) {
+        val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
+        printManager.print(jobName, IdCardPrintAdapter(cards, upCount), null)
+    }
+
+    /**
+     * Renders a single page's grid into a preview [Bitmap] for a print
+     * confirmation dialog. [pageIndex] selects which sheet (0-based).
+     */
+    fun renderGridPreview(
+        cards: List<CardData?>,
+        upCount: UpCount,
+        targetWidthPx: Int,
+        pageIndex: Int = 0,
+    ): Bitmap {
+        val start = pageIndex * upCount.copies
+        val slice = mutableListOf<CardData?>()
+        for (i in start until min(start + upCount.copies, cards.size)) slice.add(cards[i])
+        while (slice.size < upCount.copies) slice.add(null)
+
         val pageScale = targetWidthPx.toFloat() / IdCardLayoutConfig.PAGE_W_PT
         val targetHeight = (IdCardLayoutConfig.PAGE_H_PT * pageScale).toInt()
         val bitmap = Bitmap.createBitmap(targetWidthPx, targetHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.WHITE)
         canvas.scale(pageScale, pageScale)
-        val cards = List(upCount.copies) { data }
-        drawPageGrid(canvas, cards, upCount)
+        drawPageGrid(canvas, slice, upCount)
         return bitmap
     }
 
@@ -176,9 +199,12 @@ object AndroidIdPrinter {
     // ------------------------------------------------------------------
 
     private class IdCardPrintAdapter(
-        private val data: CardData,
+        private val cards: List<CardData>,
         private val upCount: UpCount,
     ) : PrintDocumentAdapter() {
+
+        private val cardCount: Int get() = cards.size
+        private val pageCount: Int get() = upCount.pagesFor(cardCount)
 
         override fun onWrite(
             pages: Array<PageRange>,
@@ -187,15 +213,16 @@ object AndroidIdPrinter {
             callback: WriteResultCallback,
         ) {
             val doc = PdfDocument()
-            val pageInfo = PdfDocument.PageInfo.Builder(
-                IdCardLayoutConfig.PAGE_W_PT,
-                IdCardLayoutConfig.PAGE_H_PT,
-                1,
-            ).create()
-            val page = doc.startPage(pageInfo)
-            val cards = List(upCount.copies) { data }
-            drawPageGrid(page.canvas, cards, upCount)
-            doc.finishPage(page)
+            for (p in 0 until pageCount) {
+                val pageInfo = PdfDocument.PageInfo.Builder(
+                    IdCardLayoutConfig.PAGE_W_PT,
+                    IdCardLayoutConfig.PAGE_H_PT,
+                    p + 1,
+                ).create()
+                val page = doc.startPage(pageInfo)
+                drawPageGrid(page.canvas, pageCards(p), upCount)
+                doc.finishPage(page)
+            }
 
             try {
                 FileOutputStream(destination.fileDescriptor).use { doc.writeTo(it) }
@@ -203,6 +230,15 @@ object AndroidIdPrinter {
                 doc.close()
             }
             callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
+        }
+
+        /** Returns the cells for page [p], blank-filling any unused trailing cells. */
+        private fun pageCards(p: Int): List<CardData?> {
+            val start = p * upCount.copies
+            val slice = mutableListOf<CardData?>()
+            for (i in start until min(start + upCount.copies, cardCount)) slice.add(cards[i])
+            while (slice.size < upCount.copies) slice.add(null)
+            return slice
         }
 
         override fun onLayout(
@@ -218,7 +254,7 @@ object AndroidIdPrinter {
             }
             val info = PrintDocumentInfo.Builder("id_card.pdf")
                 .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
-                .setPageCount(1)
+                .setPageCount(pageCount)
                 .build()
             callback.onLayoutFinished(info, true)
         }
