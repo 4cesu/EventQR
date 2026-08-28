@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
+import com.thedavelopers.eventqr.shared.constants.NotificationType;
 import com.thedavelopers.eventqr.shared.utils.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -35,6 +36,10 @@ public class Notification extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private NotificationStatus status = NotificationStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "notification_type", nullable = false)
+    private NotificationType notificationType = NotificationType.GENERAL;
 
     private UUID relatedTransactionId;
 

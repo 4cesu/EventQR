@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
+import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 
@@ -53,6 +54,16 @@ class NotificationAdapter(
 
             iconContainer.setBackgroundResource(R.drawable.bg_notification_icon_box)
             when {
+                item.notificationType == NotificationType.SCAN_REJECTED -> {
+                    iconView.setImageResource(R.drawable.ic_error_circle)
+                    iconView.setColorFilter(0xFFEF4444.toInt())
+                }
+
+                item.notificationType == NotificationType.SCAN_APPROVED -> {
+                    iconView.setImageResource(R.drawable.ic_check_circle_purple)
+                    iconView.setColorFilter(0xFF10B981.toInt())
+                }
+
                 item.title.contains("reward", ignoreCase = true) || item.message.contains("reward", ignoreCase = true) -> {
                     iconView.setImageResource(R.drawable.ic_gift)
                     iconView.setColorFilter(0xFF10B981.toInt())
