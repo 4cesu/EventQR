@@ -44,8 +44,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     private lateinit var txtTotal: TextView
     private lateinit var txtCheckedIn: TextView
     private lateinit var txtNoShow: TextView
-    private lateinit var txtBannerTitle: TextView
-    private lateinit var txtBannerDate: TextView
+    private lateinit var txtEventSelectorDate: TextView
     private lateinit var eventSelectorHost: LinearLayout
     private lateinit var bottomNavHost: LinearLayout
 
@@ -62,7 +61,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             ?: return showMissingEventScreen("Attendee Management")
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<TextView>(R.id.btnFilter).setOnClickListener {
+        findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
             startActivity(
                 Intent(this, SearchAttendeesActivity::class.java)
                     .putExtra(EXTRA_EVENT_ID, selectedEvent.id)
@@ -70,11 +69,10 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             )
         }
 
-        txtBannerTitle = findViewById(R.id.txtEventMiniTitle)
-        txtBannerDate = findViewById(R.id.txtEventMiniDate)
         txtTotal = findViewById(R.id.txtTotalCount)
         txtCheckedIn = findViewById(R.id.txtCheckedInCount)
         txtNoShow = findViewById(R.id.txtNoShowCount)
+        txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
         swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
         progressBar = findViewById(R.id.progressAttendees)
         emptyState = findViewById(R.id.txtAttendeesEmpty)
@@ -137,9 +135,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     }
 
     private fun bindEventHeader() {
-        findViewById<TextView>(R.id.txtManagementEventName).text = selectedEvent.title
-        txtBannerTitle.text = selectedEvent.title
-        txtBannerDate.text = organizerEventDateLine(selectedEvent.shortDate, selectedEvent.title, selectedEvent.venue)
+        val dateLine = organizerEventDateLine(selectedEvent.shortDate, selectedEvent.title, selectedEvent.venue)
+        txtEventSelectorDate.text = if (dateLine.isBlank()) selectedEvent.title else "${selectedEvent.title} · $dateLine"
     }
 
     private fun render(load: OrganizerMvpLoad<List<OrganizerMvpAttendee>>) {

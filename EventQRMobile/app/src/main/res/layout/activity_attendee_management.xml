@@ -35,23 +35,17 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnFilter"
-            android:layout_width="86dp"
-            android:layout_height="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="center_vertical"
             android:background="@drawable/bg_event_filter_chip_selected"
-            android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="8dp"
-            android:drawableTint="@android:color/white"
-            android:minWidth="0dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:text="Filter"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:iconTint="@android:color/white" />
+            android:contentDescription="Filter"
+            android:minWidth="44dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_search"
+            app:tint="@android:color/white" />
     </LinearLayout>
 
     <LinearLayout
@@ -61,12 +55,6 @@
         android:paddingStart="16dp"
         android:paddingTop="16dp"
         android:paddingEnd="16dp">
-
-        <TextView
-            android:id="@+id/txtManagementEventName"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"
@@ -80,62 +68,33 @@
             android:id="@+id/layoutEventSelectorHost"
             android:layout_width="match_parent"
             android:layout_height="44dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_card"
             android:gravity="center_vertical"
             android:orientation="vertical"
             android:paddingStart="10dp"
             android:paddingEnd="10dp" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/txtEventSelectorDate"
             android:layout_width="match_parent"
-            android:layout_height="38dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_attendee_banner"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp">
-
-            <ImageView
-                android:id="@+id/imgEventMiniIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_nav_calendar"
-                app:tint="@color/eventqr_purple" />
-
-            <TextView
-                android:id="@+id/txtEventMiniTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="@color/eventqr_purple"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/txtEventMiniDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="#6B7280"
-                android:textSize="12sp" />
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#6B7280"
+            android:textSize="12sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="126dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:baselineAligned="false"
             android:orientation="horizontal">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 app:cardBackgroundColor="#FFFFFF"
@@ -144,10 +103,13 @@
                 app:cardUseCompatPadding="false">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="12dp">
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -160,12 +122,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        android:gravity="center_horizontal"
                         android:textColor="@color/eventqr_text"
                         android:textSize="24sp"
                         android:textStyle="bold" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:maxLines="2"
                         android:text="Total"
                         android:textColor="#6B7280"
                         android:textSize="13sp" />
@@ -174,7 +139,7 @@
 
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
@@ -184,10 +149,13 @@
                 app:cardUseCompatPadding="false">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="12dp">
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -200,12 +168,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        android:gravity="center_horizontal"
                         android:textColor="@color/eventqr_text"
                         android:textSize="24sp"
                         android:textStyle="bold" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:maxLines="2"
                         android:text="Checked In"
                         android:textColor="#6B7280"
                         android:textSize="13sp" />
@@ -214,7 +185,7 @@
 
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 app:cardBackgroundColor="#FFFFFF"
@@ -223,10 +194,13 @@
                 app:cardUseCompatPadding="false">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="12dp">
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -239,12 +213,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        android:gravity="center_horizontal"
                         android:textColor="@color/eventqr_text"
                         android:textSize="24sp"
                         android:textStyle="bold" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:maxLines="2"
                         android:text="No Show"
                         android:textColor="#6B7280"
                         android:textSize="13sp" />

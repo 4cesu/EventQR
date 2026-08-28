@@ -365,6 +365,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
             addView(LinearLayout(this@OrganizerDashboardActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
                 setPadding(dp(12), dp(12), dp(12), dp(12))
 
                 addView(LinearLayout(this@OrganizerDashboardActivity).apply {
