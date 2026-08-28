@@ -18,6 +18,7 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequ
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 import com.thedavelopers.eventqr.shared.constants.RewardStatus;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 
 @Service
 @Transactional
@@ -49,6 +50,9 @@ public class RewardRedemptionScanService {
                 request.staffUserId(), null);
         TransactionResponse scanLog = transactionService.record(recordRequest);
 
+        boolean rejected = scanLog.transactionResult() == TransactionResult.REJECTED;
+        String rejectionReason = rejected ? scanLog.reason() : null;
+
         int pointsBalance = balanceFor(request.eventId(), verification.attendeeUserId()).getPointsBalance();
 
         List<RewardResponse> eligibleRewards = rewardRepository.findByEventId(request.eventId()).stream()
@@ -69,7 +73,9 @@ public class RewardRedemptionScanService {
                 pointsBalance,
                 request.scanPurposeId(),
                 scanLog.transactionId(),
-                eligibleRewards);
+                eligibleRewards,
+                rejected,
+                rejectionReason);
     }
 
     private AttendeePointBalance balanceFor(UUID eventId, UUID attendeeUserId) {

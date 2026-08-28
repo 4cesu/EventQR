@@ -25,6 +25,8 @@ data class RewardRedemptionScanResponse(
     val scanPurposeId: UUID,
     val redemptionScanLogId: UUID,
     val eligibleRewards: List<RewardResponse> = emptyList(),
+    val rejected: Boolean = false,
+    val rejectionReason: String? = null,
 )
 
 data class RewardRedemptionGrantRequest(

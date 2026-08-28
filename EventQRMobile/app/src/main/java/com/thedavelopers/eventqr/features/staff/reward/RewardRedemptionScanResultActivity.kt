@@ -34,6 +34,8 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
     private var pointsBalance: Int = 0
     private var redemptionScanLogId: String = ""
     private var staffUserId: String = ""
+    private var scanRejected: Boolean = false
+    private var rejectionReason: String = ""
     private var rewardsContainer: LinearLayout? = null
     private var balanceText: TextView? = null
     private var emptyText: TextView? = null
@@ -47,6 +49,8 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         pointsBalance = intent.getIntExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, 0)
         redemptionScanLogId = intent.getStringExtra(AppRewardExtras.EXTRA_REDEMPTION_SCAN_LOG_ID).orEmpty()
         staffUserId = intent.getStringExtra(StaffScreenExtras.EXTRA_STAFF_USER_ID).orEmpty()
+        scanRejected = intent.getBooleanExtra(StaffScreenExtras.EXTRA_SCAN_REJECTED, false)
+        rejectionReason = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_REJECTION_REASON).orEmpty()
         setContentView(buildUi())
         loadRewards()
     }
@@ -134,6 +138,15 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
     }
 
     private fun loadRewards() {
+        if (scanRejected) {
+            rewardsContainer?.removeAllViews()
+            emptyText?.apply {
+                text = rejectionReason.ifBlank { "This scan was rejected. Please try again." }
+                visibility = View.VISIBLE
+            }
+            showMessage(rejectionReason.ifBlank { "Scan was rejected." })
+            return
+        }
         if (eventId.isBlank()) {
             showMessage("Missing event context")
             return
