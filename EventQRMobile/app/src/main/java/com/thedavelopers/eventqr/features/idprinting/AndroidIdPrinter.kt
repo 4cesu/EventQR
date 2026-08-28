@@ -24,7 +24,9 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import java.io.FileOutputStream
+import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Renders CR80-ratio ID cards onto an A4 bond-paper page and opens the system
@@ -37,9 +39,13 @@ import kotlin.math.min
  * bitmap at [IdCardLayoutConfig.RENDER_SCALE]× to produce crisp text when the
  * PDF is printed, then composited onto the final PDF page at its physical size.
  *
- * Multi-up: a card grid can be drawn (see [UpCount]) with thin dashed cut
- * guides and corner crop marks around every cell so cards can be cut apart.
- * Cells beyond the supplied data list are left blank and never duplicated.
+ * Batch print: a fixed 3×3 grid (9 cards per A4 sheet) is drawn with thin
+ * dashed cut guides and corner crop marks around every cell so cards can be cut
+ * apart. Cells beyond the supplied data list are left blank and never
+ * duplicated; batches larger than 9 paginate to additional sheets.
+ *
+ * Single-attendee reprint (see [print]) stays independent: one card at native
+ * CR80 size, centered on its own page.
  */
 object AndroidIdPrinter {
 
@@ -48,20 +54,13 @@ object AndroidIdPrinter {
     private const val FIELD_EVENT_NAME = IdCardLayoutConfig.FIELD_EVENT_NAME
     private const val FIELD_EVENT_DATE = IdCardLayoutConfig.FIELD_EVENT_DATE
 
-    /** Common sheet layouts. One physical sheet = copies cards (rows × cols). */
-    enum class UpCount(val cols: Int, val rows: Int, val copies: Int, val label: String) {
-        ONE(1, 1, 1, "1-up"),
-        TWO(1, 2, 2, "2-up"),
-        FOUR(2, 2, 4, "4-up"),
-        EIGHT(2, 4, 8, "8-up");
+    /** Hard business cap: at most 3 columns × 3 rows = 9 cards per sheet. */
+    private const val MAX_GRID_COLS = 3
+    private const val MAX_GRID_ROWS = 3
 
-        /** Number of A4 sheets needed to hold [totalCards] (paginates by capacity). */
-        fun pagesFor(totalCards: Int): Int = if (totalCards <= 0) 0 else (totalCards + copies - 1) / copies
-
-        companion object {
-            fun fromLabel(label: String): UpCount = entries.firstOrNull { it.label == label } ?: ONE
-        }
-    }
+    /** Number of sheets a batch of [totalCards] spans at the 9-cap grid (UI estimate). */
+    private fun pagesFor(totalCards: Int): Int =
+        if (totalCards <= 0) 0 else (totalCards + MAX_GRID_COLS * MAX_GRID_ROWS - 1) / (MAX_GRID_COLS * MAX_GRID_ROWS)
 
     data class CardData(
         val attendeeName: String,
@@ -73,45 +72,58 @@ object AndroidIdPrinter {
         val qrValue: String = "",
     )
 
-    /** Single-attendee print — one card on the page (the reprint case). */
+    /**
+     * Single-attendee reprint — one card at native CR80 size, centered on its
+     * own page. Independent of the batch 3×3 grid.
+     */
     fun print(context: Context, jobName: String, data: CardData) {
         val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
-        printManager.print(jobName, IdCardPrintAdapter(listOf(data), UpCount.ONE), null)
+        printManager.print(jobName, IdCardPrintAdapter(listOf(data), 1, 1), null)
     }
 
     /**
-     * Multi-attendee print: [cards] holds each attendee's own [CardData]. The
-     * sheet(s) are laid out at [upCount] cards per A4 page, split across multiple
-     * pages as needed (last page blank-fills unused cells). Each attendee appears
-     * exactly once.
+     * Batch print: [cards] holds each attendee's own [CardData], laid out on a
+     * fixed 3×3 grid (at most 9 per page, adapting down to what fits the loaded
+     * paper), split across multiple pages as needed (last page blank-fills
+     * unused cells). Each attendee appears exactly once.
      */
-    fun print(context: Context, jobName: String, cards: List<CardData>, upCount: UpCount) {
+    fun print(context: Context, jobName: String, cards: List<CardData>) {
         val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
-        printManager.print(jobName, IdCardPrintAdapter(cards, upCount), null)
+        printManager.print(jobName, IdCardPrintAdapter(cards, MAX_GRID_COLS, MAX_GRID_ROWS), null)
     }
 
     /**
-     * Renders a single page's grid into a preview [Bitmap] for a print
+     * Number of A4 sheets a batch of [totalCards] spans at the fixed 3×3 grid.
+     */
+    fun batchPageCount(totalCards: Int): Int = pagesFor(totalCards)
+
+    /**
+     * Renders a single page's 3×3 grid into a preview [Bitmap] for a print
      * confirmation dialog. [pageIndex] selects which sheet (0-based).
+     *
+     * The preview is a fixed A4 reference (paper isn't known until the system
+     * print dialog's onLayout); the actual print uses the real media size.
      */
     fun renderGridPreview(
         cards: List<CardData?>,
-        upCount: UpCount,
         targetWidthPx: Int,
         pageIndex: Int = 0,
     ): Bitmap {
-        val start = pageIndex * upCount.copies
+        val pageW = IdCardLayoutConfig.PAGE_W_PT.toFloat()
+        val pageH = IdCardLayoutConfig.PAGE_H_PT.toFloat()
+        val perPage = MAX_GRID_COLS * MAX_GRID_ROWS
+        val start = pageIndex * perPage
         val slice = mutableListOf<CardData?>()
-        for (i in start until min(start + upCount.copies, cards.size)) slice.add(cards[i])
-        while (slice.size < upCount.copies) slice.add(null)
+        for (i in start until min(start + perPage, cards.size)) slice.add(cards[i])
+        while (slice.size < perPage) slice.add(null)
 
-        val pageScale = targetWidthPx.toFloat() / IdCardLayoutConfig.PAGE_W_PT
-        val targetHeight = (IdCardLayoutConfig.PAGE_H_PT * pageScale).toInt()
+        val pageScale = targetWidthPx.toFloat() / pageW
+        val targetHeight = (pageH * pageScale).toInt()
         val bitmap = Bitmap.createBitmap(targetWidthPx, targetHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.WHITE)
         canvas.scale(pageScale, pageScale)
-        drawPageGrid(canvas, slice, upCount)
+        drawPageGrid(canvas, slice, MAX_GRID_COLS, MAX_GRID_ROWS, pageW, pageH)
         return bitmap
     }
 
@@ -141,9 +153,16 @@ object AndroidIdPrinter {
     private val textDark = IdCardLayoutConfig.COLOR_TEXT
     private val lineLight = IdCardLayoutConfig.COLOR_BORDER_LIGHT
 
-    /** Page margin / cell gap (points) used to centre the grid on A4. */
+    /** Page margin / cell gap (points), applied to whatever paper is loaded. */
     private const val PAGE_MARGIN_PT = 30f
     private const val CELL_GAP_PT = 16f
+
+    /**
+     * Physical minimum printable margin of a real printer (~14pt ≈ 5mm).
+     * Used ONLY for the "can this grid fit" check in onLayout — an actual
+     * hardware constraint, not an aesthetic default like [PAGE_MARGIN_PT].
+     */
+    private const val PRINTER_MIN_MARGIN_PT = 14f
 
     // ------------------------------------------------------------------
     // Grid layout
@@ -153,30 +172,31 @@ object AndroidIdPrinter {
         val cols: Int,
         val rows: Int,
         val scale: Float,
-        val originX: Float,
-        val originY: Float,
         val gapX: Float,
         val gapY: Float,
         val cellW: Float,
         val cellH: Float,
+        val gridW: Float,
+        val gridH: Float,
     ) {
-        fun cellLeft(col: Int) = originX + col * (cellW + gapX)
-        fun cellTop(row: Int) = originY + row * (cellH + gapY)
+        fun cellLeft(col: Int) = col * (cellW + gapX)
+        fun cellTop(row: Int) = row * (cellH + gapY)
     }
 
     /**
-     * Computes the largest card scale that fits [cols] × [rows] within the A4
-     * page (bounded by [PAGE_MARGIN_PT] and separated by [CELL_GAP_PT]) while
-     * never scaling a card above its native CR80 size.
+     * Computes the grid layout for [cols] × [rows] on the given page
+     * ([pageW] × [pageH] points, read from the actual media size).
+     *
+     * Cards are ALWAYS rendered at native CR80 size — never shrunk or resized
+     * based on paper. Callers pass a grid (via the adaptive fit in onLayout)
+     * that is guaranteed to fit at native size; leftover space becomes margins
+     * and the area is centered by [drawPageGrid].
+     *
+     * [gridW]/[gridH] hold the total occupied area (cards + gaps). Actual
+     * placement — centering that area on the page — is applied by [drawPageGrid].
      */
-    private fun computeLayout(cols: Int, rows: Int): GridLayout {
-        val pageW = IdCardLayoutConfig.PAGE_W_PT
-        val pageH = IdCardLayoutConfig.PAGE_H_PT
-        val availW = pageW - 2 * PAGE_MARGIN_PT
-        val availH = pageH - 2 * PAGE_MARGIN_PT
-        val scaleW = (availW - CELL_GAP_PT * (cols - 1)) / (cols * cardW)
-        val scaleH = (availH - CELL_GAP_PT * (rows - 1)) / (rows * cardH)
-        val scale = min(scaleW, min(scaleH, 1f))
+    private fun computeLayout(cols: Int, rows: Int, pageW: Float, pageH: Float): GridLayout {
+        val scale = 1f // native CR80 size — cards never resize with paper
         val cellW = cardW * scale
         val cellH = cardH * scale
         val gridW = cols * cellW + (cols - 1) * CELL_GAP_PT
@@ -185,12 +205,12 @@ object AndroidIdPrinter {
             cols = cols,
             rows = rows,
             scale = scale,
-            originX = (pageW - gridW) / 2f,
-            originY = (pageH - gridH) / 2f,
             gapX = CELL_GAP_PT,
             gapY = CELL_GAP_PT,
             cellW = cellW,
             cellH = cellH,
+            gridW = gridW,
+            gridH = gridH,
         )
     }
 
@@ -200,46 +220,19 @@ object AndroidIdPrinter {
 
     private class IdCardPrintAdapter(
         private val cards: List<CardData>,
-        private val upCount: UpCount,
+        private val cols: Int,
+        private val rows: Int,
     ) : PrintDocumentAdapter() {
 
         private val cardCount: Int get() = cards.size
-        private val pageCount: Int get() = upCount.pagesFor(cardCount)
 
-        override fun onWrite(
-            pages: Array<PageRange>,
-            destination: ParcelFileDescriptor,
-            cancellationSignal: CancellationSignal,
-            callback: WriteResultCallback,
-        ) {
-            val doc = PdfDocument()
-            for (p in 0 until pageCount) {
-                val pageInfo = PdfDocument.PageInfo.Builder(
-                    IdCardLayoutConfig.PAGE_W_PT,
-                    IdCardLayoutConfig.PAGE_H_PT,
-                    p + 1,
-                ).create()
-                val page = doc.startPage(pageInfo)
-                drawPageGrid(page.canvas, pageCards(p), upCount)
-                doc.finishPage(page)
-            }
-
-            try {
-                FileOutputStream(destination.fileDescriptor).use { doc.writeTo(it) }
-            } finally {
-                doc.close()
-            }
-            callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
-        }
-
-        /** Returns the cells for page [p], blank-filling any unused trailing cells. */
-        private fun pageCards(p: Int): List<CardData?> {
-            val start = p * upCount.copies
-            val slice = mutableListOf<CardData?>()
-            for (i in start until min(start + upCount.copies, cardCount)) slice.add(cards[i])
-            while (slice.size < upCount.copies) slice.add(null)
-            return slice
-        }
+        // Page size in points, resolved from the actual media at onLayout time
+        // (fallback: A4 in case onLayout isn't reached with a media size).
+        private var pageW = IdCardLayoutConfig.PAGE_W_PT.toFloat()
+        private var pageH = IdCardLayoutConfig.PAGE_H_PT.toFloat()
+        // Grid actually fitting the loaded paper (capped at the requested cols×rows).
+        private var fitCols = cols
+        private var fitRows = rows
 
         override fun onLayout(
             oldAttributes: PrintAttributes?,
@@ -252,11 +245,82 @@ object AndroidIdPrinter {
                 callback.onLayoutCancelled()
                 return
             }
+
+            // 1. Read the actual paper size (mils) and convert to points (1 mil = 0.072 pt).
+            var wPt = pageW
+            var hPt = pageH
+            newAttributes.mediaSize?.let { media ->
+                wPt = media.widthMils * 0.072f
+                hPt = media.heightMils * 0.072f
+            }
+            pageW = wPt
+            pageH = hPt
+
+            // 5. Too small to fit even one native CR80 card (physical min. margin)?
+            val minW = cardW + 2 * PRINTER_MIN_MARGIN_PT
+            val minH = cardH + 2 * PRINTER_MIN_MARGIN_PT
+            if (wPt < minW || hPt < minH) {
+                callback.onLayoutFailed(
+                    "Paper too small for even one ID card (min ${minW.roundToInt()}×${minH.roundToInt()} pt). Pick a larger paper size.",
+                )
+                return
+            }
+
+            // 4/6. Grid adapts down to what fits at native CR80 size, never exceeding
+            // the requested 3×3 (9 cards) hard cap. Cards themselves never shrink.
+            // Uses the physical min margin — not the aesthetic PAGE_MARGIN_PT — so
+            // paper that fits 3×3 at a realistic margin (e.g. Letter) is kept at 3×3.
+            val availW = wPt - 2 * PRINTER_MIN_MARGIN_PT
+            val availH = hPt - 2 * PRINTER_MIN_MARGIN_PT
+            val maxCols = max(1, ((availW + CELL_GAP_PT) / (cardW + CELL_GAP_PT)).toInt())
+            val maxRows = max(1, ((availH + CELL_GAP_PT) / (cardH + CELL_GAP_PT)).toInt())
+            fitCols = min(cols, maxCols)
+            fitRows = min(rows, maxRows)
+
+            val pages = if (cardCount == 0) 0 else (cardCount + fitCols * fitRows - 1) / (fitCols * fitRows)
             val info = PrintDocumentInfo.Builder("id_card.pdf")
                 .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
-                .setPageCount(pageCount)
+                .setPageCount(pages)
                 .build()
             callback.onLayoutFinished(info, true)
+        }
+
+        override fun onWrite(
+            pages: Array<PageRange>,
+            destination: ParcelFileDescriptor,
+            cancellationSignal: CancellationSignal,
+            callback: WriteResultCallback,
+        ) {
+            val perPage = fitCols * fitRows
+            val pageCount = if (cardCount == 0) 0 else (cardCount + perPage - 1) / perPage
+            val doc = PdfDocument()
+            for (p in 0 until pageCount) {
+                // 3. PDF page sized from the dynamic media size, not fixed A4.
+                val pageInfo = PdfDocument.PageInfo.Builder(
+                    pageW.roundToInt(),
+                    pageH.roundToInt(),
+                    p + 1,
+                ).create()
+                val page = doc.startPage(pageInfo)
+                drawPageGrid(page.canvas, pageCards(p, perPage), fitCols, fitRows, pageW, pageH)
+                doc.finishPage(page)
+            }
+
+            try {
+                FileOutputStream(destination.fileDescriptor).use { doc.writeTo(it) }
+            } finally {
+                doc.close()
+            }
+            callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
+        }
+
+        /** Returns the cells for page [p], blank-filling any unused trailing cells. */
+        private fun pageCards(p: Int, perPage: Int): List<CardData?> {
+            val start = p * perPage
+            val slice = mutableListOf<CardData?>()
+            for (i in start until min(start + perPage, cardCount)) slice.add(cards[i])
+            while (slice.size < perPage) slice.add(null)
+            return slice
         }
     }
 
@@ -265,26 +329,36 @@ object AndroidIdPrinter {
     // ------------------------------------------------------------------
 
     /**
-     * Draws every cell (cut guides always, card content only for non-null
-     * entries). Cells with no data are left blank — never duplicated/stretched.
+     * Draws every cell (cut guides always; card content only for non-null
+     * entries). Unfilled cells are greyed out — never duplicated/stretched.
+     *
+     * The whole grid is centered on the page: the total occupied area
+     * (cards + gaps) is subtracted from the page size and the leftover is
+     * split evenly on all sides via [startX]/[startY].
      */
-    private fun drawPageGrid(canvas: Canvas, cards: List<CardData?>, upCount: UpCount) {
-        val layout = computeLayout(upCount.cols, upCount.rows)
+    private fun drawPageGrid(canvas: Canvas, cards: List<CardData?>, cols: Int, rows: Int, pageW: Float, pageH: Float) {
+        val layout = computeLayout(cols, rows, pageW, pageH)
+
+        // Center the total grid area horizontally AND vertically on the page.
+        val startX = (pageW - layout.gridW) / 2f
+        val startY = (pageH - layout.gridH) / 2f
+
         for (row in 0 until layout.rows) {
             for (col in 0 until layout.cols) {
                 val index = row * layout.cols + col
-                val cellLeft = layout.cellLeft(col)
-                val cellTop = layout.cellTop(row)
+                val cellLeft = startX + layout.cellLeft(col)
+                val cellTop = startY + layout.cellTop(row)
                 drawCellGuides(canvas, cellLeft, cellTop, layout.cellW, layout.cellH)
 
-                val data = cards.getOrNull(index) ?: continue
+                val cell = RectF(cellLeft, cellTop, cellLeft + layout.cellW, cellTop + layout.cellH)
+                val data = cards.getOrNull(index)
+                if (data == null) {
+                    val emptyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFE5E7EB.toInt() }
+                    canvas.drawRoundRect(cell, 5f, 5f, emptyPaint)
+                    continue
+                }
                 val bitmap = renderCardBitmap(data)
-                canvas.drawBitmap(
-                    bitmap,
-                    Rect(0, 0, bitmap.width, bitmap.height),
-                    RectF(cellLeft, cellTop, cellLeft + layout.cellW, cellTop + layout.cellH),
-                    null,
-                )
+                canvas.drawBitmap(bitmap, Rect(0, 0, bitmap.width, bitmap.height), cell, null)
                 bitmap.recycle()
             }
         }
