@@ -5,6 +5,7 @@ import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.api.safeApiCall
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanRequest
@@ -70,6 +71,9 @@ class StaffRepository(context: Context) {
     suspend fun reprintAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.reprintAttendeeId(eventId, attendeeId) }
 
     suspend fun getStaffPrintLogs(eventId: String) = safeApiCall { apiService.getStaffPrintLogs(eventId) }
+
+    suspend fun printIdBatch(eventId: String, attendeeUserIds: List<java.util.UUID>, reprint: Boolean) =
+        safeApiCall { apiService.printIdBatch(eventId, IdBatchPrintRequest(attendeeUserIds, reprint)) }
 
     suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
 

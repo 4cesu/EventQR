@@ -88,18 +88,33 @@ public class IdPrintingService {
     }
 
     public IdPrintResponse previewForAttendee(UUID eventId, UUID attendeeUserId) {
-        var registration = registrationLookupPort.listByEventId(eventId).stream()
-                .filter(item -> item.attendeeUserId().equals(attendeeUserId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Registration not found for attendee"));
-        return print(new IdPrintRequest(eventId, registration.qrCredentialId(), attendeeUserId, false));
+        return print(new IdPrintRequest(eventId, findRegistrationForAttendee(eventId, attendeeUserId).qrCredentialId(),
+                attendeeUserId, false));
     }
 
     public IdPrintResponse printForAttendee(UUID eventId, UUID attendeeUserId, boolean reprint) {
-        var registration = registrationLookupPort.listByEventId(eventId).stream()
+        var registration = findRegistrationForAttendee(eventId, attendeeUserId);
+        return print(new IdPrintRequest(eventId, registration.qrCredentialId(), attendeeUserId, reprint));
+    }
+
+    /**
+     * Prints a sheet that may contain multiple ID cards. One {@code id_print_logs}
+     * entry is written per attendee entry (i.e. per printed card), so an 8-up sheet
+     * with 8 entries produces 8 individual log rows rather than one per sheet.
+     */
+    public List<IdPrintResponse> printBatch(UUID eventId, List<UUID> attendeeUserIds, boolean reprint) {
+        return attendeeUserIds.stream()
+                .map(attendeeUserId -> findRegistrationForAttendee(eventId, attendeeUserId))
+                .map(registration -> print(new IdPrintRequest(eventId, registration.qrCredentialId(),
+                        registration.attendeeUserId(), reprint)))
+                .toList();
+    }
+
+    private com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort.RegistrationSnapshot findRegistrationForAttendee(
+            UUID eventId, UUID attendeeUserId) {
+        return registrationLookupPort.listByEventId(eventId).stream()
                 .filter(item -> item.attendeeUserId().equals(attendeeUserId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found for attendee"));
-        return print(new IdPrintRequest(eventId, registration.qrCredentialId(), attendeeUserId, reprint));
     }
 }
