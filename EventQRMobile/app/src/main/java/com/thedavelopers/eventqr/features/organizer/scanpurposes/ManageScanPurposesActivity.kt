@@ -227,6 +227,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
+        applyDuplicateLock(selectedType)
 
         val nameInput = EditText(this).apply {
             hint = "Custom name, e.g. Sponsor Booth A"

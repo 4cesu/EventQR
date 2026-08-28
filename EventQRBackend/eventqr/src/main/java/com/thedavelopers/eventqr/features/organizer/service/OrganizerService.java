@@ -165,6 +165,8 @@ public class OrganizerService {
         event.setRewardsEnabled(request.enabled());
         if (request.enabled()) {
             ensureRewardRedemptionScanPurpose(eventId);
+        } else {
+            disableRewardRedemptionScanPurpose(eventId);
         }
         return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
@@ -185,6 +187,16 @@ public class OrganizerService {
         scanPurpose.setDescription("Staff-scan flow for redeeming attendee rewards");
         scanPurposeRepository.save(scanPurpose);
         log.info("Auto-provisioned REWARD_REDEMPTION_SCAN scan purpose for eventId={}", eventId);
+    }
+
+    private void disableRewardRedemptionScanPurpose(UUID eventId) {
+        scanPurposeRepository.findByEventIdAndCode(eventId, ScanPurposeCode.REWARD_REDEMPTION_SCAN)
+                .ifPresent(scanPurpose -> {
+                    scanPurpose.setActive(false);
+                    scanPurposeRepository.save(scanPurpose);
+                    log.info("Disabled REWARD_REDEMPTION_SCAN scan purpose for eventId={} purposeId={}",
+                            eventId, scanPurpose.getId());
+                });
     }
 
     @Transactional(readOnly = true)
