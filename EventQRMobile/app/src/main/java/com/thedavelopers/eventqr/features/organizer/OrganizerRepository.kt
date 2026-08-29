@@ -388,8 +388,12 @@ class OrganizerRepository(private val context: Context) {
     }
 }
 
+// Kept in sync with backend OrganizerService.displayStatus() (and lifecycleStatus()/approvedOnly()
+// on the client): ACTIVE is a distinct label from APPROVED so an ongoing event is never misclassified
+// as Upcoming. Currently only reachable via buildEventSnapshot(), which has no callers.
 private fun EventStatus.toDisplayStatus(): String = when (this) {
-    EventStatus.APPROVED, EventStatus.ACTIVE -> "Approved"
+    EventStatus.APPROVED -> "Approved"
+    EventStatus.ACTIVE -> "Active"
     EventStatus.PENDING_REVIEW, EventStatus.DRAFT -> "Pending"
     EventStatus.REJECTED -> "Rejected"
     EventStatus.ENDED -> "Completed"
