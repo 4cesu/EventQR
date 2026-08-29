@@ -25,4 +25,8 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
                                                                                String location);
 
     long countByStatusIn(Collection<EventStatus> statuses);
+
+    List<Event> findByStatusAndEventStartAtLessThanEqual(EventStatus status, Instant eventStartAt);
+
+    List<Event> findByStatusAndEventEndAtLessThanEqual(EventStatus status, Instant eventEndAt);
 }
