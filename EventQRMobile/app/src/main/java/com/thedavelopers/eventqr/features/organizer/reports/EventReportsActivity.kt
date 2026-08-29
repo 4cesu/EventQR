@@ -169,13 +169,25 @@ open class EventReportsActivity : AppCompatActivity() {
         var status: EventReportFilterStatus = EventReportFilterStatus.ALL
 
         val dateError = text("", 12, false, ERROR).apply { visibility = View.GONE }
+        val dateHint = text("Select both Start Date and End Date to generate.", 12, false, MUTED)
+            .apply { visibility = View.GONE }
+
+        lateinit var generateButton: Button
+        fun refreshGenerateState() {
+            val ready = startDate != null && endDate != null
+            generateButton.isEnabled = ready
+            generateButton.alpha = if (ready) 1f else 0.6f
+            dateHint.visibility = if (ready) View.GONE else View.VISIBLE
+            if (ready) dateError.visibility = View.GONE
+        }
+
         val startDateInput = buildDateInput("Start Date") { picked ->
             startDate = picked
-            dateError.visibility = View.GONE
+            refreshGenerateState()
         }
         val endDateInput = buildDateInput("End Date") { picked ->
             endDate = picked
-            dateError.visibility = View.GONE
+            refreshGenerateState()
         }
 
         root.addView(startDateInput.wrapper)
@@ -191,8 +203,8 @@ open class EventReportsActivity : AppCompatActivity() {
             root.addView(statusSelector { status = it })
         }
 
-        val generateButton = primaryButton("Generate") {
-            if (startDate != null && endDate != null && endDate!!.isBefore(startDate)) {
+        generateButton = primaryButton("Generate") {
+            if (endDate!!.isBefore(startDate!!)) {
                 dateError.text = "End date must be on or after start date."
                 dateError.visibility = View.VISIBLE
                 return@primaryButton
@@ -211,14 +223,21 @@ open class EventReportsActivity : AppCompatActivity() {
             generateSingleReport(item, OrganizerReportsRepository.defaultFilters(), dialog, root)
         }
 
+        root.addView(dateHint.apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                setMargins(0, dp(8), 0, 0)
+            }
+        })
         root.addView(generateButton.apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)).apply {
-                setMargins(0, dp(16), 0, dp(8))
+                setMargins(0, 0, 0, dp(8))
             }
         })
         root.addView(skipButton.apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48))
         })
+
+        refreshGenerateState()
 
         dialog.setContentView(root)
         dialog.show()
