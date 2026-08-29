@@ -26,7 +26,7 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    private static final List<EventStatus> PUBLIC_EVENT_STATUSES = List.of(EventStatus.ACTIVE);
+    private static final List<EventStatus> PUBLIC_EVENT_STATUSES = List.of(EventStatus.APPROVED, EventStatus.ACTIVE);
 
     private final EventRepository eventRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
