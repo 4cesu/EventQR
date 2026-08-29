@@ -109,12 +109,13 @@ open class EventManagementHubActivity : AppCompatActivity() {
             })
 
             // UC-20 edit lock: once an event is Active (ongoing) or Completed the Organizer can
-            // no longer edit its details, so the entry point is hidden (backend still enforces 409).
-            val canEdit = event.lifecycleStatus() != "Active" && event.lifecycleStatus() != "Completed"
+            // no longer edit its details, so the entry is relabeled to view-only ("View Event
+            // Details") instead of being hidden - the screen opens fully read-only (backend also
+            // enforces a 409 if a stale client still tries to edit).
+            val canEdit = event.lifecycleStatus() == "Upcoming"
+            val editLabel = if (canEdit) "Edit Event Details" else "View Event Details"
             val menuItems = buildList {
-                if (canEdit) {
-                    add(Triple("Edit Event Details", com.thedavelopers.eventqr.R.drawable.ic_fileedit, EditEventDetailsActivity::class.java))
-                }
+                add(Triple(editLabel, com.thedavelopers.eventqr.R.drawable.ic_fileedit, EditEventDetailsActivity::class.java))
                 add(Triple("Staff Assignment", com.thedavelopers.eventqr.R.drawable.ic_admin_users, ManageUsersActivity::class.java))
                 add(Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java))
                 add(Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_qr_scan, ManageScanPurposesActivity::class.java))
@@ -128,7 +129,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
             // reshuffle the visual identity of the existing entries.
             menuItems.forEach { (label, icon, target) ->
                 val (iconTint, iconBg) = when (label) {
-                    "Edit Event Details" -> Color.parseColor("#2563EB") to Color.parseColor("#DBEAFE")
+                    "Edit Event Details", "View Event Details" -> Color.parseColor("#2563EB") to Color.parseColor("#DBEAFE")
                     "Staff Assignment" -> Color.parseColor("#4F46E5") to Color.parseColor("#E0E7FF")
                     "Attendees" -> Color.parseColor("#7C3AED") to Color.parseColor("#EDE9FE")
                     "Scan Purposes" -> Color.parseColor("#06B6D4") to Color.parseColor("#CFFAFE")
@@ -142,7 +143,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                         iconRes = icon,
                         iconTint = iconTint,
                         iconBg = iconBg,
-                    ) { openOrganizerPage(target, event.id, event.title) },
+                    ) { openOrganizerPage(target, event.id, event.title, viewOnly = label == "View Event Details") },
                 )
             }
         }

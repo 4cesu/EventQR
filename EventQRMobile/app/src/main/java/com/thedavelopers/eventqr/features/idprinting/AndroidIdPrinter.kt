@@ -450,12 +450,8 @@ object AndroidIdPrinter {
         }
         y += qrSize + qrSpacing
 
-        if (data.visibleFields.contains(FIELD_EVENT_NAME) && data.eventName.isNotBlank()) {
-            y = drawLabel(canvas, "EVENT NAME", centerX, y)
-            y = drawValue(canvas, data.eventName.uppercase(), eventNameFont, centerX, y)
-            y += fieldSpacing
-        }
-
+        // Attendee Name is the prominent (largest/bold) identifier and sits first below the QR
+        // per the canonical FIELD_ORDER, before Role, Event Name, Attendee ID and Event Date.
         y = drawLabel(canvas, "ATTENDEE NAME", centerX, y)
         y = drawValue(canvas, data.attendeeName, nameFont, centerX, y)
         y += fieldSpacing
@@ -463,6 +459,12 @@ object AndroidIdPrinter {
         if (data.visibleFields.contains(FIELD_ROLE) && data.role.isNotBlank()) {
             y = drawLabel(canvas, "ROLE", centerX, y)
             y = drawValue(canvas, data.role, roleFont, centerX, y)
+            y += fieldSpacing
+        }
+
+        if (data.visibleFields.contains(FIELD_EVENT_NAME) && data.eventName.isNotBlank()) {
+            y = drawLabel(canvas, "EVENT NAME", centerX, y)
+            y = drawValue(canvas, data.eventName.uppercase(), eventNameFont, centerX, y)
             y += fieldSpacing
         }
 

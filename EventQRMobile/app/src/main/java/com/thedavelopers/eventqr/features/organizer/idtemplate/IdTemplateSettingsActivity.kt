@@ -150,18 +150,20 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
         // QR code (locked) — size from shared config ratio
         cardView.addView(qrPlaceholder())
-        if (fieldStates.getValue(IdCardLayoutConfig.FIELD_EVENT_NAME)) {
-            cardView.addView(previewBanner(
-                IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_EVENT_NAME),
-                IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_EVENT_NAME),
-            ))
-        }
+        // Attendee Name stays the prominent (largest/bold) identifier, now placed first below the
+        // QR code per the canonical FIELD_ORDER, before Role, Event Name, Attendee ID and Event Date.
         cardView.addView(previewValue("Attendee Name", "Juan Dela Cruz", valueSizeSp = previewNameFontSp))
         if (fieldStates.getValue(IdCardLayoutConfig.FIELD_ROLE)) {
             cardView.addView(previewValue(
                 IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_ROLE),
                 IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_ROLE),
                 valueSizeSp = previewRoleFontSp,
+            ))
+        }
+        if (fieldStates.getValue(IdCardLayoutConfig.FIELD_EVENT_NAME)) {
+            cardView.addView(previewBanner(
+                IdCardLayoutConfig.displayName(IdCardLayoutConfig.FIELD_EVENT_NAME),
+                IdCardLayoutConfig.sampleValue(IdCardLayoutConfig.FIELD_EVENT_NAME),
             ))
         }
         if (fieldStates.getValue(IdCardLayoutConfig.FIELD_ATTENDEE_ID)) {
