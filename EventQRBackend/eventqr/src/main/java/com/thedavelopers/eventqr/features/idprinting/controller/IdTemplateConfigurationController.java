@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.idprinting.controller;
 import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +44,7 @@ public class IdTemplateConfigurationController {
     @PutMapping
     public ResponseEntity<ApiResponse<IdTemplateConfigResponse>> save(HttpServletRequest request,
                                                                       @PathVariable UUID eventId,
-                                                                      @RequestBody IdTemplateConfigDto body) {
+                                                                      @Valid @RequestBody IdTemplateConfigDto body) {
         // Path param is authoritative; body.eventId is intentionally ignored.
         IdTemplateConfigResponse saved = configurationService.saveConfig(
                 eventId, body.visibleFields(), currentUserId(request));

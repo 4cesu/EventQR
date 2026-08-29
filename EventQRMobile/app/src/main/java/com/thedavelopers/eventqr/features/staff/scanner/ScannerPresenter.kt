@@ -111,7 +111,6 @@ class ScannerPresenter(
         job = kotlinx.coroutines.MainScope().launch {
             val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString)
             val request = if (isShortId) {
-                android.util.Log.d(tag, "Submitting scan via short ID eventId=$eventId scanPurposeId=${purpose.scanPurposeId} scanPurposeCode=${purpose.code} shortId=$trimmed")
                 TransactionRequest(
                     eventId = UUID.fromString(eventId),
                     scanPurposeId = purpose.scanPurposeId,
@@ -120,7 +119,6 @@ class ScannerPresenter(
                     notes = notes.ifBlank { null },
                 )
             } else {
-                android.util.Log.d(tag, "Submitting scan via QR value eventId=$eventId scanPurposeId=${purpose.scanPurposeId} scanPurposeCode=${purpose.code} qrValue=$trimmed")
                 TransactionRequest(
                     eventId = UUID.fromString(eventId),
                     scanPurposeId = purpose.scanPurposeId,

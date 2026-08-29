@@ -43,8 +43,10 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<UserResponse>> create(@Valid @RequestBody UserRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("User created", userService.create(request)));
+    public ResponseEntity<ApiResponse<UserResponse>> create(HttpServletRequest request,
+                                                            @Valid @RequestBody UserRequest body) {
+        requireCanCreateWithRole(request, body.role());
+        return ResponseEntity.ok(ApiResponse.success("User created", userService.create(body)));
     }
 
     @GetMapping
@@ -89,8 +91,10 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/role/{role}")
-    public ResponseEntity<ApiResponse<UserResponse>> changeRole(@PathVariable UUID userId,
+    public ResponseEntity<ApiResponse<UserResponse>> changeRole(HttpServletRequest request,
+                                                                @PathVariable UUID userId,
                                                                 @PathVariable AccountRole role) {
+        requireAdmin(request);
         return ResponseEntity.ok(ApiResponse.success("Role updated", userService.changeRoleResponse(userId, role)));
     }
 
@@ -98,6 +102,19 @@ public class UserController {
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
         if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required");
+        }
+    }
+
+    private void requireCanCreateWithRole(HttpServletRequest request, AccountRole roleToCreate) {
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (roleToCreate == AccountRole.ADMIN || roleToCreate == AccountRole.SUPER_ADMIN) {
+            if (callerRole != AccountRole.SUPER_ADMIN) {
+                throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Only super admins can create admin accounts");
+            }
+        } else if (roleToCreate == AccountRole.ORGANIZER || roleToCreate == AccountRole.STAFF) {
+            if (callerRole != AccountRole.ADMIN && callerRole != AccountRole.SUPER_ADMIN) {
+                throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required to create this role");
+            }
         }
     }
 }

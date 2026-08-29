@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.core.api
 
+import com.thedavelopers.eventqr.BuildConfig
+
 object ApiConfig {
-    const val BASE_URL = "https://eventqr-backend-owoa.onrender.com/api/v1/"
+    val BASE_URL: String = BuildConfig.BASE_URL
 }

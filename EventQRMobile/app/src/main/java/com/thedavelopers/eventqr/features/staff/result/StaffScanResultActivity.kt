@@ -147,11 +147,6 @@ open class StaffScanResultActivity : AppCompatActivity() {
             return
         }
 
-        Log.d(
-            tag,
-            "requestPayload eventId=$eventId registrationId=$registrationId attendeeUserId=$attendeeId qrCredentialId=$qrCredentialId qrValue=$qrValue scanPurposeId=$purposeId scanPurposeCode=$purposeCode transactionType=$purposeCode selectedPurposeLabel=$purposeLabel"
-        )
-
         savingTransaction = true
         findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.VISIBLE
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false

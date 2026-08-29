@@ -34,6 +34,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.User
 import com.thedavelopers.eventqr.features.organizer.model.dto.RewardSettingsRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest;
 import com.thedavelopers.eventqr.features.organizer.service.OrganizerService;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -54,24 +55,28 @@ public class OrganizerController {
 
     @GetMapping("/events")
     public ResponseEntity<ApiResponse<List<OrganizerEventResponse>>> events(HttpServletRequest request) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.listEvents(currentUserId(request))));
     }
 
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<OrganizerDashboardResponse>> dashboard(HttpServletRequest request) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.dashboard(currentUserId(request))));
     }
 
     @GetMapping("/events/{eventId}")
     public ResponseEntity<ApiResponse<OrganizerEventResponse>> event(HttpServletRequest request,
                                                                      @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.event(currentUserId(request), eventId)));
     }
 
     @PatchMapping("/events/{eventId}")
     public ResponseEntity<ApiResponse<EventResponse>> updateEvent(HttpServletRequest request,
-                                                               @PathVariable UUID eventId,
-                                                               @Valid @RequestBody EventRequest body) {
+                                                                  @PathVariable UUID eventId,
+                                                                  @Valid @RequestBody EventRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Event updated", organizerService.updateEvent(currentUserId(request), eventId, body)));
     }
 
@@ -79,19 +84,22 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<EventResponse>> updateEventStatus(HttpServletRequest request,
                                                                        @PathVariable UUID eventId,
                                                                        @RequestParam String status) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Event status updated",
                 organizerService.updateStatus(currentUserId(request), eventId, com.thedavelopers.eventqr.shared.constants.EventStatus.valueOf(status))));
     }
 
     @GetMapping("/events/{eventId}/dashboard")
     public ResponseEntity<ApiResponse<OrganizerDashboardResponse>> eventDashboard(HttpServletRequest request,
-                                                                                  @PathVariable UUID eventId) {
+                                                                                 @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.dashboard(currentUserId(request), eventId)));
     }
 
     @GetMapping("/events/{eventId}/attendees")
     public ResponseEntity<ApiResponse<List<OrganizerAttendeeResponse>>> attendees(HttpServletRequest request,
-                                                                                  @PathVariable UUID eventId) {
+                                                                                 @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.attendees(currentUserId(request), eventId)));
     }
 
@@ -99,21 +107,24 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<List<OrganizerAttendeeResponse>>> searchAttendees(HttpServletRequest request,
                                                                                        @PathVariable UUID eventId,
                                                                                        @RequestParam String query) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.searchAttendees(currentUserId(request), eventId, query)));
     }
 
     @GetMapping("/events/{eventId}/attendees/{attendeeId}")
     public ResponseEntity<ApiResponse<OrganizerAttendeeResponse>> attendee(HttpServletRequest request,
-                                                                           @PathVariable UUID eventId,
-                                                                           @PathVariable UUID attendeeId) {
+                                                                          @PathVariable UUID eventId,
+                                                                          @PathVariable UUID attendeeId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.attendee(currentUserId(request), eventId, attendeeId)));
     }
 
     @PatchMapping("/events/{eventId}/attendees/{attendeeId}/status")
     public ResponseEntity<ApiResponse<OrganizerAttendeeResponse>> updateAttendeeStatus(HttpServletRequest request,
-                                                                                       @PathVariable UUID eventId,
-                                                                                       @PathVariable UUID attendeeId,
-                                                                                       @RequestParam String status) {
+                                                                                      @PathVariable UUID eventId,
+                                                                                      @PathVariable UUID attendeeId,
+                                                                                      @RequestParam String status) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Attendee status updated",
                 organizerService.updateAttendeeStatus(currentUserId(request), eventId, attendeeId, status)));
     }
@@ -121,6 +132,7 @@ public class OrganizerController {
     @GetMapping("/events/{eventId}/transactions")
     public ResponseEntity<ApiResponse<List<OrganizerTransactionResponse>>> transactions(HttpServletRequest request,
                                                                                        @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.transactions(currentUserId(request), eventId)));
     }
 
@@ -128,30 +140,35 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse>> transaction(HttpServletRequest request,
                                                                                                                               @PathVariable UUID eventId,
                                                                                                                               @PathVariable UUID transactionId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.transaction(currentUserId(request), eventId, transactionId)));
     }
 
     @GetMapping("/reports/summary")
     public ResponseEntity<ApiResponse<OrganizerOverallReportResponse>> overallReports(HttpServletRequest request) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.overallReport(currentUserId(request))));
     }
 
     @GetMapping("/events/{eventId}/reports")
     public ResponseEntity<ApiResponse<OrganizerReportResponse>> reports(HttpServletRequest request,
                                                                         @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.report(currentUserId(request), eventId)));
     }
 
     @GetMapping("/events/{eventId}/staff")
     public ResponseEntity<ApiResponse<List<OrganizerStaffResponse>>> staff(HttpServletRequest request,
                                                                            @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.staff(currentUserId(request), eventId)));
     }
 
     @GetMapping("/events/{eventId}/staff/search")
     public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchEventStaffUsers(HttpServletRequest request,
-                                                                                       @PathVariable UUID eventId,
-                                                                                       @RequestParam String query) {
+                                                                                      @PathVariable UUID eventId,
+                                                                                      @RequestParam String query) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.searchUsers(currentUserId(request), eventId, query)));
     }
 
@@ -159,6 +176,7 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<OrganizerStaffResponse>> addStaff(HttpServletRequest request,
                                                                         @PathVariable UUID eventId,
                                                                         @Valid @RequestBody StaffAssignmentRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Staff assigned", organizerService.addStaff(currentUserId(request), eventId, body)));
     }
 
@@ -166,7 +184,8 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<OrganizerStaffResponse>> updateStaff(HttpServletRequest request,
                                                                            @PathVariable UUID eventId,
                                                                            @PathVariable UUID assignmentId,
-                                                                           @RequestBody StaffAssignmentUpdateRequest body) {
+                                                                           @Valid @RequestBody StaffAssignmentUpdateRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Staff assignment updated",
                 organizerService.updateStaff(currentUserId(request), eventId, assignmentId, body)));
     }
@@ -175,6 +194,7 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<Void>> removeStaff(HttpServletRequest request,
                                                          @PathVariable UUID eventId,
                                                          @PathVariable UUID assignmentId) {
+        requireOrganizer(request);
         organizerService.removeStaff(currentUserId(request), eventId, assignmentId);
         return ResponseEntity.ok(ApiResponse.success("Staff assignment removed", null));
     }
@@ -182,28 +202,32 @@ public class OrganizerController {
     @GetMapping("/users/search")
     public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(HttpServletRequest request,
                                                                              @RequestParam String query) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.searchUsers(currentUserId(request), query)));
     }
 
     @GetMapping("/events/{eventId}/scan-purposes")
     public ResponseEntity<ApiResponse<List<OrganizerScanPurposeResponse>>> scanPurposes(HttpServletRequest request,
                                                                                         @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.scanPurposes(currentUserId(request), eventId)));
     }
 
     @PostMapping("/events/{eventId}/scan-purposes")
     public ResponseEntity<ApiResponse<OrganizerScanPurposeResponse>> createScanPurpose(HttpServletRequest request,
-                                                                                       @PathVariable UUID eventId,
-                                                                                       @Valid @RequestBody OrganizerScanPurposeRequest body) {
+                                                                                      @PathVariable UUID eventId,
+                                                                                      @Valid @RequestBody OrganizerScanPurposeRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Scan purpose saved",
                 organizerService.saveScanPurpose(currentUserId(request), eventId, body)));
     }
 
     @PatchMapping("/events/{eventId}/scan-purposes/{purposeId}")
     public ResponseEntity<ApiResponse<OrganizerScanPurposeResponse>> updateScanPurpose(HttpServletRequest request,
-                                                                                       @PathVariable UUID eventId,
-                                                                                       @PathVariable UUID purposeId,
-                                                                                       @Valid @RequestBody OrganizerScanPurposeRequest body) {
+                                                                                      @PathVariable UUID eventId,
+                                                                                      @PathVariable UUID purposeId,
+                                                                                      @Valid @RequestBody OrganizerScanPurposeRequest body) {
+        requireOrganizer(request);
         OrganizerScanPurposeRequest merged = new OrganizerScanPurposeRequest(purposeId, body.title(), body.code(),
                 body.enabled(), body.trackingOnly(), body.pointsEnabled(), body.pointsValue(), body.allowDuplicate(),
                 body.duplicateRuleSummary(), body.requiredSelectionLabel(), body.description());
@@ -215,6 +239,7 @@ public class OrganizerController {
         public ResponseEntity<ApiResponse<Void>> deleteScanPurpose(HttpServletRequest request,
                                        @PathVariable UUID eventId,
                                        @PathVariable UUID purposeId) {
+        requireOrganizer(request);
         organizerService.deleteScanPurpose(currentUserId(request), eventId, purposeId);
         return ResponseEntity.ok(ApiResponse.success("Scan purpose deleted", null));
         }
@@ -223,6 +248,7 @@ public class OrganizerController {
         public ResponseEntity<ApiResponse<OrganizerScanPurposeResponse>> enableScanPurpose(HttpServletRequest request,
                                                    @PathVariable UUID eventId,
                                                    @PathVariable UUID purposeId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Scan purpose enabled",
             organizerService.enableScanPurpose(currentUserId(request), eventId, purposeId, true)));
         }
@@ -231,6 +257,7 @@ public class OrganizerController {
         public ResponseEntity<ApiResponse<OrganizerScanPurposeResponse>> disableScanPurpose(HttpServletRequest request,
                                                 @PathVariable UUID eventId,
                                                 @PathVariable UUID purposeId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Scan purpose disabled",
             organizerService.enableScanPurpose(currentUserId(request), eventId, purposeId, false)));
         }
@@ -240,13 +267,15 @@ public class OrganizerController {
                                                   @PathVariable UUID eventId,
                                                   @PathVariable UUID purposeId,
                                                   @RequestParam boolean trackingOnly) {
+            requireOrganizer(request);
             return ResponseEntity.ok(ApiResponse.success("Scan purpose updated",
                 organizerService.toggleTrackingOnly(currentUserId(request), eventId, purposeId, trackingOnly)));
             }
 
         @GetMapping("/events/{eventId}/transaction-rules")
         public ResponseEntity<ApiResponse<List<OrganizerTransactionRuleResponse>>> transactionRules(HttpServletRequest request,
-                                                                        @PathVariable UUID eventId) {
+                                                                    @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.listTransactionRules(currentUserId(request), eventId)));
         }
 
@@ -254,6 +283,7 @@ public class OrganizerController {
         public ResponseEntity<ApiResponse<OrganizerTransactionRuleResponse>> updateTransactionRule(HttpServletRequest request,
                                                                           @PathVariable UUID eventId,
                                                                           @Valid @RequestBody TransactionRuleRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Transaction rule saved",
             organizerService.saveTransactionRule(currentUserId(request), eventId, body)));
         }
@@ -263,6 +293,7 @@ public class OrganizerController {
                                                                           @PathVariable UUID eventId,
                                                                           @PathVariable UUID ruleId,
                                                                           @Valid @RequestBody TransactionRuleRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Transaction rule saved",
             organizerService.saveTransactionRule(currentUserId(request), eventId, ruleId, body)));
         }
@@ -270,6 +301,7 @@ public class OrganizerController {
         @GetMapping("/events/{eventId}/reward-settings")
         public ResponseEntity<ApiResponse<Boolean>> rewardSettings(HttpServletRequest request,
                                        @PathVariable UUID eventId) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.event(currentUserId(request), eventId).rewardsStatus().equals("Enabled")));
         }
 
@@ -277,8 +309,17 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<EventResponse>> updateRewardSettings(HttpServletRequest request,
                                            @PathVariable UUID eventId,
                                            @Valid @RequestBody RewardSettingsRequest body) {
+        requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Reward settings updated",
             organizerService.updateRewardSettings(currentUserId(request), eventId, body)));
+    }
+
+    private void requireOrganizer(HttpServletRequest request) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ORGANIZER || role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer access required");
     }
 
     private UUID currentUserId(HttpServletRequest request) {

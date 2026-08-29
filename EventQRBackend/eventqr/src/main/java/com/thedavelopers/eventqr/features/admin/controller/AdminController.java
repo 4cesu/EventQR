@@ -163,7 +163,7 @@ public class AdminController {
     @PatchMapping("/event-requests/{requestId}/approve")
     public ResponseEntity<ApiResponse<EventRequestResponse>> approveEventRequest(HttpServletRequest request,
                                                                                 @PathVariable UUID requestId,
-                                                                                @RequestBody(required = false) EventRequestDecisionRequest body) {
+                                                                                @Valid @RequestBody(required = false) EventRequestDecisionRequest body) {
         requireAdmin(request);
         UUID adminUserId = currentAdminId(request);
         String remarks = body == null ? null : body.adminRemarks();
@@ -174,7 +174,7 @@ public class AdminController {
     @PatchMapping("/event-requests/{requestId}/reject")
     public ResponseEntity<ApiResponse<EventRequestResponse>> rejectEventRequest(HttpServletRequest request,
                                                                                @PathVariable UUID requestId,
-                                                                               @RequestBody(required = false) EventRequestDecisionRequest body) {
+                                                                               @Valid @RequestBody(required = false) EventRequestDecisionRequest body) {
         requireAdmin(request);
         UUID adminUserId = currentAdminId(request);
         String remarks = body == null ? null : body.adminRemarks();
