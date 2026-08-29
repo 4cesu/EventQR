@@ -29,6 +29,7 @@ import kotlin.math.roundToInt
 
 internal const val EXTRA_EVENT_ID = "event_id"
 internal const val EXTRA_EVENT_TITLE = "event_title"
+internal const val EXTRA_EVENT_VIEW_ONLY = "event_view_only"
 internal const val EXTRA_PLACEHOLDER_TITLE = "placeholder_title"
 internal const val EXTRA_PLACEHOLDER_MESSAGE = "placeholder_message"
 internal const val EXTRA_PLACEHOLDER_NAV = "placeholder_nav"
@@ -193,6 +194,9 @@ internal fun AppCompatActivity.intentEventId(): String? =
 internal fun AppCompatActivity.intentEventTitle(): String? =
     intent.getStringExtra(EXTRA_EVENT_TITLE)?.takeIf { it.isNotBlank() }
 
+internal fun AppCompatActivity.intentEventViewOnly(): Boolean =
+    intent.getBooleanExtra(EXTRA_EVENT_VIEW_ONLY, false)
+
 internal fun AppCompatActivity.saveSelectedEventId(eventId: String?) {
     getSharedPreferences("organizer_mvp_selection", Context.MODE_PRIVATE).edit().apply {
         if (eventId.isNullOrBlank()) remove("selected_event_id") else putString("selected_event_id", eventId)
@@ -217,13 +221,14 @@ internal fun AppCompatActivity.resolveSelectedEvent(events: List<OrganizerMvpEve
     return selected
 }
 
-internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: String? = null, eventTitle: String? = null) {
+internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: String? = null, eventTitle: String? = null, viewOnly: Boolean = false) {
     val intent = Intent(this, target)
     eventId?.let {
         saveSelectedEventId(it)
         intent.putExtra(EXTRA_EVENT_ID, it)
     }
     eventTitle?.takeIf { it.isNotBlank() }?.let { intent.putExtra(EXTRA_EVENT_TITLE, it) }
+    if (viewOnly) intent.putExtra(EXTRA_EVENT_VIEW_ONLY, true)
     startActivity(intent)
 }
 

@@ -27,6 +27,7 @@ import com.thedavelopers.eventqr.features.organizer.dp
 import com.thedavelopers.eventqr.features.organizer.ghostButton
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.intentEventTitle
+import com.thedavelopers.eventqr.features.organizer.intentEventViewOnly
 import com.thedavelopers.eventqr.features.organizer.organizerShell
 import com.thedavelopers.eventqr.features.organizer.primaryButton
 import com.thedavelopers.eventqr.features.organizer.rounded
@@ -62,6 +63,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private lateinit var content: LinearLayout
     private lateinit var statusView: TextView
     private lateinit var saveButton: Button
+    private var screenTitle: String = EDIT_LABEL
 
     private lateinit var titleInput: EditText
     private lateinit var descriptionInput: EditText
@@ -75,6 +77,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     private lateinit var bannerPreview: ImageView
     private lateinit var bannerStatus: TextView
+    private lateinit var bannerPickButton: Button
 
     private var loadedEvent: OrganizerEventDto? = null
     private var selectedBannerFile: File? = null
@@ -114,8 +117,9 @@ class EditEventDetailsActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
         eventId = intentEventId() ?: return showMissingEventScreen("Edit Event Details")
 
+        screenTitle = if (intentEventViewOnly()) VIEW_LABEL else EDIT_LABEL
         content = organizerShell(
-            title = "Edit Event Details",
+            title = screenTitle,
             subtitle = intentEventTitle()?.takeIf { it.isNotBlank() },
             showBack = true,
         )
@@ -160,7 +164,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44)).apply {
                 setMargins(0, dp(10), 0, 0)
             }
-        })
+        }.also { bannerPickButton = it })
 
         formCard.addView(
             text("Locked: eventId, organizer, approval status, registration windows, start date, end date and rewards stay unchanged.", 12, false, MUTED).apply {
@@ -330,9 +334,34 @@ class EditEventDetailsActivity : AppCompatActivity() {
         val reason = if (event.status.equals("Active", ignoreCase = true)) "ongoing" else "completed"
         statusView.text = "Editing locked — event is $reason"
         statusView.setTextColor(ERROR)
+        screenTitle = VIEW_LABEL
+        updateHeaderTitle(VIEW_LABEL)
+        // All fields, including the banner picker, are read-only in this state.
         listOf(titleInput, descriptionInput, venueInput, capacityInput).forEach { it.isEnabled = false }
-        saveButton.isEnabled = false
-        saveButton.text = "Editing locked"
+        bannerPickButton.isEnabled = false
+        // No Save button in view-only mode: hide it entirely rather than showing an inert state.
+        saveButton.visibility = View.GONE
+    }
+
+    // Finds the shell header title (created by organizerShell) and relabels it, so the screen
+    // reads "View Event Details" even when opened directly on a locked event.
+    private fun updateHeaderTitle(label: String) {
+        var parent: android.view.ViewParent? = content.parent
+        while (parent is ViewGroup && parent.parent is ViewGroup) parent = parent.parent
+        val root = parent as? ViewGroup ?: return
+        fun find(group: ViewGroup): TextView? {
+            for (i in 0 until group.childCount) {
+                val child = group.getChildAt(i)
+                if (child is TextView) {
+                    val text = child.text?.toString()
+                    if (text == EDIT_LABEL || text == VIEW_LABEL) return child
+                    continue
+                }
+                if (child is ViewGroup) find(child)?.let { return it }
+            }
+            return null
+        }
+        find(root)?.text = label
     }
 
     private fun saveChanges() {
@@ -412,5 +441,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
     companion object {
         private val TEXT_COLOR = android.graphics.Color.parseColor("#111827")
         private const val MAX_BANNER_BYTES = 5L * 1024L * 1024L
+        private const val EDIT_LABEL = "Edit Event Details"
+        private const val VIEW_LABEL = "View Event Details"
     }
 }

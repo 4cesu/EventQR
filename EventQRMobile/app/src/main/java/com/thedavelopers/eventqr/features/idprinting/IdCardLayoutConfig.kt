@@ -67,15 +67,15 @@ object IdCardLayoutConfig {
     /** Canonical rendering order — both surfaces MUST use this. */
     val FIELD_ORDER: List<String> = listOf(
         FIELD_QR_CODE,
-        FIELD_EVENT_NAME,
         FIELD_ATTENDEE_NAME,
         FIELD_ROLE,
+        FIELD_EVENT_NAME,
         FIELD_ATTENDEE_ID,
         FIELD_EVENT_DATE,
     )
 
     val LOCKED_FIELDS: List<String> = listOf(FIELD_QR_CODE, FIELD_ATTENDEE_NAME)
-    val OPTIONAL_FIELDS: List<String> = listOf(FIELD_ATTENDEE_ID, FIELD_ROLE, FIELD_EVENT_NAME, FIELD_EVENT_DATE)
+    val OPTIONAL_FIELDS: List<String> = listOf(FIELD_ROLE, FIELD_EVENT_NAME, FIELD_ATTENDEE_ID, FIELD_EVENT_DATE)
 
     fun displayName(field: String): String = when (field) {
         FIELD_ATTENDEE_ID -> "Attendee ID"
