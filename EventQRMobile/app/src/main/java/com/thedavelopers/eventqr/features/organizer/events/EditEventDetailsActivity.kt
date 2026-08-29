@@ -1,7 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.os.Bundle
 import android.text.InputType
 import android.view.ViewGroup
@@ -29,9 +27,7 @@ import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.features.organizer.text
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -42,9 +38,9 @@ import java.time.format.DateTimeFormatter
  * - Built with the programmatic View toolkit used by every other organizer screen (team
  *   decision), not Compose as the module text implies; no ViewModel — repositories plus
  *   coroutine launches inside activities, matching the rest of this codebase.
- * - Date/time entry reuses the DatePickerDialog + TimePickerDialog pattern from the attendee
- *   event-request form, but deliberately allows PAST dates here (UC-20 locked scope: capstone
- *   demo needs past-dated test events editable).
+ * - The full event schedule (registration windows + event start/end) is locked and shown in
+ *   a read-only "Schedule (Locked)" section; only title/description/venue/capacity are
+ *   editable. The backend rejects a changed start date (409) as a backstop.
  */
 class EditEventDetailsActivity : AppCompatActivity() {
 
@@ -58,10 +54,13 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private lateinit var descriptionInput: EditText
     private lateinit var venueInput: EditText
     private lateinit var capacityInput: EditText
-    private lateinit var startDateTimeInput: EditText
+
+    private lateinit var regOpenView: TextView
+    private lateinit var regCloseView: TextView
+    private lateinit var eventStartView: TextView
+    private lateinit var eventEndView: TextView
 
     private var loadedEvent: OrganizerEventDto? = null
-    private var startDateTimeValue: LocalDateTime? = null
 
     private val zoneId: ZoneId = ZoneId.systemDefault()
     private val displayFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
@@ -77,6 +76,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             showBack = true,
         )
         content.addView(buildForm())
+        content.addView(buildLockedSchedule())
         statusView = text("", 13, false).apply { setPadding(dp(4), dp(8), dp(4), 0) }
         content.addView(statusView)
         saveButton = primaryButton("Save Changes") { saveChanges() }.apply {
@@ -98,19 +98,35 @@ class EditEventDetailsActivity : AppCompatActivity() {
         descriptionInput = addInput(formCard, "Description", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE, singleLine = false, minLines = 3)
         venueInput = addInput(formCard, "Venue")
         capacityInput = addInput(formCard, "Capacity", inputType = InputType.TYPE_CLASS_NUMBER)
-        startDateTimeInput = addInput(formCard, "Event Start Date & Time")
-        configureDateTimeField(startDateTimeInput) { selected ->
-            startDateTimeValue = selected
-            startDateTimeInput.setText(selected.format(displayFormatter))
-            startDateTimeInput.error = null
-        }
 
         formCard.addView(
-            text("Locked: eventId, organizer, approval status, registration windows, end date, logo and rewards stay unchanged.", 12, false, MUTED).apply {
+            text("Locked: eventId, organizer, approval status, registration windows, start date, end date, logo and rewards stay unchanged.", 12, false, MUTED).apply {
                 setPadding(0, dp(12), 0, 0)
             },
         )
         return formCard
+    }
+
+    private fun buildLockedSchedule(): LinearLayout {
+        val scheduleCard = card(16)
+        scheduleCard.addView(text("Schedule (Locked)", 15, true, TEXT_COLOR).apply { setPadding(0, 0, 0, dp(4)) })
+
+        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time")
+        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time")
+        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time")
+        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time")
+        return scheduleCard
+    }
+
+    private fun addLockedRow(parent: LinearLayout, label: String): TextView {
+        parent.addView(text(label, 14, true, TEXT_COLOR).apply { setPadding(0, dp(12), 0, dp(6)) })
+        val value = text("-", 14, false, TEXT_COLOR).apply {
+            background = rounded(android.graphics.Color.parseColor("#F3F4F6"), 10, BORDER, density = resources.displayMetrics.density)
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            isEnabled = false
+        }
+        parent.addView(value)
+        return value
     }
 
     private fun addInput(
@@ -130,42 +146,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }
         parent.addView(editText)
         return editText
-    }
-
-    // Same widgets as the attendee request form's date-time field, minus its minDate/past-time
-    // rejection: UC-20 locked scope allows editing past-dated events.
-    private fun configureDateTimeField(field: EditText, onSelected: (LocalDateTime) -> Unit) {
-        field.isFocusable = false
-        field.isFocusableInTouchMode = false
-        field.isCursorVisible = false
-        field.isLongClickable = false
-        field.setTextIsSelectable(false)
-        field.setOnClickListener {
-            val initial = startDateTimeValue ?: LocalDateTime.now(zoneId)
-            DatePickerDialog(
-                this,
-                { _, year, month, dayOfMonth ->
-                    val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
-                    val initialTime = if (selectedDate == initial.toLocalDate()) {
-                        initial.toLocalTime().withSecond(0).withNano(0)
-                    } else {
-                        LocalTime.of(9, 0)
-                    }
-                    TimePickerDialog(
-                        this,
-                        { _, hourOfDay, minute ->
-                            onSelected(LocalDateTime.of(selectedDate, LocalTime.of(hourOfDay, minute)))
-                        },
-                        initialTime.hour,
-                        initialTime.minute,
-                        false,
-                    ).show()
-                },
-                initial.year,
-                initial.monthValue - 1,
-                initial.dayOfMonth,
-            ).show()
-        }
     }
 
     private fun loadEvent() {
@@ -188,12 +168,15 @@ class EditEventDetailsActivity : AppCompatActivity() {
         descriptionInput.setText(event.description.orEmpty())
         venueInput.setText(event.venue.orEmpty())
         capacityInput.setText(event.capacity.coerceAtLeast(0).toString())
-        event.eventStartAt?.let { instant ->
-            startDateTimeValue = LocalDateTime.ofInstant(instant, zoneId)
-            startDateTimeInput.setText(startDateTimeValue!!.format(displayFormatter))
-        }
+        regOpenView.text = event.registrationOpenAt?.let { formatLockedInstant(it) } ?: "-"
+        regCloseView.text = event.registrationCloseAt?.let { formatLockedInstant(it) } ?: "-"
+        eventStartView.text = event.eventStartAt?.let { formatLockedInstant(it) } ?: "-"
+        eventEndView.text = event.eventEndAt?.let { formatLockedInstant(it) } ?: "-"
         if (isEditLocked(event)) applyEditLock(event)
     }
+
+    private fun formatLockedInstant(instant: java.time.Instant): String =
+        java.time.LocalDateTime.ofInstant(instant, zoneId).format(displayFormatter)
 
     // UC-20 edit lock: details are editable only while the event is Upcoming (Approved).
     // Once it is Active (ongoing) or Completed the whole form is read-only; the backend
@@ -206,7 +189,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         val reason = if (event.status.equals("Active", ignoreCase = true)) "ongoing" else "completed"
         statusView.text = "Editing locked — event is $reason"
         statusView.setTextColor(ERROR)
-        listOf(titleInput, descriptionInput, venueInput, capacityInput, startDateTimeInput).forEach { it.isEnabled = false }
+        listOf(titleInput, descriptionInput, venueInput, capacityInput).forEach { it.isEnabled = false }
         saveButton.isEnabled = false
         saveButton.text = "Editing locked"
     }
@@ -216,9 +199,8 @@ class EditEventDetailsActivity : AppCompatActivity() {
         val capacityValue = capacityInput.text.toString().trim().toIntOrNull()
 
         titleInput.error = if (title.isBlank()) "Title is required" else null
-        if (startDateTimeValue == null) startDateTimeInput.error = "Date is required"
         if (capacityValue == null || capacityValue <= 0) capacityInput.error = "Capacity must be greater than 0"
-        if (title.isBlank() || startDateTimeValue == null || capacityValue == null || capacityValue <= 0) return
+        if (title.isBlank() || capacityValue == null || capacityValue <= 0) return
 
         val current = loadedEvent ?: run {
             Toast.makeText(this, "Event not loaded yet", Toast.LENGTH_SHORT).show()
@@ -262,7 +244,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         eventLogoUrl = current.eventLogoUrl,
         registrationOpenAt = current.registrationOpenAt,
         registrationCloseAt = current.registrationCloseAt,
-        eventStartAt = requireNotNull(startDateTimeValue).atZone(zoneId).toInstant(),
+        eventStartAt = requireNotNull(current.eventStartAt),
         eventEndAt = current.eventEndAt,
         capacity = capacityInput.text.toString().trim().toInt(),
         rewardsEnabled = current.rewardsEnabled ?: false,
