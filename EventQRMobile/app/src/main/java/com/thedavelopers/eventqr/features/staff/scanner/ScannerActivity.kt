@@ -380,7 +380,22 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun loadSelectedPurposes() { selectedEvent()?.let { presenter.loadPurposes(it.id) } }
     private fun selectedEvent(): EventSpinnerOption? = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
     private fun bindSelectedEventHeader() { val event = selectedEvent(); selectedEventTitle.text = event?.label ?: "No assigned event"; selectedEventDate.text = event?.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty() }
-    private fun bindSelectedPurposeHeader() { val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition); selectedPurposeName.text = purpose?.displayName().orEmpty().ifBlank { "Select purpose" }; selectedPurposePoints.visibility = View.GONE }
+    private fun bindSelectedPurposeHeader() {
+        val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
+        if (purpose == null) {
+            selectedPurposeName.text = "Select purpose"
+            selectedPurposePoints.visibility = View.GONE
+            return
+        }
+        selectedPurposeName.text = purpose.displayName()
+        if (purpose.trackingOnly) {
+            selectedPurposePoints.visibility = View.GONE
+        } else {
+            selectedPurposePoints.text = purpose.defaultDescription()
+            selectedPurposePoints.setTextColor(0xFF6B7280.toInt())
+            selectedPurposePoints.visibility = View.VISIBLE
+        }
+    }
 
     private fun renderEventDropdown() {
         eventPopup?.dismiss()
