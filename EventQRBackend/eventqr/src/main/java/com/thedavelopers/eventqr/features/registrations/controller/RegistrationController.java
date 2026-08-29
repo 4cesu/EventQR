@@ -14,12 +14,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.thedavelopers.eventqr.features.events.service.EventService;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.qrcredentials.service.QrCredentialService;
 import com.thedavelopers.eventqr.features.qremail.service.QREmailService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -32,13 +36,18 @@ public class RegistrationController {
     private final QrCredentialService qrCredentialService;
     private final QREmailService qrEmailService;
     private final JwtService jwtService;
+    private final EventService eventService;
+    private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
 
     public RegistrationController(RegistrationService registrationService, QrCredentialService qrCredentialService,
-                                  QREmailService qrEmailService, JwtService jwtService) {
+                                  QREmailService qrEmailService, JwtService jwtService,
+                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository) {
         this.registrationService = registrationService;
         this.qrCredentialService = qrCredentialService;
         this.qrEmailService = qrEmailService;
         this.jwtService = jwtService;
+        this.eventService = eventService;
+        this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
     }
 
     @PostMapping
@@ -53,7 +62,9 @@ public class RegistrationController {
     }
 
     @GetMapping("/{registrationId}")
-    public ResponseEntity<ApiResponse<RegistrationResponse>> findOne(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<RegistrationResponse>> findOne(HttpServletRequest request,
+                                                                     @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         return ResponseEntity.ok(ApiResponse.success(registrationService.findOne(registrationId)));
     }
 
@@ -65,34 +76,46 @@ public class RegistrationController {
     }
 
     @GetMapping("/event/{eventId}")
-    public ResponseEntity<ApiResponse<List<RegistrationResponse>>> findByEvent(@PathVariable UUID eventId) {
+    public ResponseEntity<ApiResponse<List<RegistrationResponse>>> findByEvent(HttpServletRequest request,
+                                                                               @PathVariable UUID eventId) {
+        requireEventAccess(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId)));
     }
 
     @PostMapping("/{registrationId}/qr")
-    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> generateQr(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> generateQr(HttpServletRequest request,
+                                                                        @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR credential prepared", registrationService.getOrCreateQrCredential(registrationId)));
     }
 
     @PostMapping("/{registrationId}/qr/link")
-    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> linkQr(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> linkQr(HttpServletRequest request,
+                                                                    @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR credential linked", registrationService.linkQrCredential(registrationId)));
     }
 
     @GetMapping("/{registrationId}/qr/one-time")
-    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> oneTimeQr(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> oneTimeQr(HttpServletRequest request,
+                                                                       @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         QrCredentialSnapshot qr = registrationService.getOrCreateQrCredential(registrationId);
         return ResponseEntity.ok(ApiResponse.success("One-time QR credential", qrCredentialService.markDisplayedOnce(qr.qrCredentialId())));
     }
 
     @PostMapping("/{registrationId}/qr/download")
-    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> downloadQr(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> downloadQr(HttpServletRequest request,
+                                                                        @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         QrCredentialSnapshot qr = registrationService.getOrCreateQrCredential(registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR download registered", qrCredentialService.markDownloaded(qr.qrCredentialId())));
     }
 
     @PostMapping("/{registrationId}/qr/email")
-    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> emailQr(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> emailQr(HttpServletRequest request,
+                                                                     @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         registrationService.getOrCreateQrCredential(registrationId);
         qrEmailService.sendForRegistrationSafely(registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR email delivery attempted",
@@ -100,7 +123,9 @@ public class RegistrationController {
     }
 
     @PostMapping("/{registrationId}/qr/email/retry")
-    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> retryEmailQr(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> retryEmailQr(HttpServletRequest request,
+                                                                          @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         registrationService.getOrCreateQrCredential(registrationId);
         qrEmailService.sendForRegistrationSafely(registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR email retry attempted",
@@ -108,8 +133,59 @@ public class RegistrationController {
     }
 
     @GetMapping("/{registrationId}/email-status")
-    public ResponseEntity<ApiResponse<String>> emailStatus(@PathVariable UUID registrationId) {
+    public ResponseEntity<ApiResponse<String>> emailStatus(HttpServletRequest request,
+                                                           @PathVariable UUID registrationId) {
+        requireRegistrationAccess(request, registrationId);
         QrCredentialSnapshot qr = registrationService.getOrCreateQrCredential(registrationId);
         return ResponseEntity.ok(ApiResponse.success(qr.deliveryStatus().name()));
+    }
+
+    private void requireRegistrationAccess(HttpServletRequest request, UUID registrationId) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        RegistrationResponse registration = registrationService.findOne(registrationId);
+        if (role == AccountRole.ATTENDEE) {
+            if (registration.attendeeUserId().equals(callerId)) {
+                return;
+            }
+            throw new ForbiddenException("You can only access your own registration");
+        }
+        if (role == AccountRole.ORGANIZER) {
+            if (eventService.findOne(registration.eventId()).organizerUserId().equals(callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Event ownership required");
+        }
+        if (role == AccountRole.STAFF) {
+            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(registration.eventId(), callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Staff user is not actively assigned to this event");
+        }
+        throw new ForbiddenException("Access denied to registration");
+    }
+
+    private void requireEventAccess(HttpServletRequest request, UUID eventId) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ORGANIZER) {
+            if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Event ownership required");
+        }
+        if (role == AccountRole.STAFF) {
+            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Staff user is not actively assigned to this event");
+        }
+        throw new ForbiddenException("Access denied to event registrations");
     }
 }

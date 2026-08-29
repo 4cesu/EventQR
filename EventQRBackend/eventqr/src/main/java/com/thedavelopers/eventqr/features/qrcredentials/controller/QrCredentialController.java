@@ -10,9 +10,12 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.thedavelopers.eventqr.features.events.service.EventService;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.qrcredentials.service.QrCredentialService;
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
@@ -25,13 +28,19 @@ public class QrCredentialController {
     private final QrCredentialService qrCredentialService;
     private final RegistrationService registrationService;
     private final JwtService jwtService;
+    private final EventService eventService;
+    private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
 
     public QrCredentialController(QrCredentialService qrCredentialService,
                                   RegistrationService registrationService,
-                                  JwtService jwtService) {
+                                  JwtService jwtService,
+                                  EventService eventService,
+                                  EventStaffAssignmentRepository eventStaffAssignmentRepository) {
         this.qrCredentialService = qrCredentialService;
         this.registrationService = registrationService;
         this.jwtService = jwtService;
+        this.eventService = eventService;
+        this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
     }
 
     @GetMapping("/registration/{registrationId}")
@@ -74,10 +83,30 @@ public class QrCredentialController {
     }
 
     private void requireAccessibleRegistration(HttpServletRequest request, UUID registrationId) {
+        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ATTENDEE) {
-            UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-            registrationService.findOneForAttendee(registrationId, userId);
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
         }
+        com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse registration = registrationService.findOne(registrationId);
+        if (role == AccountRole.ATTENDEE) {
+            if (registration.attendeeUserId().equals(callerId)) {
+                return;
+            }
+            throw new ForbiddenException("You can only access your own QR credential");
+        }
+        if (role == AccountRole.ORGANIZER) {
+            if (eventService.findOne(registration.eventId()).organizerUserId().equals(callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Event ownership required");
+        }
+        if (role == AccountRole.STAFF) {
+            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(registration.eventId(), callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Staff user is not actively assigned to this event");
+        }
+        throw new ForbiddenException("Access denied to QR credential");
     }
 }

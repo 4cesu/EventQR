@@ -97,7 +97,6 @@ open class StaffCameraScannerActivity : AppCompatActivity(), SurfaceHolder.Callb
             val decoded = decodeFrame(data, width, height)
             runOnUiThread {
                 if (!decoded.isNullOrBlank()) {
-                    Log.d(tag, "raw QR value detected: $decoded")
                     val payload = android.content.Intent().apply {
                         putExtra(StaffScreenExtras.EXTRA_QR_VALUE, decoded)
                     }

@@ -28,6 +28,7 @@ import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/events/{eventId}/reports")
@@ -78,7 +79,7 @@ public class EventReportController {
     public ResponseEntity<byte[]> export(HttpServletRequest request,
                                          @PathVariable UUID eventId,
                                          @PathVariable ReportType reportType,
-                                         @RequestBody(required = false) ReportExportRequest exportRequest) {
+                                         @Valid @RequestBody(required = false) ReportExportRequest exportRequest) {
         ReportFilterStatus status = exportRequest == null || exportRequest.status() == null
                 ? ReportFilterStatus.ALL
                 : exportRequest.status();

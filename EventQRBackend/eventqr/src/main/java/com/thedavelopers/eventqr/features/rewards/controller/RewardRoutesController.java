@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse;
@@ -34,26 +36,36 @@ public class RewardRoutesController {
 
     private final RewardService rewardService;
     private final JwtService jwtService;
+    private final EventService eventService;
+    private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
 
-    public RewardRoutesController(RewardService rewardService, JwtService jwtService) {
+    public RewardRoutesController(RewardService rewardService, JwtService jwtService,
+                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository) {
         this.rewardService = rewardService;
         this.jwtService = jwtService;
+        this.eventService = eventService;
+        this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
     }
 
     @GetMapping("/events/{eventId}/rewards")
-    public ResponseEntity<ApiResponse<List<RewardResponse>>> eventRewards(@PathVariable UUID eventId) {
+    public ResponseEntity<ApiResponse<List<RewardResponse>>> eventRewards(HttpServletRequest request,
+                                                                          @PathVariable UUID eventId) {
+        requireOwnerOrStaff(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRewards(eventId)));
     }
 
     @GetMapping("/events/{eventId}/rewards/{rewardId}")
-    public ResponseEntity<ApiResponse<RewardResponse>> eventReward(@PathVariable UUID eventId, @PathVariable UUID rewardId) {
+    public ResponseEntity<ApiResponse<RewardResponse>> eventReward(HttpServletRequest request,
+                                                                   @PathVariable UUID eventId,
+                                                                   @PathVariable UUID rewardId) {
+        requireOwnerOrStaff(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findReward(eventId, rewardId)));
     }
 
     @GetMapping("/organizer/events/{eventId}/rewards")
     public ResponseEntity<ApiResponse<List<RewardResponse>>> organizerRewards(HttpServletRequest request,
                                                                               @PathVariable UUID eventId) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRewards(eventId)));
     }
 
@@ -61,7 +73,7 @@ public class RewardRoutesController {
     public ResponseEntity<ApiResponse<RewardResponse>> createReward(HttpServletRequest request,
                                                                     @PathVariable UUID eventId,
                                                                     @Valid @RequestBody RewardRequest body) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         RewardRequest normalized = new RewardRequest(eventId, body.name(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims());
         return ResponseEntity.ok(ApiResponse.success("Reward created", rewardService.saveReward(normalized)));
     }
@@ -71,7 +83,7 @@ public class RewardRoutesController {
                                                                     @PathVariable UUID eventId,
                                                                     @PathVariable UUID rewardId,
                                                                     @Valid @RequestBody RewardRequest body) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         RewardRequest normalized = new RewardRequest(eventId, body.name(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims());
         return ResponseEntity.ok(ApiResponse.success("Reward updated", rewardService.updateReward(eventId, rewardId, normalized)));
     }
@@ -80,7 +92,7 @@ public class RewardRoutesController {
     public ResponseEntity<ApiResponse<Void>> deleteReward(HttpServletRequest request,
                                                           @PathVariable UUID eventId,
                                                           @PathVariable UUID rewardId) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         rewardService.deleteReward(eventId, rewardId);
         return ResponseEntity.ok(ApiResponse.success("Reward deleted", null));
     }
@@ -88,7 +100,7 @@ public class RewardRoutesController {
     @GetMapping("/organizer/events/{eventId}/claimed-rewards")
     public ResponseEntity<ApiResponse<List<RewardRedemptionResponse>>> organizerClaimedRewards(HttpServletRequest request,
                                                                                                @PathVariable UUID eventId) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRedemptions(eventId)));
     }
 
@@ -102,7 +114,7 @@ public class RewardRoutesController {
     @GetMapping("/organizer/events/{eventId}/point-rules")
     public ResponseEntity<ApiResponse<List<PointRule>>> pointRules(HttpServletRequest request,
                                                                @PathVariable UUID eventId) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.listPointRules(eventId)));
     }
 
@@ -110,7 +122,7 @@ public class RewardRoutesController {
     public ResponseEntity<ApiResponse<PointRuleRequest>> createPointRule(HttpServletRequest request,
                                                                          @PathVariable UUID eventId,
                                                                          @Valid @RequestBody PointRuleRequest body) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         PointRuleRequest normalized = new PointRuleRequest(eventId, body.scanPurposeId(), body.points(), body.active());
         return ResponseEntity.ok(ApiResponse.success("Point rule saved", rewardService.savePointRule(normalized)));
     }
@@ -120,16 +132,16 @@ public class RewardRoutesController {
                                                                          @PathVariable UUID eventId,
                                                                          @PathVariable UUID ruleId,
                                                                          @Valid @RequestBody PointRuleRequest body) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         PointRuleRequest normalized = new PointRuleRequest(eventId, body.scanPurposeId(), body.points(), body.active());
         return ResponseEntity.ok(ApiResponse.success("Point rule updated", rewardService.updatePointRule(eventId, ruleId, normalized)));
     }
 
     @DeleteMapping("/organizer/events/{eventId}/point-rules/{ruleId}")
     public ResponseEntity<ApiResponse<Void>> deletePointRule(HttpServletRequest request,
-                                                            @PathVariable UUID eventId,
-                                                            @PathVariable UUID ruleId) {
-        requireNonAttendee(request);
+                                                             @PathVariable UUID eventId,
+                                                             @PathVariable UUID ruleId) {
+        requireOwnerOrStaff(request, eventId);
         rewardService.deletePointRule(eventId, ruleId);
         return ResponseEntity.ok(ApiResponse.success("Point rule deleted", null));
     }
@@ -151,7 +163,7 @@ public class RewardRoutesController {
     @GetMapping("/organizer/events/{eventId}/point-transactions")
     public ResponseEntity<ApiResponse<List<PointTransaction>>> organizerPointTransactions(HttpServletRequest request,
                                                                                           @PathVariable UUID eventId) {
-        requireNonAttendee(request);
+        requireOwnerOrStaff(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findPointTransactions(eventId)));
     }
 
@@ -163,5 +175,26 @@ public class RewardRoutesController {
         if (jwtService.extractRoleFromBearer(request.getHeader("Authorization")) == AccountRole.ATTENDEE) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer or admin access required");
         }
+    }
+
+    private void requireOwnerOrStaff(HttpServletRequest request, UUID eventId) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        UUID callerId = currentUserId(request);
+        if (role == AccountRole.ORGANIZER) {
+            if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
+                return;
+            }
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Event ownership required");
+        }
+        if (role == AccountRole.STAFF) {
+            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
+                return;
+            }
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff user is not actively assigned to this event");
+        }
+        throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer or staff access required");
     }
 }
