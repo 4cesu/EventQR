@@ -23,7 +23,7 @@ import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort;
 @Transactional
 public class EventService implements EventLookupPort {
 
-    private static final List<EventStatus> PUBLIC_EVENT_STATUSES = List.of(EventStatus.ACTIVE);
+    private static final List<EventStatus> PUBLIC_EVENT_STATUSES = List.of(EventStatus.APPROVED, EventStatus.ACTIVE);
 
     private final EventRepository eventRepository;
 

@@ -69,7 +69,7 @@ public class RewardController {
     @GetMapping("/event/{eventId}")
     public ResponseEntity<ApiResponse<List<RewardResponse>>> findRewards(HttpServletRequest request,
                                                                          @PathVariable UUID eventId) {
-        requireEventAccess(request, eventId);
+        requireEventReadAccess(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRewards(eventId)));
     }
 
@@ -98,6 +98,30 @@ public class RewardController {
     private void requireEventAccess(HttpServletRequest request, UUID eventId) {
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
         if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ORGANIZER) {
+            if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Event ownership required");
+        }
+        if (role == AccountRole.STAFF) {
+            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Staff user is not actively assigned to this event");
+        }
+        throw new ForbiddenException("Organizer or staff access required");
+    }
+
+    private void requireEventReadAccess(HttpServletRequest request, UUID eventId) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        if (role == AccountRole.ATTENDEE) {
             return;
         }
         UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
