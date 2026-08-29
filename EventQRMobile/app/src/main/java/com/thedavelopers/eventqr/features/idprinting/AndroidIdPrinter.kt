@@ -10,6 +10,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.util.Log
 import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
@@ -250,11 +251,15 @@ object AndroidIdPrinter {
             var wPt = pageW
             var hPt = pageH
             newAttributes.mediaSize?.let { media ->
+                // DEBUG: raw mils BEFORE the *0.072f conversion
+                Log.d("IdPrinter", "onLayout raw mediaSize: widthMils=${media.widthMils} heightMils=${media.heightMils} " +
+                    "wPt=${wPt}->${media.widthMils * 0.072f} hPt=${hPt}->${media.heightMils * 0.072f}")
                 wPt = media.widthMils * 0.072f
                 hPt = media.heightMils * 0.072f
             }
             pageW = wPt
             pageH = hPt
+            Log.d("IdPrinter", "onLayout final pageW=$pageW pageH=$pageH")
 
             // 5. Too small to fit even one native CR80 card (physical min. margin)?
             val minW = cardW + 2 * PRINTER_MIN_MARGIN_PT
@@ -342,6 +347,11 @@ object AndroidIdPrinter {
         // Center the total grid area horizontally AND vertically on the page.
         val startX = (pageW - layout.gridW) / 2f
         val startY = (pageH - layout.gridH) / 2f
+
+        // DEBUG: actual runtime values for the real print job
+        Log.d("IdPrinter", "drawPageGrid pageW=$pageW pageH=$pageH " +
+            "gridW=${layout.gridW} gridH=${layout.gridH} " +
+            "startX=$startX startY=$startY cols=$cols rows=$rows (fitCols/fitRows)")
 
         for (row in 0 until layout.rows) {
             for (col in 0 until layout.cols) {

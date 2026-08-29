@@ -108,16 +108,21 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 setPadding(dp(2), dp(20), dp(2), dp(10))
             })
 
-            val menuItems = listOf(
-                Triple("Edit Event Details", com.thedavelopers.eventqr.R.drawable.ic_fileedit, EditEventDetailsActivity::class.java),
-                Triple("Staff Assignment", com.thedavelopers.eventqr.R.drawable.ic_admin_users, ManageUsersActivity::class.java),
-                Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java),
-                Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_qr_scan, ManageScanPurposesActivity::class.java),
-                Triple("Transaction Rules", com.thedavelopers.eventqr.R.drawable.ic_admin_shield, TransactionRulesActivity::class.java),
-                Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_file, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java),
-                Triple("Rewards", com.thedavelopers.eventqr.R.drawable.ic_gift, ManageRewardsActivity::class.java),
-                Triple("Point Rules", com.thedavelopers.eventqr.R.drawable.ic_trend_up, PointRulesPlaceholderActivity::class.java),
-            )
+            // UC-20 edit lock: once an event is Active (ongoing) or Completed the Organizer can
+            // no longer edit its details, so the entry point is hidden (backend still enforces 409).
+            val canEdit = event.lifecycleStatus() != "Active" && event.lifecycleStatus() != "Completed"
+            val menuItems = buildList {
+                if (canEdit) {
+                    add(Triple("Edit Event Details", com.thedavelopers.eventqr.R.drawable.ic_fileedit, EditEventDetailsActivity::class.java))
+                }
+                add(Triple("Staff Assignment", com.thedavelopers.eventqr.R.drawable.ic_admin_users, ManageUsersActivity::class.java))
+                add(Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java))
+                add(Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_qr_scan, ManageScanPurposesActivity::class.java))
+                add(Triple("Transaction Rules", com.thedavelopers.eventqr.R.drawable.ic_admin_shield, TransactionRulesActivity::class.java))
+                add(Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_file, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java))
+                add(Triple("Rewards", com.thedavelopers.eventqr.R.drawable.ic_gift, ManageRewardsActivity::class.java))
+                add(Triple("Point Rules", com.thedavelopers.eventqr.R.drawable.ic_trend_up, PointRulesPlaceholderActivity::class.java))
+            }
 
             // Colors keyed by label, not position: inserting/reordering rows must never
             // reshuffle the visual identity of the existing entries.

@@ -122,6 +122,11 @@ public class OrganizerService {
     // for capstone defense.
     public EventResponse updateEvent(UUID organizerUserId, UUID eventId, EventRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
+        // SDD 3.5 / UC-20 edit lock: once an event is Active (Ongoing) or Completed the
+        // Organizer can no longer edit its details — editable only while Upcoming (APPROVED).
+        if (event.getStatus() == EventStatus.ACTIVE || event.getStatus() == EventStatus.ENDED) {
+            throw new ConflictException("Cannot edit an event that is ongoing or completed");
+        }
         if (request.title() == null || request.title().isBlank()) {
             throw new BadRequestException("Title is required");
         }
@@ -919,7 +924,10 @@ public class OrganizerService {
 
     private String displayStatus(EventStatus status) {
         return switch (status) {
-            case APPROVED, ACTIVE -> "Approved";
+            case APPROVED -> "Approved";
+            // ACTIVE is shown as its own lifecycle label so the client can distinguish an
+            // Upcoming (APPROVED) event from one that is ongoing and therefore edit-locked.
+            case ACTIVE -> "Active";
             case ENDED -> "Completed";
             case REJECTED, CANCELLED -> "Rejected";
             default -> "Pending";

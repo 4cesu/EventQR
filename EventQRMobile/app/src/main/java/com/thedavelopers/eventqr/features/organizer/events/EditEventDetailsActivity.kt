@@ -192,6 +192,23 @@ class EditEventDetailsActivity : AppCompatActivity() {
             startDateTimeValue = LocalDateTime.ofInstant(instant, zoneId)
             startDateTimeInput.setText(startDateTimeValue!!.format(displayFormatter))
         }
+        if (isEditLocked(event)) applyEditLock(event)
+    }
+
+    // UC-20 edit lock: details are editable only while the event is Upcoming (Approved).
+    // Once it is Active (ongoing) or Completed the whole form is read-only; the backend
+    // enforces the same rule (409) as a backstop for stale clients.
+    private fun isEditLocked(event: OrganizerEventDto): Boolean =
+        event.status.equals("Active", ignoreCase = true) ||
+            event.status.equals("Completed", ignoreCase = true)
+
+    private fun applyEditLock(event: OrganizerEventDto) {
+        val reason = if (event.status.equals("Active", ignoreCase = true)) "ongoing" else "completed"
+        statusView.text = "Editing locked — event is $reason"
+        statusView.setTextColor(ERROR)
+        listOf(titleInput, descriptionInput, venueInput, capacityInput, startDateTimeInput).forEach { it.isEnabled = false }
+        saveButton.isEnabled = false
+        saveButton.text = "Editing locked"
     }
 
     private fun saveChanges() {
