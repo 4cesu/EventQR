@@ -1,13 +1,19 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
+import android.util.Base64
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
@@ -18,6 +24,7 @@ import com.thedavelopers.eventqr.features.organizer.ERROR
 import com.thedavelopers.eventqr.features.organizer.MUTED
 import com.thedavelopers.eventqr.features.organizer.card
 import com.thedavelopers.eventqr.features.organizer.dp
+import com.thedavelopers.eventqr.features.organizer.ghostButton
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.intentEventTitle
 import com.thedavelopers.eventqr.features.organizer.organizerShell
@@ -25,8 +32,10 @@ import com.thedavelopers.eventqr.features.organizer.primaryButton
 import com.thedavelopers.eventqr.features.organizer.rounded
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.features.organizer.text
+import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -41,6 +50,10 @@ import java.time.format.DateTimeFormatter
  * - The full event schedule (registration windows + event start/end) is locked and shown in
  *   a read-only "Schedule (Locked)" section; only title/description/venue/capacity are
  *   editable. The backend rejects a changed start date (409) as a backstop.
+ * - SCOPE ADDITION (beyond SRS/SDD UC-16 / SDD 3.1 - event creation poster): the event banner
+ *   (poster) is editable post-approval here. It is cropped to 16:9 and uploaded via the shared
+ *   /uploads/event-logo endpoint, storing a fileId on events.eventLogoUrl. The backend persists
+ *   eventLogoUrl on update (OrganizerService.updateEvent); flag for the capstone deviation log.
  */
 class EditEventDetailsActivity : AppCompatActivity() {
 
@@ -60,10 +73,41 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private lateinit var eventStartView: TextView
     private lateinit var eventEndView: TextView
 
+    private lateinit var bannerPreview: ImageView
+    private lateinit var bannerStatus: TextView
+
     private var loadedEvent: OrganizerEventDto? = null
+    private var selectedBannerFile: File? = null
+    private var newBannerFileId: String? = null
 
     private val zoneId: ZoneId = ZoneId.systemDefault()
     private val displayFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
+
+    private val bannerPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { launchBannerCrop(it) }
+    }
+
+    // SCOPE ADDITION (banner edit post-approval, flagged for capstone deviation log):
+    // mirror the 16:9 crop-before-upload flow used at event creation so banners stay landscape.
+    private val bannerCropLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            when {
+                result.resultCode == RESULT_OK -> {
+                    val croppedUri = result.data?.let { UCrop.getOutput(it) }
+                    if (croppedUri != null) {
+                        handleCroppedBanner(croppedUri)
+                    } else {
+                        bannerStatus.text = "Unable to process banner. Please try again."
+                        bannerStatus.setTextColor(ERROR)
+                    }
+                }
+                result.resultCode == UCrop.RESULT_ERROR -> {
+                    result.data?.let { UCrop.getError(it) }
+                    bannerStatus.text = "Unable to crop banner. Please choose another image."
+                    bannerStatus.setTextColor(ERROR)
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,8 +119,8 @@ class EditEventDetailsActivity : AppCompatActivity() {
             subtitle = intentEventTitle()?.takeIf { it.isNotBlank() },
             showBack = true,
         )
-        content.addView(buildForm())
         content.addView(buildLockedSchedule())
+        content.addView(buildForm())
         statusView = text("", 13, false).apply { setPadding(dp(4), dp(8), dp(4), 0) }
         content.addView(statusView)
         saveButton = primaryButton("Save Changes") { saveChanges() }.apply {
@@ -99,8 +143,27 @@ class EditEventDetailsActivity : AppCompatActivity() {
         venueInput = addInput(formCard, "Venue")
         capacityInput = addInput(formCard, "Capacity", inputType = InputType.TYPE_CLASS_NUMBER)
 
+        formCard.addView(text("Event Banner", 15, true, TEXT_COLOR).apply { setPadding(0, dp(18), 0, dp(6)) })
+        bannerPreview = ImageView(this).apply {
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(android.graphics.Color.parseColor("#F3F4F6"), 10, BORDER, density = resources.displayMetrics.density)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(180))
+        }
+        formCard.addView(bannerPreview)
         formCard.addView(
-            text("Locked: eventId, organizer, approval status, registration windows, start date, end date, logo and rewards stay unchanged.", 12, false, MUTED).apply {
+            text("No banner set. Tap below to choose a 16:9 landscape image.", 12, false, MUTED).apply {
+                setPadding(0, dp(8), 0, 0)
+            }.also { bannerStatus = it },
+        )
+        formCard.addView(ghostButton("Choose new banner") { bannerPicker.launch("image/*") }.apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44)).apply {
+                setMargins(0, dp(10), 0, 0)
+            }
+        })
+
+        formCard.addView(
+            text("Locked: eventId, organizer, approval status, registration windows, start date, end date and rewards stay unchanged.", 12, false, MUTED).apply {
                 setPadding(0, dp(12), 0, 0)
             },
         )
@@ -148,6 +211,83 @@ class EditEventDetailsActivity : AppCompatActivity() {
         return editText
     }
 
+    private fun launchBannerCrop(sourceUri: Uri) {
+        val destinationUri = Uri.fromFile(File(cacheDir, "event_banner_cropped_${System.currentTimeMillis()}.jpg"))
+        val options = UCrop.Options().apply {
+            setCompressionFormat(android.graphics.Bitmap.CompressFormat.JPEG)
+            setCompressionQuality(85)
+            setFreeStyleCropEnabled(false)
+        }
+        val cropIntent = UCrop.of(sourceUri, destinationUri)
+            .withAspectRatio(16f, 9f)
+            .withMaxResultSize(1920, 1080)
+            .withOptions(options)
+            .getIntent(this)
+        bannerCropLauncher.launch(cropIntent)
+    }
+
+    private fun handleCroppedBanner(croppedUri: Uri) {
+        val croppedFile = File(cacheDir, "event_banner_${System.currentTimeMillis()}.jpg")
+        runCatching {
+            contentResolver.openInputStream(croppedUri)?.use { input ->
+                croppedFile.outputStream().use { output -> input.copyTo(output) }
+            } ?: error("Unable to open cropped image")
+        }.onSuccess {
+            if (croppedFile.length() > MAX_BANNER_BYTES) {
+                croppedFile.delete()
+                bannerStatus.text = "Banner must not exceed 5 MB. Please choose a smaller image."
+                bannerStatus.setTextColor(ERROR)
+                return
+            }
+            selectedBannerFile?.delete()
+            selectedBannerFile = croppedFile
+            bannerPreview.setImageURI(croppedUri)
+            bannerPreview.background = null
+            bannerStatus.text = "New banner selected (16:9). It will be uploaded when you save."
+            bannerStatus.setTextColor(com.thedavelopers.eventqr.features.organizer.PURPLE)
+        }.onFailure {
+            bannerStatus.text = "Unable to attach banner. Please choose another image."
+            bannerStatus.setTextColor(ERROR)
+        }
+    }
+
+    private fun loadBannerPreview(current: OrganizerEventDto) {
+        val fileId = current.eventLogoUrl?.trim().orEmpty()
+        if (fileId.isBlank()) {
+            bannerPreview.visibility = View.GONE
+            bannerStatus.text = "No banner set. Tap below to choose a 16:9 landscape image."
+            return
+        }
+        MainScope().launch {
+            when (val result = repository.getStoredFile(fileId)) {
+                is NetworkResult.Success -> {
+                    val encoded = result.data?.contentBase64
+                    if (encoded.isNullOrBlank()) {
+                        bannerPreview.visibility = View.GONE
+                        return@launch
+                    }
+                    runCatching {
+                        val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    }.onSuccess { bitmap ->
+                        if (bitmap != null) {
+                            bannerPreview.setImageBitmap(bitmap)
+                            bannerPreview.background = null
+                            bannerPreview.visibility = View.VISIBLE
+                            bannerStatus.text = "Current banner. Tap below to replace it."
+                        } else {
+                            bannerPreview.visibility = View.GONE
+                        }
+                    }.onFailure {
+                        bannerPreview.visibility = View.GONE
+                    }
+                }
+                is NetworkResult.Error -> bannerPreview.visibility = View.GONE
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+
     private fun loadEvent() {
         MainScope().launch {
             when (val result = repository.fetchOrganizerEvent(eventId)) {
@@ -172,6 +312,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         regCloseView.text = event.registrationCloseAt?.let { formatLockedInstant(it) } ?: "-"
         eventStartView.text = event.eventStartAt?.let { formatLockedInstant(it) } ?: "-"
         eventEndView.text = event.eventEndAt?.let { formatLockedInstant(it) } ?: "-"
+        loadBannerPreview(event)
         if (isEditLocked(event)) applyEditLock(event)
     }
 
@@ -217,7 +358,23 @@ class EditEventDetailsActivity : AppCompatActivity() {
         saveButton.isEnabled = false
         statusView.text = ""
         MainScope().launch {
-            when (val result = repository.updateOrganizerEvent(eventId, buildRequest(current, organizerId))) {
+            // SCOPE ADDITION (banner edit post-approval): if the organizer picked a new banner,
+            // upload it first to obtain a fresh fileId, then send the update with that fileId.
+            val uploadResult = selectedBannerFile?.let { file ->
+                when (val result = repository.uploadEventBanner(file)) {
+                    is NetworkResult.Success -> result.data?.fileId?.toString()
+                    is NetworkResult.Error -> {
+                        statusView.text = result.message.ifBlank { "Could not upload banner. Please try another image." }
+                        statusView.setTextColor(ERROR)
+                        saveButton.isEnabled = true
+                        return@launch
+                    }
+                    NetworkResult.Loading -> null
+                }
+            }
+            val bannerFileId = uploadResult ?: newBannerFileId ?: current.eventLogoUrl
+
+            when (val result = repository.updateOrganizerEvent(eventId, buildRequest(current, organizerId, bannerFileId))) {
                 is NetworkResult.Success -> {
                     Toast.makeText(this@EditEventDetailsActivity, "Event updated", Toast.LENGTH_SHORT).show()
                     finish()
@@ -236,12 +393,13 @@ class EditEventDetailsActivity : AppCompatActivity() {
     }
 
     // Echoes every untouched value back exactly as loaded so the PATCH never alters
-    // registration windows, end date, logo, rewards state, or organizer ownership.
-    private fun buildRequest(current: OrganizerEventDto, organizerId: java.util.UUID): EventRequest = EventRequest(
+    // registration windows, end date, rewards state, or organizer ownership. The banner
+    // (eventLogoUrl) reflects any newly chosen/uploaded poster else the loaded value.
+    private fun buildRequest(current: OrganizerEventDto, organizerId: java.util.UUID, bannerFileId: String?): EventRequest = EventRequest(
         title = titleInput.text.toString().trim(),
         description = descriptionInput.text.toString().trim().ifBlank { null },
         location = venueInput.text.toString().trim().ifBlank { null },
-        eventLogoUrl = current.eventLogoUrl,
+        eventLogoUrl = bannerFileId,
         registrationOpenAt = current.registrationOpenAt,
         registrationCloseAt = current.registrationCloseAt,
         eventStartAt = requireNotNull(current.eventStartAt),
@@ -253,5 +411,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     companion object {
         private val TEXT_COLOR = android.graphics.Color.parseColor("#111827")
+        private const val MAX_BANNER_BYTES = 5L * 1024L * 1024L
     }
 }

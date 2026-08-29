@@ -35,8 +35,12 @@ import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequ
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
+import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 
 data class OrganizerMvpLoad<T>(
     val data: T,
@@ -330,6 +334,14 @@ class OrganizerRepository(private val context: Context) {
     suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
     suspend fun updateOrganizerEvent(eventId: String, request: com.thedavelopers.eventqr.features.events.model.dto.EventRequest) =
         safeApiCall { apiService.updateOrganizerEvent(eventId, request) }
+    suspend fun uploadEventBanner(file: File): NetworkResult<com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse> = safeApiCall {
+        val contentType = detectImageMediaType(file) ?: "image/jpeg"
+        val requestBody = file.asRequestBody(contentType.toMediaTypeOrNull())
+        val uploadName = ensureImageExtension(file.name, contentType)
+        val part = MultipartBody.Part.createFormData("file", uploadName, requestBody)
+        apiService.uploadEventLogo(part)
+    }
+    suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
     suspend fun fetchOrganizerDashboardSummary() = safeApiCall { apiService.getOrganizerDashboardSummary() }
     suspend fun fetchOrganizerDashboard(eventId: String) = safeApiCall { apiService.getOrganizerDashboard(eventId) }
     suspend fun fetchOrganizerAttendees(eventId: String) = safeApiCall { apiService.getOrganizerAttendees(eventId) }
@@ -382,6 +394,33 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun createNotification(request: NotificationRequest) = safeApiCall { apiService.createNotification(request) }
     suspend fun getNotificationsByEvent(eventId: String) = safeApiCall { apiService.getNotificationsByEvent(eventId) }
+
+    private fun detectImageMediaType(file: File): String? {
+        val header = ByteArray(8)
+        val count = runCatching {
+            file.inputStream().use { it.read(header) }
+        }.getOrDefault(0)
+        if (count >= 3 && (header[0].toInt() and 0xFF) == 0xFF && (header[1].toInt() and 0xFF) == 0xD8 && (header[2].toInt() and 0xFF) == 0xFF) {
+            return "image/jpeg"
+        }
+        if (count >= 4 && (header[0].toInt() and 0xFF) == 0x89 && header[1] == 0x50.toByte() && header[2] == 0x4E.toByte() && header[3] == 0x47.toByte()) {
+            return "image/png"
+        }
+        val lowerName = file.name.lowercase()
+        return when {
+            lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") -> "image/jpeg"
+            lowerName.endsWith(".png") -> "image/png"
+            else -> null
+        }
+    }
+
+    private fun ensureImageExtension(fileName: String, contentType: String): String {
+        val lowerName = fileName.lowercase()
+        return when (contentType) {
+            "image/png" -> if (lowerName.endsWith(".png")) fileName else "$fileName.png"
+            else -> if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) fileName else "$fileName.jpg"
+        }
+    }
 
     companion object {
         private const val KEY_SELECTED_EVENT_ID = "selected_event_id"

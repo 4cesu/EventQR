@@ -156,6 +156,7 @@ public class OrganizerService {
         event.setEventEndAt(request.eventEndAt());
         event.setCapacity(request.capacity());
         event.setRewardsEnabled(Boolean.TRUE.equals(request.rewardsEnabled()));
+        event.setEventLogoUrl(request.eventLogoUrl());
         return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
                 event.getCapacity(), event.getCurrentAttendeeCount(), event.getStatus(), event.isRewardsEnabled(),
