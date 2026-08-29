@@ -141,6 +141,12 @@ public class OrganizerService {
             throw new BadRequestException(
                     "Capacity cannot be less than current registered attendees (" + registeredCount + ")");
         }
+        if (!java.util.Objects.equals(request.eventStartAt(), event.getEventStartAt())
+                || !java.util.Objects.equals(request.eventEndAt(), event.getEventEndAt())
+                || !java.util.Objects.equals(request.registrationOpenAt(), event.getRegistrationOpenAt())
+                || !java.util.Objects.equals(request.registrationCloseAt(), event.getRegistrationCloseAt())) {
+            throw new ConflictException("Registration window and event start/end dates cannot be modified after creation");
+        }
         event.setTitle(request.title().trim());
         event.setDescription(request.description());
         event.setLocation(request.location());
