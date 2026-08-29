@@ -19,19 +19,20 @@
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="240dp"
-                android:background="@drawable/bg_eventqr_gradient">
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_eventqr_gradient"
+                android:paddingVertical="32dp">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingHorizontal="24dp">
 
                     <FrameLayout
-                        android:layout_width="110dp"
-                        android:layout_height="110dp">
+                        android:layout_width="104dp"
+                        android:layout_height="104dp">
 
                         <View
                             android:layout_width="match_parent"
@@ -40,8 +41,8 @@
 
                         <ImageView
                             android:id="@+id/imgProfileAvatar"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
                             android:layout_gravity="center"
                             android:contentDescription="Profile photo"
                             android:scaleType="centerCrop"
@@ -49,8 +50,8 @@
 
                         <FrameLayout
                             android:id="@+id/imgProfileAvatarPlaceholder"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
                             android:layout_gravity="center"
                             android:background="@drawable/bg_profile_avatar_gradient">
 
@@ -65,34 +66,44 @@
                     </FrameLayout>
 
                     <TextView
-                        android:id="@+id/txtProfileRole"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:background="@drawable/bg_profile_role_badge"
-                        android:paddingHorizontal="24dp"
-                        android:paddingVertical="8dp"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
                         android:id="@+id/txtProfileName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="gone" />
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:textColor="#FFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtProfileRole"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_profile_role_badge"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="6dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/txtProfileEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="gone" />
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:textColor="#E0DFF6"
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/txtPhone"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="gone" />
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:textColor="#E0DFF6"
+                        android:textSize="14sp" />
                 </LinearLayout>
             </FrameLayout>
 
@@ -147,11 +158,22 @@
                     android:layout_height="0dp"
                     android:visibility="gone" />
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="Account"
+                    android:textColor="@color/eventqr_muted"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardEditProfile"
                     android:layout_width="match_parent"
                     android:layout_height="72dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="4dp"
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
