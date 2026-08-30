@@ -45,7 +45,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
-        findViewById<TextView>(R.id.txtTagCategory).text = intent.getStringExtra(EXTRA_EVENT_CATEGORY).orEmpty().ifBlank { "Technology" }
+        findViewById<TextView>(R.id.txtTagCategory).text = intent.getStringExtra(EXTRA_EVENT_CATEGORY).orEmpty().ifBlank { "Event" }
         
         intent.getStringExtra(EXTRA_EVENT_COUNT)?.let { countStr ->
             intent.getStringExtra(EXTRA_EVENT_CAPACITY)?.let { capacityStr ->
@@ -108,9 +108,12 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
         val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
         
-        event.eventStartAt?.let {
-            findViewById<TextView>(R.id.txtDetailDate).text = dateFormatter.format(it)
-            findViewById<TextView>(R.id.txtDetailTime).text = timeFormatter.format(it)
+        if (event.eventStartAt != null) {
+            findViewById<TextView>(R.id.txtDetailDate).text = dateFormatter.format(event.eventStartAt)
+            findViewById<TextView>(R.id.txtDetailTime).text = timeFormatter.format(event.eventStartAt)
+        } else {
+            findViewById<TextView>(R.id.txtDetailDate).text = "--"
+            findViewById<TextView>(R.id.txtDetailTime).text = "-"
         }
 
         updateRegistrationStatusUI(event.currentAttendeeCount, event.capacity)
@@ -193,15 +196,25 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     private fun updateRegistrationStatusUI(current: Int, capacity: Int) {
-        findViewById<TextView>(R.id.txtDetailCapacity).text = "$current / $capacity registered"
-        
-        val cap = capacity.coerceAtLeast(1)
-        val percent = (current.toFloat() / cap.toFloat() * 100).toInt().coerceIn(0, 100)
+        val capacityView = findViewById<TextView>(R.id.txtDetailCapacity)
+        val percentView = findViewById<TextView>(R.id.txtRegPercent)
+        val progressBar = findViewById<android.widget.ProgressBar>(R.id.pbRegistrationDetail)
+        val remainingView = findViewById<TextView>(R.id.txtRemainingSpots)
+
+        if (capacity <= 0) {
+            capacityView.text = "--"
+            percentView.text = ""
+            remainingView.text = ""
+            progressBar.progress = 0
+            return
+        }
+
+        capacityView.text = "$current / $capacity registered"
+        val percent = (current.toFloat() / capacity.toFloat() * 100).toInt().coerceIn(0, 100)
         val remaining = (capacity - current).coerceAtLeast(0)
-        
-        findViewById<TextView>(R.id.txtRegPercent).text = "$percent% full"
-        findViewById<android.widget.ProgressBar>(R.id.pbRegistrationDetail).progress = percent
-        findViewById<TextView>(R.id.txtRemainingSpots).text = "$remaining spots remaining"
+        percentView.text = "$percent% full"
+        progressBar.progress = percent
+        remainingView.text = "$remaining spots remaining"
     }
 
     private fun checkOwnedEventThenAvailability(event: AttendeeEventResponse) {
