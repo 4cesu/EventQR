@@ -6,6 +6,7 @@ fun toFriendlyRegistrationError(message: String): String {
         normalized.contains("duplicate registration") || normalized.contains("already registered") || normalized.contains("duplicate key") || normalized.contains("unique constraint") -> "You are already registered for this event."
         normalized.contains("event is at capacity") || normalized.contains("capacity") || normalized.contains("full") -> "This event is full."
         normalized.contains("registration is closed") || normalized.contains("registration closed") || normalized.contains("closed") -> "Registration is closed."
+        normalized.contains("event is not open for registration") || normalized.contains("not open for registration") -> "This event is not open for registration."
         normalized.contains("event is not active") || normalized.contains("not active") -> "This event is not active."
         normalized.contains("unauthorized") || normalized.contains("forbidden") -> "You do not have permission to register for this event."
         normalized.contains("not found") -> "Event not found."

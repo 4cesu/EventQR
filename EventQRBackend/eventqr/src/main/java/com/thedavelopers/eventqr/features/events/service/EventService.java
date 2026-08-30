@@ -85,17 +85,17 @@ public class EventService implements EventLookupPort {
         int attendeeCount = safeCount(event.getCurrentAttendeeCount());
         Instant now = Instant.now();
 
-        boolean statusActive = event.getStatus() == EventStatus.ACTIVE;
+        boolean statusPublic = event.getStatus() == EventStatus.APPROVED || event.getStatus() == EventStatus.ACTIVE;
         boolean onOrAfterRegistrationOpen = event.getRegistrationOpenAt() == null || !now.isBefore(event.getRegistrationOpenAt());
         boolean onOrBeforeRegistrationClose = event.getRegistrationCloseAt() == null || !now.isAfter(event.getRegistrationCloseAt());
 
-        boolean registrationOpen = statusActive && onOrAfterRegistrationOpen && onOrBeforeRegistrationClose;
+        boolean registrationOpen = statusPublic && onOrAfterRegistrationOpen && onOrBeforeRegistrationClose;
         boolean full = capacity > 0 && attendeeCount >= capacity;
         boolean available = registrationOpen && !full;
 
         String message;
-        if (!statusActive) {
-            message = "Event is not active";
+        if (!statusPublic) {
+            message = "Event is not open for registration";
         } else if (!onOrAfterRegistrationOpen) {
             message = "Registration not open yet";
         } else if (!onOrBeforeRegistrationClose) {
