@@ -69,8 +69,9 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         Instant now = Instant.now();
         boolean registrationWindowOpen = (eventSnapshot.registrationOpenAt() == null || !now.isBefore(eventSnapshot.registrationOpenAt()))
                 && (eventSnapshot.registrationCloseAt() == null || !now.isAfter(eventSnapshot.registrationCloseAt()));
-        if (eventSnapshot.status() != EventStatus.ACTIVE) {
-            throw new ForbiddenException("Event is not active");
+        boolean statusPublic = eventSnapshot.status() == EventStatus.APPROVED || eventSnapshot.status() == EventStatus.ACTIVE;
+        if (!statusPublic) {
+            throw new ForbiddenException("Event is not open for registration");
         }
         if (!registrationWindowOpen) {
             throw new ForbiddenException("Registration is closed");
