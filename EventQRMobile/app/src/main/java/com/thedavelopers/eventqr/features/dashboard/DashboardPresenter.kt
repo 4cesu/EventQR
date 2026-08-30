@@ -6,6 +6,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.attendee.AttendeeRepository
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
@@ -135,6 +136,7 @@ class DashboardPresenter(
     }
 
     fun logout() {
+        RegistrationsCache.clear()
         sessionManager.clearSession()
     }
 

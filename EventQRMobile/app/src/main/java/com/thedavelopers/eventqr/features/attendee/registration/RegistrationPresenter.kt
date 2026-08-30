@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.features.attendee
 
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -52,6 +53,7 @@ class RegistrationPresenter(
             when (regResult) {
                 is NetworkResult.Success -> {
                     val submission = regResult.data
+                    RegistrationsCache.addRegistration(submission.registration)
                     val registrationId = submission.registration.registrationId.toString()
                     val qrCredentialId = submission.qrCredential.qrCredentialId.toString()
 

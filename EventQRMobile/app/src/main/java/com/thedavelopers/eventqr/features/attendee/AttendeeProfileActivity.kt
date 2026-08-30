@@ -30,6 +30,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import kotlinx.coroutines.launch
 import java.io.File
@@ -113,6 +114,7 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
     private fun performSignOut() {
         clearAvatarCache(filesDir)
+        RegistrationsCache.clear()
         sessionManager.clearSession()
         startActivity(
             Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)

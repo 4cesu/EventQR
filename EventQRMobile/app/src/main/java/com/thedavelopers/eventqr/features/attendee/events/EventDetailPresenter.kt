@@ -4,6 +4,8 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -21,12 +23,12 @@ class EventDetailPresenter(
     fun loadEventDetails(eventId: String) {
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
+            checkRegistrationStatus(eventId)
             val result = repository.getEvent(eventId)
             view?.showLoading(false)
             when (result) {
                 is NetworkResult.Success -> {
                     view?.renderEvent(result.data)
-                    checkRegistrationStatus(eventId)
                 }
                 is NetworkResult.Error -> {
                     view?.showMessage("Unable to load event details: ${result.message}")
@@ -48,18 +50,39 @@ class EventDetailPresenter(
             return
         }
 
+        val cached = RegistrationsCache.get()
+        if (cached != null) {
+            view?.updateRegistrationStatus(isRegisteredIn(cached, eventId))
+        }
+        if (cached != null && RegistrationsCache.isFresh()) {
+            return
+        }
+
         kotlinx.coroutines.MainScope().launch {
+            val cachedRegistered = cached?.let { isRegisteredIn(it, eventId) }
             val result = repository.getMyRegistrations()
-            if (result is NetworkResult.Success) {
-                val isRegistered = result.data.any {
-                    it.eventId.toString() == eventId &&
-                        it.status != RegistrationStatus.CANCELLED &&
-                        it.status != RegistrationStatus.NO_SHOW
+            when (result) {
+                is NetworkResult.Success -> {
+                    val freshRegistered = isRegisteredIn(result.data, eventId)
+                    if (cachedRegistered != freshRegistered) {
+                        view?.updateRegistrationStatus(freshRegistered)
+                    }
                 }
-                view?.updateRegistrationStatus(isRegistered)
-            } else if (result is NetworkResult.Error) {
-                view?.onRegistrationStatusCheckFailed()
+                is NetworkResult.Error -> {
+                    if (cached == null) {
+                        view?.onRegistrationStatusCheckFailed()
+                    }
+                }
+                NetworkResult.Loading -> Unit
             }
+        }
+    }
+
+    private fun isRegisteredIn(items: List<RegistrationResponse>, eventId: String): Boolean {
+        return items.any {
+            it.eventId.toString() == eventId &&
+                it.status != RegistrationStatus.CANCELLED &&
+                it.status != RegistrationStatus.NO_SHOW
         }
     }
 
