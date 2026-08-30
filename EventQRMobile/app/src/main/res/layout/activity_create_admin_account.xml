@@ -22,8 +22,8 @@
 
             <ImageButton
                 android:id="@+id/buttonBack"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back"
                 android:padding="10dp"
@@ -70,21 +70,50 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Admin Details"
-                    android:textColor="#111827"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="The new account will receive the Admin role only."
-                    android:textColor="#6B7280"
-                    android:textSize="13sp" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_admin_icon_tile_purple">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="Admin account"
+                            android:src="@drawable/ic_nav_profile"
+                            android:tint="@color/eventqr_purple" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Admin Details"
+                            android:textColor="#111827"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="The new account will receive the Admin role only."
+                            android:textColor="#6B7280"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -198,10 +227,16 @@
                     android:textColorHint="#71717A"
                     android:textSize="14sp" />
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="20dp"
+                    android:background="#F3F4F6" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="18dp"
                     android:text="Temporary Password"
                     android:textColor="#111827"
                     android:textSize="13sp"
@@ -284,36 +319,36 @@
                                 android:id="@+id/txtPasswordLengthRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="○ At least 8 characters"
-                                android:textColor="@color/eventqr_muted"
-                                android:textSize="11sp" />
+android:text="○ At least 8 characters"
+                                    android:textColor="@color/eventqr_muted"
+                                    android:textSize="12sp" />
 
                             <TextView
                                 android:id="@+id/txtPasswordCapitalRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="○ One uppercase letter"
-                                android:textColor="@color/eventqr_muted"
-                                android:textSize="11sp" />
+android:text="○ One uppercase letter"
+                                    android:textColor="@color/eventqr_muted"
+                                    android:textSize="12sp" />
 
                             <TextView
                                 android:id="@+id/txtPasswordNumberRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="○ One number"
-                                android:textColor="@color/eventqr_muted"
-                                android:textSize="11sp" />
+android:text="○ One number"
+                                    android:textColor="@color/eventqr_muted"
+                                    android:textSize="12sp" />
 
                             <TextView
                                 android:id="@+id/txtPasswordSpecialRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="○ One special character"
-                                android:textColor="@color/eventqr_muted"
-                                android:textSize="11sp" />
+android:text="○ One special character"
+                                    android:textColor="@color/eventqr_muted"
+                                    android:textSize="12sp" />
                         </LinearLayout>
 
                         <TextView
@@ -358,7 +393,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginTop="20dp"
-                    android:backgroundTint="@color/eventqr_purple"
+                    android:background="@drawable/bg_primary_button"
                     android:text="Create Admin Account"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
