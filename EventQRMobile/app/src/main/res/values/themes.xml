@@ -14,10 +14,20 @@
         <item name="android:activityCloseExitAnimation">@null</item>
     </style>
 
-    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_transparent_icon</item>
-        <item name="windowSplashScreenBackground">@color/eventqr_indigo</item>
-        <item name="postSplashScreenTheme">@style/Theme.EventQR</item>
+    <style name="Theme.App.Starting" parent="Theme.EventQR">
+        <!--
+            Legacy starting theme (API < 31).
+            windowSplashScreenBackground in the SplashScreen API only accepts a single
+            opaque solid color, which can't reproduce the gradient and causes a visible
+            solid-color flash before the gradient+logo splash draws. Instead, render the
+            actual gradient as the window background so the very first frame matches the
+            splash content (see activity_splash_modern.xml, which uses the same drawable),
+            making the cold-start transition seamless on pre-Android-12 devices.
+            On Android 12+ the native SplashScreen theme below (values-v31) is used.
+        -->
+        <item name="android:windowBackground">@drawable/bg_eventqr_gradient</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowDisablePreview">false</item>
     </style>
 
     <style name="RequestEventLabel">

@@ -40,7 +40,13 @@ open class LandingActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        // Only Android 12+ (API 31+) uses the native SplashScreen theme (values-v31).
+        // On older versions the gradient is drawn directly as the window background
+        // (android:windowBackground in Theme.App.Starting), so calling installSplashScreen()
+        // there would override it with a solid color and reintroduce a launch flash.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            installSplashScreen()
+        }
         super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
