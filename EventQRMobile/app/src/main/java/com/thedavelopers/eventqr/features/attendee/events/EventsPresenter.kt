@@ -18,7 +18,7 @@ class EventsPresenter(
     fun loadEvents() {
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            when (val result = repository.getEvents()) {
+            when (val result = repository.getBrowseEvents()) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)
                     view?.showEvents(result.data)

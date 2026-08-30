@@ -89,6 +89,11 @@ public class EventController {
         return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents()));
     }
 
+    @GetMapping("/attendee-browse")
+    public ResponseEntity<ApiResponse<List<AttendeeEventResponse>>> listAttendeeBrowse() {
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents()));
+    }
+
     private void requireAuthenticated(HttpServletRequest request) {
         jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
     }
