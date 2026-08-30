@@ -93,6 +93,7 @@ class AttendeeRepository(context: Context) {
     suspend fun getRewardBalance(eventId: String, attendeeUserId: String) = safeApiCall { apiService.getRewardBalance(eventId, attendeeUserId) }
     suspend fun redeemReward(request: RewardRedemptionRequest) = safeApiCall { apiService.redeemReward(request) }
     suspend fun getRewardRedemptions(eventId: String) = safeApiCall { apiService.getRewardRedemptions(eventId) }
+    suspend fun getMyRewardRedemptions(eventId: String) = safeApiCall { apiService.getMyClaimedRewards(eventId) }
     suspend fun getMyNotifications() = safeApiCall { apiService.getMyNotifications() }
     suspend fun markNotificationRead(notificationId: String) = safeApiCall { apiService.markNotificationRead(notificationId) }
     suspend fun markAllNotificationsRead() = safeApiCall { apiService.markAllNotificationsRead() }
