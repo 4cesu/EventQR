@@ -28,6 +28,7 @@ import java.util.UUID
 class AttendeeRepository(context: Context) {
     private val apiService = ApiClient.getService(context)
     suspend fun getEvents() = safeApiCall { apiService.getAttendeeVisibleEvents() }
+    suspend fun getBrowseEvents() = safeApiCall { apiService.getAttendeeBrowseEvents() }
     suspend fun getEvent(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
     suspend fun getEventAvailability(eventId: String) = safeApiCall { apiService.getEventAvailability(eventId) }
     suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }

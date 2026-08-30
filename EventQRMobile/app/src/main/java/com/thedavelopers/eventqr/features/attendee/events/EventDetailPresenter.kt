@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
 import kotlinx.coroutines.Job
@@ -48,10 +49,16 @@ class EventDetailPresenter(
         }
 
         kotlinx.coroutines.MainScope().launch {
-            val result = repository.getRegistrationsByEvent(eventId)
+            val result = repository.getMyRegistrations()
             if (result is NetworkResult.Success) {
-                val isRegistered = result.data.any { it.attendeeUserId.toString() == userId }
+                val isRegistered = result.data.any {
+                    it.eventId.toString() == eventId &&
+                        it.status != RegistrationStatus.CANCELLED &&
+                        it.status != RegistrationStatus.NO_SHOW
+                }
                 view?.updateRegistrationStatus(isRegistered)
+            } else if (result is NetworkResult.Error) {
+                view?.onRegistrationStatusCheckFailed()
             }
         }
     }

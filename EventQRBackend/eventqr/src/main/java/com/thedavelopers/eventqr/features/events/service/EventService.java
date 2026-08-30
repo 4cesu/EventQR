@@ -25,6 +25,8 @@ public class EventService implements EventLookupPort {
 
     private static final List<EventStatus> PUBLIC_EVENT_STATUSES = List.of(EventStatus.APPROVED, EventStatus.ACTIVE);
 
+    private static final List<EventStatus> ATTENDEE_BROWSE_STATUSES = List.of(EventStatus.APPROVED, EventStatus.ACTIVE, EventStatus.ENDED);
+
     private final EventRepository eventRepository;
 
     public EventService(EventRepository eventRepository) {
@@ -145,6 +147,12 @@ public class EventService implements EventLookupPort {
 
     public List<AttendeeEventResponse> findAttendeeVisibleEvents() {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(PUBLIC_EVENT_STATUSES).stream()
+            .map(this::toAttendeeResponse)
+            .toList();
+    }
+
+    public List<AttendeeEventResponse> findAttendeeBrowseEvents() {
+        return eventRepository.findByStatusInOrderByEventStartAtAsc(ATTENDEE_BROWSE_STATUSES).stream()
             .map(this::toAttendeeResponse)
             .toList();
     }

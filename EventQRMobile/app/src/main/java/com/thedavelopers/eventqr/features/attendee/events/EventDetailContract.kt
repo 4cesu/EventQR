@@ -6,6 +6,7 @@ interface EventDetailContract {
     interface View : AttendeeView {
         fun renderEvent(event: AttendeeEventResponse)
         fun updateRegistrationStatus(isRegistered: Boolean)
+        fun onRegistrationStatusCheckFailed()
         fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String)
         fun getSessionUserId(): String?
         fun getSessionEmail(): String
