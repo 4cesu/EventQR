@@ -30,6 +30,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var isAlreadyRegistered = false
     private var isOwnedByCurrentOrganizer = false
     private var isFirstResume = true
+    private var registrationStatusCheckFailed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -275,6 +276,12 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             return
         }
 
+        if (registrationStatusCheckFailed) {
+            setUnverifiableState(btn)
+            logRegistrationWindow(event, availability, "Registration status unavailable", false)
+            return
+        }
+
         if (availability.available) {
             btn.isEnabled = true
             btn.text = "Register"
@@ -303,6 +310,11 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             return
         }
 
+        if (registrationStatusCheckFailed) {
+            setUnverifiableState(btn)
+            return
+        }
+
         btn.isEnabled = true
         btn.text = "Register"
         btn.setBackgroundResource(R.drawable.bg_detail_register_button)
@@ -311,6 +323,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     override fun updateRegistrationStatus(isRegistered: Boolean) {
         isAlreadyRegistered = isRegistered
+        registrationStatusCheckFailed = false
         if (isOwnedByCurrentOrganizer) {
             setOwnedEventState()
             return
@@ -323,6 +336,15 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
                 findViewById<View>(R.id.btnViewRewards)?.visibility = View.VISIBLE
             }
         }
+    }
+
+    override fun onRegistrationStatusCheckFailed() {
+        registrationStatusCheckFailed = true
+        if (isOwnedByCurrentOrganizer) {
+            setOwnedEventState()
+            return
+        }
+        setUnverifiableState(findViewById(R.id.btnRegisterForEvent))
     }
 
     override fun showLoading(isLoading: Boolean) = Unit
@@ -365,6 +387,12 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private fun setAlreadyRegisteredState(button: Button) {
         button.isEnabled = false
         button.text = "Already Registered"
+        button.setBackgroundResource(R.drawable.bg_disabled_button)
+    }
+
+    private fun setUnverifiableState(button: Button) {
+        button.isEnabled = false
+        button.text = "Can't verify registration"
         button.setBackgroundResource(R.drawable.bg_disabled_button)
     }
 
