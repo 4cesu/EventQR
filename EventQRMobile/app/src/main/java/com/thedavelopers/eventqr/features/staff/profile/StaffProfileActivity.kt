@@ -13,6 +13,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import kotlinx.coroutines.launch
 
@@ -61,6 +62,7 @@ open class StaffProfileActivity : AppCompatActivity() {
     }
 
     private fun performSignOut() {
+        RegistrationsCache.clear()
         sessionManager.clearSession()
         startActivity(Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
         finish()

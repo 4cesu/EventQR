@@ -38,7 +38,7 @@
                     android:id="@+id/txtEventDay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="15"
+                    android:text=""
                     android:textColor="#4F46E5"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -47,7 +47,7 @@
                     android:id="@+id/txtEventMonth"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="JUN"
+                    android:text=""
                     android:textColor="#4F46E5"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -72,7 +72,7 @@
                         android:layout_marginEnd="8dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="TechSummit 2026"
+                        android:text=""
                         android:textColor="#111827"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -85,7 +85,7 @@
                         android:background="@drawable/bg_event_status_upcoming"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="4dp"
-                        android:text="Upcoming"
+                        android:text=""
                         android:textColor="#4F46E5"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -96,7 +96,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="08:00 AM"
+                    android:text=""
                     android:textColor="#6B7280"
                     android:textSize="14sp" />
 
@@ -104,7 +104,7 @@
                     android:id="@+id/txtAttendeeEventLocation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="SM Mall of Asia Arena, Manila"
+                    android:text=""
                     android:textColor="#6B7280"
                     android:textSize="14sp" />
 
@@ -120,7 +120,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="742 / 1000 registered"
+                        android:text=""
                         android:textColor="#9CA3AF"
                         android:textSize="12sp" />
 
@@ -128,7 +128,7 @@
                         android:id="@+id/txtRegistrationPercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="74%"
+                        android:text=""
                         android:textColor="#9CA3AF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -140,7 +140,7 @@
                     android:layout_height="4dp"
                     android:layout_marginTop="6dp"
                     android:max="100"
-                    android:progress="74"
+                    android:progress="0"
                     android:progressDrawable="@drawable/pb_event_upcoming" />
             </LinearLayout>
         </LinearLayout>

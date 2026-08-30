@@ -83,7 +83,7 @@
                         android:background="@drawable/bg_category_badge"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="4dp"
-                        android:text="Technology"
+                        android:text=""
                         android:textColor="#FFFFFF"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -93,7 +93,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="TechSummit 2026"
+                        android:text=""
                         android:textColor="#FFFFFF"
                         android:textSize="28sp"
                         android:textStyle="bold" />
@@ -108,18 +108,18 @@
                 android:paddingTop="20dp">
 
                 <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                    <TextView android:id="@+id/txtDetailStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Upcoming" android:textColor="#4F46E5" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/txtDetailStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textColor="#4F46E5" android:textSize="14sp" android:textStyle="bold" />
                     <TextView android:id="@+id/txtOrganizer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="by Organizer" android:textColor="#6B7280" android:textSize="14sp" android:visibility="gone" />
                 </RelativeLayout>
 
-                <TextView android:id="@+id/txtDetailDescription" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:lineSpacingExtra="4dp" android:text="Event description goes here..." android:textColor="#374151" android:textSize="15sp" />
+                <TextView android:id="@+id/txtDetailDescription" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:lineSpacingExtra="4dp" android:text="" android:textColor="#374151" android:textSize="15sp" />
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="20dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_calendar" app:tint="#4F46E5" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DATE" android:textColor="#9CA3AF" android:textSize="11sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Monday, June 15, 2026" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
@@ -127,7 +127,7 @@
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_lock_idle_alarm" app:tint="#4F46E5" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TIME" android:textColor="#9CA3AF" android:textSize="11sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="08:00 AM" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
@@ -135,7 +135,7 @@
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_home" app:tint="#4F46E5" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LOCATION" android:textColor="#9CA3AF" android:textSize="11sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailVenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="SM Mall of Asia Arena, Manila" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailVenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
@@ -143,7 +143,7 @@
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_profile" app:tint="#4F46E5" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CAPACITY" android:textColor="#9CA3AF" android:textSize="11sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailCapacity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="742 / 1000 registered" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailCapacity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="" android:textColor="#111827" android:textSize="15sp" android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
                     <View android:id="@+id/viewRewardsDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
@@ -160,10 +160,10 @@
                 <LinearLayout android:id="@+id/layoutRegistrationStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="20dp">
                     <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Registration Status" android:textColor="#111827" android:textSize="16sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/txtRegPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="74% full" android:textColor="#4F46E5" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/txtRegPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="" android:textColor="#4F46E5" android:textSize="14sp" android:textStyle="bold" />
                     </RelativeLayout>
-                    <ProgressBar android:id="@+id/pbRegistrationDetail" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="12dp" android:max="100" android:progress="74" android:progressDrawable="@drawable/pb_event_upcoming" />
-                    <TextView android:id="@+id/txtRemainingSpots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="258 spots remaining" android:textColor="#6B7280" android:textSize="14sp" />
+                    <ProgressBar android:id="@+id/pbRegistrationDetail" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="12dp" android:max="100" android:progress="0" android:progressDrawable="@drawable/pb_event_upcoming" />
+                    <TextView android:id="@+id/txtRemainingSpots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="" android:textColor="#6B7280" android:textSize="14sp" />
                 </LinearLayout>
 
                 <View android:id="@+id/layoutDetailRewards" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />

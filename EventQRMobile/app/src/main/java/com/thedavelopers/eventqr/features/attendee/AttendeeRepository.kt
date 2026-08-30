@@ -8,6 +8,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
@@ -71,7 +72,12 @@ class AttendeeRepository(context: Context) {
     }
     suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
     suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
-    suspend fun getMyRegistrations() = safeApiCall { apiService.getMyRegistrations() }
+    suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
+        safeApiCall { apiService.getMyRegistrations() }.also { result ->
+            if (result is NetworkResult.Success) {
+                RegistrationsCache.set(result.data)
+            }
+        }
     suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }
     suspend fun getMyTransactions() = safeApiCall { apiService.getMyTransactions() }
     suspend fun createQrCredential(registrationId: String) = safeApiCall { apiService.createQrCredential(registrationId) }
