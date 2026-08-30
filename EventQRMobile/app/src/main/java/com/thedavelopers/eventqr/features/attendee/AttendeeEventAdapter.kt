@@ -89,13 +89,17 @@ class AttendeeEventAdapter(
             })
 
             // Date formatting
-            item.eventStartAt?.let {
-                val zonedDateTime = it.atZone(java.time.ZoneId.of("Asia/Manila"))
+            if (item.eventStartAt != null) {
+                val zonedDateTime = item.eventStartAt.atZone(java.time.ZoneId.of("Asia/Manila"))
                 dayView.text = zonedDateTime.dayOfMonth.toString()
                 monthView.text = zonedDateTime.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH).uppercase()
-                
+
                 val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH)
                 dateTimeView.text = zonedDateTime.format(timeFormatter)
+            } else {
+                dayView.text = "--"
+                monthView.text = "---"
+                dateTimeView.text = "-"
             }
 
             locationView.text = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
