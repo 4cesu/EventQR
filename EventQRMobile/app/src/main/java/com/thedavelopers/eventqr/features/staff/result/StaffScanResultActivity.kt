@@ -84,13 +84,13 @@ open class StaffScanResultActivity : AppCompatActivity() {
     }
 
     private fun bindStaticFields(isValid: Boolean) {
-        findViewById<TextView>(R.id.txtScanResultState).text = if (isValid) "QR Code Valid" else "Verification Rejected"
-        findViewById<TextView>(R.id.txtScanResultTitle).text = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orUnknown("Assigned event")
         findViewById<TextView>(R.id.txtScanResultEvent).text = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orUnknown("Assigned event")
         findViewById<TextView>(R.id.txtScanResultPurpose).text = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME).orUnknown("Scan purpose")
         findViewById<TextView>(R.id.txtScanResultReason).text = intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE).orUnknown("No reason supplied")
 
         if (isValid) {
+            findViewById<View>(R.id.headerApproved).visibility = View.VISIBLE
+            findViewById<View>(R.id.headerRejected).visibility = View.GONE
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.VISIBLE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.GONE
             findViewById<TextView>(R.id.txtScanResultAttendeeName).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown()
@@ -100,12 +100,25 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
         } else {
+            findViewById<View>(R.id.headerApproved).visibility = View.GONE
+            findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.txtScanResultStateRejected).text = "Verification Rejected"
+            findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = "Backend verification rejected the scan."
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.txtScanResultStatusHint).text = "Backend verification rejected the scan."
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.GONE
         }
+    }
+
+    private fun bindRejectedResult(message: String) {
+        findViewById<View>(R.id.headerApproved).visibility = View.GONE
+        findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = "Verification Rejected"
+        findViewById<TextView>(R.id.txtScanResultReason).text = message
+        findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
+        findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
+        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
     }
 
     private fun recordTransaction() {
@@ -292,14 +305,6 @@ open class StaffScanResultActivity : AppCompatActivity() {
             openAttendeeDetails()
         }
         dialog.show()
-    }
-
-    private fun bindRejectedResult(message: String) {
-        findViewById<TextView>(R.id.txtScanResultState).text = "Verification Rejected"
-        findViewById<TextView>(R.id.txtScanResultReason).text = message
-        findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
-        findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
-        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
     }
 
     private fun showEntryLoggedDialog(result: TransactionResponse) {

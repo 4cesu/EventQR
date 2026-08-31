@@ -6,16 +6,31 @@
     android:background="#F3F4F6"
     android:orientation="vertical">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="#FFFFFF"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:text="Transaction Logs"
-        android:textColor="#111827"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_admin_header_gradient"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Transaction Logs"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Recent scan activity across your events"
+            android:textColor="#C7D2FE"
+            android:textSize="13sp" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/cardStaffTransactionsEvent"
@@ -95,22 +110,22 @@
         android:paddingTop="12dp"
         android:paddingBottom="10dp">
 
-        <LinearLayout android:layout_width="0dp" android:layout_height="126dp" android:layout_marginEnd="8dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_event_status_upcoming" android:padding="10dp" android:src="@drawable/ic_file" app:tint="#4F46E5" />
-            <TextView android:id="@+id/txtTotalScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="24sp" android:textStyle="bold" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total" android:textColor="#6B7280" android:textSize="13sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center" android:orientation="vertical" android:paddingVertical="18dp">
+            <ImageView android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_icon_tile_indigo" android:padding="11dp" android:src="@drawable/ic_file" app:tint="#4F46E5" />
+            <TextView android:id="@+id/txtTotalScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="26sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total scans" android:textColor="#6B7280" android:textSize="12sp" />
         </LinearLayout>
 
-        <LinearLayout android:layout_width="0dp" android:layout_height="126dp" android:layout_marginHorizontal="4dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_green_pill" android:padding="10dp" android:src="@drawable/ic_staff_check" app:tint="#059669" />
-            <TextView android:id="@+id/txtSuccessfulScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="24sp" android:textStyle="bold" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Success" android:textColor="#6B7280" android:textSize="13sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="4dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center" android:orientation="vertical" android:paddingVertical="18dp">
+            <ImageView android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_icon_tile_green" android:padding="11dp" android:src="@drawable/ic_staff_check" app:tint="#10B981" />
+            <TextView android:id="@+id/txtSuccessfulScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="26sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Successful" android:textColor="#6B7280" android:textSize="12sp" />
         </LinearLayout>
 
-        <LinearLayout android:layout_width="0dp" android:layout_height="126dp" android:layout_marginStart="8dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_red_warning" android:padding="10dp" android:src="@drawable/ic_staff_close" app:tint="#DC2626" />
-            <TextView android:id="@+id/txtRejectedScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="24sp" android:textStyle="bold" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rejected" android:textColor="#6B7280" android:textSize="13sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center" android:orientation="vertical" android:paddingVertical="18dp">
+            <ImageView android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_icon_tile_red" android:padding="11dp" android:src="@drawable/ic_staff_close" app:tint="#EF4444" />
+            <TextView android:id="@+id/txtRejectedScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="26sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rejected" android:textColor="#6B7280" android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
 

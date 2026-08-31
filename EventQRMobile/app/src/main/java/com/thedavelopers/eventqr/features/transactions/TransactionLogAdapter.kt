@@ -19,7 +19,7 @@ import java.util.Locale
 class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHolder>() {
 
     private val items = mutableListOf<TransactionResponse>()
-    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
+    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, h:mm a", Locale.ENGLISH)
         .withZone(ZoneId.of("Asia/Manila"))
 
     fun submitItems(newItems: List<TransactionResponse>) {
@@ -47,6 +47,7 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
         private val purposeIconView: ImageView = itemView.findViewById(R.id.imgPurposeIcon)
         private val iconContainer: FrameLayout = itemView.findViewById(R.id.iconContainer)
         private val pointsView: TextView = itemView.findViewById(R.id.txtPointsDelta)
+        private val statusBadgeView: TextView = itemView.findViewById(R.id.txtStatusBadge)
 
         fun bind(item: TransactionResponse) {
             val isSuccess = item.transactionResult.name == "APPROVED" || item.transactionResult.name == "SUCCESS"
@@ -57,11 +58,16 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
             purposeNameView.text = item.scanPurposeName?.takeIf { it.isNotBlank() } ?: formatType(item.transactionType.name)
             timeView.text = formatTime(item.scannedAt)
 
-            iconContainer.setBackgroundResource(if (isSuccess) R.drawable.bg_transaction_success_icon else R.drawable.bg_transaction_rejected_icon)
+            iconContainer.setBackgroundResource(if (isSuccess) R.drawable.bg_transaction_earned_icon else R.drawable.bg_transaction_redeemed_icon)
             purposeIconView.setImageResource(if (isSuccess) R.drawable.ic_staff_check else R.drawable.ic_staff_close)
             purposeIconView.imageTintList = ColorStateList.valueOf(
                 if (isSuccess) Color.parseColor("#10B981") else Color.parseColor("#EF4444")
             )
+
+            statusBadgeView.visibility = View.VISIBLE
+            statusBadgeView.text = if (isSuccess) "Success" else "Rejected"
+            statusBadgeView.setBackgroundResource(if (isSuccess) R.drawable.bg_success_chip else R.drawable.bg_red_warning)
+            statusBadgeView.setTextColor(if (isSuccess) Color.parseColor("#15803D") else Color.parseColor("#B91C1C"))
 
             if (points == 0) {
                 pointsView.visibility = View.INVISIBLE
