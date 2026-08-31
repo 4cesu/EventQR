@@ -11,12 +11,14 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.orUnknown
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
+import java.time.Instant
 
 open class StaffTransactionResultActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +39,9 @@ open class StaffTransactionResultActivity : AppCompatActivity() {
             append(intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orUnknown("Event"))
         }
         findViewById<TextView>(R.id.txtTransactionAttendee).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown("Attendee")
-        findViewById<TextView>(R.id.txtTransactionTime).text = intent.getStringExtra(StaffScreenExtras.EXTRA_SCANNED_AT).orUnknown("Just now")
+        findViewById<TextView>(R.id.txtTransactionTime).text = formatScannedAt(
+            intent.getStringExtra(StaffScreenExtras.EXTRA_SCANNED_AT).orEmpty()
+        )
         findViewById<TextView>(R.id.txtTransactionPoints).text = intent.getIntExtra(StaffScreenExtras.EXTRA_POINTS_DELTA, 0).let { delta -> if (delta >= 0) "+$delta pts" else "$delta pts" }
         findViewById<TextView>(R.id.txtTransactionReason).text = intent.getStringExtra(StaffScreenExtras.EXTRA_REASON).orUnknown(if (approved) "Approved by backend" else "Rejected by backend")
 
@@ -63,6 +67,11 @@ open class StaffTransactionResultActivity : AppCompatActivity() {
             putExtra(StaffScreenExtras.EXTRA_EVENT_ID, intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID))
         })
         finish()
+    }
+
+    private fun formatScannedAt(raw: String): String {
+        val instant = runCatching { Instant.parse(raw) }.getOrNull()
+        return if (instant != null) DateFormatters.formatInstant(instant) else "Just now"
     }
 
     private fun openAttendeeDetails() {

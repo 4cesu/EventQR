@@ -177,7 +177,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                         tag,
                         "backendSaveResult success=true transactionId=${result.data.transactionId} eventId=${result.data.eventId} scanPurposeId=${result.data.scanPurposeId} transactionResult=${result.data.transactionResult}"
                     )
-                    showEntryLoggedDialog(result.data)
+                    openTransactionResult(result.data)
                 }
                 is NetworkResult.Error -> {
                     val message = "Transaction failed: ${result.message}"
@@ -303,44 +303,6 @@ open class StaffScanResultActivity : AppCompatActivity() {
         doneButton.setOnClickListener {
             dialog.dismiss()
             openAttendeeDetails()
-        }
-        dialog.show()
-    }
-
-    private fun showEntryLoggedDialog(result: TransactionResponse) {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(24), dp(24), dp(24))
-            setBackgroundResource(R.drawable.bg_card)
-        }
-
-        container.addView(TextView(this).apply {
-            text = "Entry Logged!"
-            textSize = 28f
-            setTextColor(0xFF111827.toInt())
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-        })
-        container.addView(TextView(this).apply {
-            text = "Transaction recorded and points awarded to attendee."
-            textSize = 16f
-            setTextColor(0xFF6B7280.toInt())
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, dp(12), 0, dp(20))
-        })
-        val doneButton = Button(this).apply {
-            text = "Done"
-            setBackgroundResource(R.drawable.bg_scanner_button)
-            setTextColor(0xFFFFFFFF.toInt())
-        }
-        container.addView(doneButton)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(container)
-            .setCancelable(false)
-            .create()
-        doneButton.setOnClickListener {
-            dialog.dismiss()
-            openTransactionResult(result)
         }
         dialog.show()
     }

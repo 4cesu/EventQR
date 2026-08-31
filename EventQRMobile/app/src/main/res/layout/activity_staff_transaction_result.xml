@@ -105,14 +105,14 @@
                 <FrameLayout
                     android:layout_width="88dp"
                     android:layout_height="88dp"
-                    android:background="@drawable/bg_transaction_redeemed_icon">
+                    android:background="@drawable/bg_staff_rejected_circle">
 
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_gravity="center"
                         android:contentDescription="Rejected"
-                        android:src="@drawable/ic_close_red" />
+                        android:src="@drawable/ic_close_white" />
                 </FrameLayout>
 
                 <TextView
@@ -121,7 +121,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Transaction Rejected"
-                    android:textColor="#B91C1C"
+                    android:textColor="@android:color/white"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -132,7 +132,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="Transaction was not recorded"
-                    android:textColor="#9F1239"
+                    android:textColor="#D1D5FF"
                     android:textSize="14sp" />
             </LinearLayout>
 
