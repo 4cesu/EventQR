@@ -53,84 +53,96 @@
             android:paddingTop="22dp"
             android:paddingBottom="22dp">
 
-            <LinearLayout
+<FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_reward_points"
+        android:elevation="5dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="28dp">
+
+            <FrameLayout
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/bg_reward_icon_circle">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Reward"
+                    android:padding="22dp"
+                    android:src="@drawable/ic_nav_gift"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/txtRewardTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_reward_points"
-                android:elevation="5dp"
+                android:layout_marginTop="20dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-black"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingHorizontal="24dp"
-                android:paddingVertical="24dp">
+                android:maxLines="2"
+                android:text="Reward Title"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-                <FrameLayout
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/bg_reward_icon_circle">
+            <TextView
+                android:id="@+id/txtRewardDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:lineSpacingExtra="3dp"
+                android:text="Redeem this reward using your event points."
+                android:textColor="#EDE9FE"
+                android:textSize="15sp" />
 
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="Reward"
-                        android:padding="20dp"
-                        android:src="@drawable/ic_nav_gift"
-                        app:tint="#FFFFFF" />
-                </FrameLayout>
+            <View
+                android:layout_width="60dp"
+                android:layout_height="3dp"
+                android:layout_marginTop="20dp"
+                android:background="#FFFFFF" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/txtRewardTitle"
-                    android:layout_width="match_parent"
+                    android:id="@+id/txtPointsValue"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:ellipsize="end"
                     android:fontFamily="sans-serif-black"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="Reward Title"
+                    android:includeFontPadding="false"
+                    android:text="100"
                     android:textColor="#FFFFFF"
-                    android:textSize="22sp"
+                    android:textSize="42sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/txtRewardDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:gravity="center"
-                    android:text="Redeem this reward using your event points."
-                    android:textColor="#EDE9FE"
-                    android:textSize="15sp" />
-
-                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:baselineAligned="true"
-                    android:baselineAlignedChildIndex="0"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/txtPointsValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-black"
-                        android:includeFontPadding="false"
-                        android:text="100"
-                        android:textColor="#FFFFFF"
-                        android:textSize="36sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:includeFontPadding="false"
-                        android:text="pts"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                    android:layout_marginStart="6dp"
+                    android:includeFontPadding="false"
+                    android:text="pts"
+                    android:textColor="#DDD6FE"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
             </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -139,12 +151,27 @@
                 android:background="@drawable/bg_card"
                 android:elevation="3dp"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="14dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reward Details"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="4dp"
+                    android:background="#EEF0F4" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="48dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -154,15 +181,15 @@
                         android:layout_weight="1"
                         android:text="Status"
                         android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/txtRewardStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_green_pill"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="5dp"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="6dp"
                         android:text="Available"
                         android:textColor="#065F46"
                         android:textSize="13sp"
@@ -176,7 +203,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="48dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -186,7 +213,7 @@
                         android:layout_weight="1"
                         android:text="Remaining"
                         android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/txtRewardRemaining"
@@ -194,7 +221,7 @@
                         android:layout_height="wrap_content"
                         android:text="--"
                         android:textColor="@color/eventqr_text"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -205,7 +232,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="48dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -215,7 +242,7 @@
                         android:layout_weight="1"
                         android:text="Your Points"
                         android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/txtUserPoints"
@@ -223,7 +250,7 @@
                         android:layout_height="wrap_content"
                         android:text="0 pts"
                         android:textColor="#5B25C9"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
