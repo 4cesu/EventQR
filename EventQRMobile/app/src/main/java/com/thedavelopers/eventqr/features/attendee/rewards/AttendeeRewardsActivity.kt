@@ -1,11 +1,17 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
-import android.widget.AdapterView
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -49,11 +55,15 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var claimsAction: TextView
     private lateinit var rewardsRecycler: RecyclerView
     private lateinit var rewardsBalanceCard: View
+    private lateinit var spinnerArrow: ImageView
+    private lateinit var cardSelectedEvent: View
+    private lateinit var txtSelectedEventTitle: TextView
     private val eventOptions = mutableListOf<RegisteredEventOption>()
     private var selectedEventId: String? = null
     private var selectedEventTitle: String = ""
     private var attendeeUserId: String? = null
-    private var suppressSelectionCallback = false
+    private var eventPopup: PopupWindow? = null
+    private var isEventDropdownOpen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,12 +98,15 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         emptyEventsText = findViewById(R.id.txtNoRegisteredEvents)
         emptyRewardsText = findViewById(R.id.txtRewardsEmpty)
         eventSpinner = findViewById(R.id.spinnerRegisteredEvents)
+        cardSelectedEvent = findViewById(R.id.cardSelectedEvent)
+        txtSelectedEventTitle = findViewById(R.id.txtSelectedEventTitle)
         eventTitleText = findViewById(R.id.txtRewardsEventTitle)
         balanceText = findViewById(R.id.txtRewardsBalance)
         rewardsSectionTitle = findViewById(R.id.txtRewardsSectionTitle)
         claimsAction = findViewById(R.id.txtMyClaims)
         rewardsRecycler = findViewById(R.id.recyclerRewards)
         rewardsBalanceCard = findViewById(R.id.cardRewardsBalance)
+        spinnerArrow = findViewById(R.id.spinnerArrow)
 
         rewardsRecycler.apply {
             layoutManager = LinearLayoutManager(this@AttendeeRewardsActivity)
@@ -109,14 +122,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         retryButton.setOnClickListener { refreshRewardsPreservingSelection() }
         swipeRefresh.setOnRefreshListener { refreshRewardsPreservingSelection() }
 
-        eventSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                if (suppressSelectionCallback) return
-                eventOptions.getOrNull(position)?.let { loadSelectedEventRewards(it) }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) = Unit
-        }
+        cardSelectedEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
 
         attendeeUserId = SessionManager(this).getUserId()
         loadRegisteredEvents()
@@ -124,6 +130,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
     override fun onDestroy() {
         presenter.detach()
+        eventPopup?.dismiss()
         super.onDestroy()
     }
 
@@ -202,7 +209,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         emptyRewardsText.visibility = View.GONE
         rewardsRecycler.visibility = View.GONE
         rewardsBalanceCard.visibility = View.GONE
-        eventSpinner.visibility = View.GONE
+        cardSelectedEvent.visibility = View.GONE
+        spinnerArrow.visibility = View.GONE
         rewardsSectionTitle.visibility = View.GONE
         claimsAction.visibility = View.GONE
 
@@ -229,7 +237,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                         selectedEventId = null
                         selectedEventTitle = ""
                         emptyEventsText.visibility = View.VISIBLE
-                        eventSpinner.visibility = View.GONE
+                        cardSelectedEvent.visibility = View.GONE
+                        spinnerArrow.visibility = View.GONE
                         rewardsSectionTitle.visibility = View.GONE
                         claimsAction.visibility = View.GONE
                         rewardsBalanceCard.visibility = View.GONE
@@ -239,7 +248,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                     }
 
                     emptyEventsText.visibility = View.GONE
-                    eventSpinner.visibility = View.VISIBLE
+                    cardSelectedEvent.visibility = View.VISIBLE
+                    spinnerArrow.visibility = if (eventOptions.size > 1) View.VISIBLE else View.GONE
                     rewardsSectionTitle.visibility = View.VISIBLE
                     claimsAction.visibility = View.VISIBLE
 
@@ -254,9 +264,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                         .takeIf { it >= 0 }
                         ?: 0
 
-                    suppressSelectionCallback = true
                     eventSpinner.setSelection(initialIndex, false)
-                    eventSpinner.post { suppressSelectionCallback = false }
+                    bindSelectedEventHeader()
                     loadSelectedEventRewards(eventOptions[initialIndex])
                 }
 
@@ -270,6 +279,68 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         }
     }
 
+    private fun bindSelectedEventHeader() {
+        val option = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
+        txtSelectedEventTitle.text = option?.title ?: "Select event"
+    }
+
+    private fun renderEventDropdown() {
+        eventPopup?.dismiss()
+        eventPopup = PopupWindow(buildEventDropdownView(), cardSelectedEvent.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
+            isOutsideTouchable = true
+            elevation = dp(8).toFloat()
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { isEventDropdownOpen = false; normalizeChevron(spinnerArrow, false) }
+        }
+    }
+
+    private fun buildEventDropdownView(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundResource(R.drawable.bg_card)
+        eventOptions.forEachIndexed { index, option ->
+            addView(LinearLayout(this@AttendeeRewardsActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(14), dp(16), dp(14))
+                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setOnClickListener {
+                    eventSpinner.setSelection(index, false)
+                    bindSelectedEventHeader()
+                    renderEventDropdown()
+                    setEventDropdownOpen(false)
+                    loadSelectedEventRewards(eventOptions[index])
+                }
+                addView(TextView(this@AttendeeRewardsActivity).apply {
+                    text = option.title
+                    setTextColor(if (index == eventSpinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
+                    textSize = 15f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+            })
+        }
+    }
+
+    private fun setEventDropdownOpen(open: Boolean) {
+        if (open && eventOptions.isEmpty()) return
+        if (open) {
+            if (eventPopup == null || cardSelectedEvent.width > 0 && eventPopup?.width != cardSelectedEvent.width) renderEventDropdown()
+            isEventDropdownOpen = true
+            normalizeChevron(spinnerArrow, true)
+            eventPopup?.showAsDropDown(cardSelectedEvent, 0, 0)
+        } else {
+            eventPopup?.dismiss()
+            isEventDropdownOpen = false
+            normalizeChevron(spinnerArrow, false)
+        }
+    }
+
+    private fun normalizeChevron(view: View, open: Boolean) {
+        if (view is ImageView) {
+            view.rotation = if (open) 180f else 0f
+        }
+    }
+
     private fun loadSelectedEventRewards(option: RegisteredEventOption) {
         selectedEventId = option.eventId
         selectedEventTitle = option.title
@@ -277,4 +348,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         eventTitleText.visibility = View.VISIBLE
         presenter.load(option.eventId, attendeeUserId)
     }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

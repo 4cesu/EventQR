@@ -13,7 +13,7 @@
         android:background="#FFFFFF"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:text="Staff / Scan QR"
+        android:text="Scan QR"
         android:textColor="#111827"
         android:textSize="18sp"
         android:textStyle="bold" />
@@ -161,16 +161,14 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <TextView
+                <ImageView
                     android:id="@+id/txtPurposeChevron"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:text="▾"
-                    android:textColor="#9CA3AF"
-                    android:textSize="18sp"
-                    android:translationY="-1dp" />
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="Dropdown"
+                    android:src="@drawable/ic_arrow_drop_down"
+                    android:tint="#6B7280" />
             </LinearLayout>
 
             <Spinner

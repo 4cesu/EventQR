@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="Attendee / Rewards"
+            android:text="Rewards"
             android:textColor="@color/eventqr_text"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -134,15 +134,52 @@
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
-                <Spinner
-                    android:id="@+id/spinnerRegisteredEvents"
+                <LinearLayout
+                    android:id="@+id/cardSelectedEvent"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/bg_rewards_dropdown"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:spinnerMode="dropdown" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp">
+
+                    <TextView
+                        android:id="@+id/txtSelectedEventTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Select event"
+                        android:textColor="@color/eventqr_text"
+                        android:textSize="15sp" />
+
+                    <ImageView
+                        android:id="@+id/spinnerArrow"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="8dp"
+                        android:contentDescription="Dropdown"
+                        android:src="@drawable/ic_arrow_drop_down"
+                        android:tint="#6B7280" />
+                </LinearLayout>
+
+                <Spinner
+                    android:id="@+id/spinnerRegisteredEvents"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutEventDropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_card"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:id="@+id/cardRewardsBalance"

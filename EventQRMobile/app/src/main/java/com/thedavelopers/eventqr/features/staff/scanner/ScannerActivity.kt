@@ -79,7 +79,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private lateinit var selectedPurposeCard: LinearLayout
     private lateinit var selectedPurposeName: TextView
     private lateinit var selectedPurposePoints: TextView
-    private lateinit var purposeChevron: TextView
+    private lateinit var purposeChevron: ImageView
     private lateinit var purposeDropdown: LinearLayout
     private lateinit var inlineCameraSurface: SurfaceView
     private lateinit var inlineCameraStatus: TextView
@@ -592,10 +592,17 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         })
     }
 
-    private fun normalizeChevron(view: TextView, open: Boolean) {
-        view.includeFontPadding = false
-        view.translationY = -dp(1).toFloat()
-        view.text = if (open) "▴" else "▾"
+    private fun normalizeChevron(view: View, open: Boolean) {
+        when (view) {
+            is TextView -> {
+                view.includeFontPadding = false
+                view.translationY = -dp(1).toFloat()
+                view.text = if (open) "\u25B4" else "\u25BE"
+            }
+            is ImageView -> {
+                view.rotation = if (open) 180f else 0f
+            }
+        }
     }
 
     private fun parseQrPayload(raw: String): ParsedQrPayload? {
