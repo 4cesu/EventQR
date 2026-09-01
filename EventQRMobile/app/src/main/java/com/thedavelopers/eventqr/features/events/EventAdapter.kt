@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 
@@ -52,14 +51,7 @@ class EventAdapter(
                 append("/")
                 append(item.capacity)
             }
-            statusView.text = item.status.name.replace('_', ' ')
-            statusView.setBackgroundResource(
-                if (item.status == EventStatus.ACTIVE || item.status == EventStatus.APPROVED) {
-                    R.drawable.button_rounded
-                } else {
-                    R.drawable.transparent_alt
-                }
-            )
+            EventStatusBadgeStyler.bind(statusView, item.status)
             itemView.setOnClickListener { onClick(item) }
         }
     }

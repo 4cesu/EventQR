@@ -211,6 +211,7 @@ public class EventService implements EventLookupPort {
             event.getEventEndAt(),
             safeCount(event.getCapacity()),
             safeCount(event.getCurrentAttendeeCount()),
+            event.getStatus(),
             event.getOrganizerUserId()
         );
     }

@@ -18,6 +18,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.RoleMapper
@@ -36,6 +37,7 @@ import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.attendee.configureAttendeeBottomNav
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -356,23 +358,11 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     private fun applyStatusBadgeStyle(textView: TextView, label: String, isRegistered: Boolean) {
-        when {
-            isRegistered -> {
-                textView.setBackgroundResource(R.drawable.bg_event_status_registered)
-                textView.setTextColor(0xFF4F46E5.toInt())
-            }
-            label.equals("Completed", true) -> {
-                textView.setBackgroundResource(R.drawable.bg_event_status_completed)
-                textView.setTextColor(0xFF10B981.toInt())
-            }
-            label.equals("Active", true) -> {
-                textView.setBackgroundResource(R.drawable.bg_event_status_active)
-                textView.setTextColor(0xFF06B6D4.toInt())
-            }
-            else -> {
-                textView.setBackgroundResource(R.drawable.bg_event_status_upcoming)
-                textView.setTextColor(0xFF4F46E5.toInt())
-            }
+        if (isRegistered) {
+            textView.setBackgroundResource(R.drawable.bg_event_status_registered)
+            textView.setTextColor(0xFF4F46E5.toInt())
+        } else {
+            EventStatusBadgeStyler.bind(textView, EventStatusBadgeStyler.fromLabel(label))
         }
     }
 
@@ -385,40 +375,20 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         monthView: TextView,
         progressBar: ProgressBar,
     ) {
-        val isCompleted = status.equals("Completed", true)
-        val isActive = status.equals("Active", true) || status.equals("Ongoing", true)
+        val eventStatus = EventStatusBadgeStyler.fromLabel(status)
+        val primaryColor = EventStatusBadgeStyler.primaryColor(this, eventStatus)
 
-        val primaryColor = when {
-            isCompleted -> 0xFF10B981.toInt()
-            isActive -> 0xFF06B6D4.toInt()
-            else -> 0xFF4F46E5.toInt()
-        }
-
-        statusView.setBackgroundResource(
-            when {
-                isCompleted -> R.drawable.bg_event_status_completed
-                isActive -> R.drawable.bg_event_status_active
-                else -> R.drawable.bg_event_status_upcoming
-            },
-        )
-        statusView.setTextColor(primaryColor)
-
+        EventStatusBadgeStyler.bind(statusView, eventStatus)
         topStrip.setBackgroundColor(primaryColor)
         dayView.setTextColor(primaryColor)
         monthView.setTextColor(primaryColor)
 
-        dateLayout.setBackgroundResource(
-            when {
-                isCompleted -> R.drawable.bg_event_date_completed
-                isActive -> R.drawable.bg_event_date_active
-                else -> R.drawable.bg_event_date_upcoming
-            },
-        )
+        dateLayout.setBackgroundResource(EventStatusBadgeStyler.backgroundRes(eventStatus))
 
         progressBar.progressDrawable = getDrawable(
-            when {
-                isCompleted -> R.drawable.pb_event_completed
-                isActive -> R.drawable.pb_event_active
+            when (eventStatus) {
+                EventStatus.ENDED -> R.drawable.pb_event_completed
+                EventStatus.ACTIVE -> R.drawable.pb_event_active
                 else -> R.drawable.pb_event_upcoming
             },
         )

@@ -6,8 +6,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
-import java.time.Instant
 
 class AttendeeEventAdapter(
     private val onClick: (AttendeeEventResponse) -> Unit,
@@ -46,47 +47,25 @@ class AttendeeEventAdapter(
         private val progressBar: android.widget.ProgressBar = itemView.findViewById(R.id.pbRegistration)
 
         fun bind(item: AttendeeEventResponse) {
-            val now = Instant.now()
-            val isCompleted = item.eventEndAt?.isBefore(now) == true
-            val isUpcoming = item.eventStartAt?.isAfter(now) == true
-            val isOngoing = !isCompleted && !isUpcoming
+            val status = EventStatusBadgeStyler.resolve(item.status, item.eventStartAt, item.eventEndAt)
 
             titleView.text = item.title.ifBlank { "Untitled event" }
-            statusView.text = when {
-                isCompleted -> "Completed"
-                isUpcoming -> "Upcoming"
-                else -> "Active"
-            }
 
-            // Status colors and drawables
-            val primaryColor = when {
-                isCompleted -> 0xFF10B981.toInt() // green
-                isUpcoming -> 0xFF4F46E5.toInt() // purple/blue
-                else -> 0xFF06B6D4.toInt() // cyan
-            }
+            // Status colors and drawables (centralized via EventStatusBadgeStyler)
+            val primaryColor = EventStatusBadgeStyler.primaryColor(itemView.context, status)
 
+            EventStatusBadgeStyler.bind(statusView, status)
             topStrip.setBackgroundColor(primaryColor)
-            statusView.setTextColor(primaryColor)
             dayView.setTextColor(primaryColor)
             monthView.setTextColor(primaryColor)
-
-            statusView.setBackgroundResource(when {
-                isCompleted -> R.drawable.bg_event_status_completed
-                isUpcoming -> R.drawable.bg_event_status_upcoming
-                else -> R.drawable.bg_event_status_active
-            })
-
-            dateLayout.setBackgroundResource(when {
-                isCompleted -> R.drawable.bg_event_date_completed
-                isUpcoming -> R.drawable.bg_event_date_upcoming
-                else -> R.drawable.bg_event_date_active
-            })
-
-            progressBar.progressDrawable = itemView.context.getDrawable(when {
-                isCompleted -> R.drawable.pb_event_completed
-                isUpcoming -> R.drawable.pb_event_upcoming
-                else -> R.drawable.pb_event_active
-            })
+            dateLayout.setBackgroundResource(EventStatusBadgeStyler.backgroundRes(status))
+            progressBar.progressDrawable = itemView.context.getDrawable(
+                when (status) {
+                    EventStatus.ENDED -> R.drawable.pb_event_completed
+                    EventStatus.APPROVED -> R.drawable.pb_event_upcoming
+                    else -> R.drawable.pb_event_active
+                },
+            )
 
             // Date formatting
             if (item.eventStartAt != null) {

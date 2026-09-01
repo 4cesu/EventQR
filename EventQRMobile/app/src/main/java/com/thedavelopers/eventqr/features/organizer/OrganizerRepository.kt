@@ -436,7 +436,7 @@ private fun EventStatus.toDisplayStatus(): String = when (this) {
     EventStatus.PENDING_REVIEW, EventStatus.DRAFT -> "Pending"
     EventStatus.REJECTED -> "Rejected"
     EventStatus.ENDED -> "Completed"
-    EventStatus.CANCELLED -> "Rejected"
+    EventStatus.CANCELLED -> "Cancelled"
 }
 
 private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEvent(

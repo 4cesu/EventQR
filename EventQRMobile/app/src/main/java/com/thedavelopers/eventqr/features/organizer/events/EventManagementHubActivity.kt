@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.organizer.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -68,7 +69,12 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 setPadding(dp(20), 0, dp(20), 0)
                 gravity = android.view.Gravity.CENTER_VERTICAL
 
-                addView(text(event.lifecycleStatus(), 11, true, Color.parseColor("#5A45F2")).apply {
+                addView(text(
+                    event.lifecycleStatus(),
+                    11,
+                    true,
+                    EventStatusBadgeStyler.primaryColor(this@EventManagementHubActivity, EventStatusBadgeStyler.fromLabel(event.status)),
+                ).apply {
                     setPadding(dp(12), dp(4), dp(12), dp(4))
                     background = rounded(Color.WHITE, 16, null, density = resources.displayMetrics.density)
                     layoutParams = LinearLayout.LayoutParams(

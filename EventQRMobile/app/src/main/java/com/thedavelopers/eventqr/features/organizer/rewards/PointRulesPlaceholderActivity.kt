@@ -117,10 +117,6 @@ open class PointRulesPlaceholderActivity : AppCompatActivity() {
             repository.saveSelectedEventId(event.id)
             saveSelectedEventId(event.id)
             loadPointRules()
-        }.apply {
-            background = rounded(Color.WHITE, 10, BORDER, density = resources.displayMetrics.density)
-            setPadding(dp(12), 0, dp(12), 0)
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48))
         })
 
         root.addView(eventBanner())

@@ -20,6 +20,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import kotlinx.coroutines.MainScope
@@ -201,19 +202,15 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     }
 
     private fun statusBadge(status: EventStatus): TextView {
-        val label = when (status) {
-            EventStatus.ACTIVE -> "Active"
-            EventStatus.ENDED -> "Ended"
-            else -> "Upcoming"
-        }
+        val color = EventStatusBadgeStyler.primaryColor(this, status)
         return TextView(this).apply {
-            text = label
+            text = EventStatusBadgeStyler.displayLabel(status)
             textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             includeFontPadding = false
-            setTextColor(Color.parseColor("#4F46E5"))
+            setTextColor(color)
             setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = rounded(Color.parseColor("#EEF2FF"), 18, null, 0)
+            background = rounded(color and 0x22FFFFFF or 0x22000000, 18, null, 0)
         }
     }
 
