@@ -1,216 +1,229 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    android:orientation="vertical">
+    android:fillViewport="true"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_eventqr_gradient"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingHorizontal="28dp"
-        android:paddingTop="48dp"
-        android:paddingBottom="26dp">
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="270dp"
-            android:layout_height="100dp"
-            android:layout_marginTop="30dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="EventQR logo"
-            android:scaleType="fitCenter"
-            android:src="@drawable/splash_logo_w_text_right" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:lineSpacingExtra="3dp"
-            android:text="The complete QR-based solution for event registration,\naccess control, attendance tracking, and reward\nmanagement"
-            android:textColor="#F4F3FF"
-            android:textSize="14sp" />
+            android:background="@drawable/bg_eventqr_gradient"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/landing_header_padding_h"
+            android:paddingTop="@dimen/landing_header_padding_top"
+            android:paddingBottom="@dimen/landing_header_padding_bottom">
 
-        <Button
-            android:id="@+id/btnSignIn"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="26dp"
-            android:background="@drawable/bg_white_pill_button"
-            android:elevation="3dp"
-            android:text="Sign In"
-            android:textAllCaps="false"
-            android:textColor="@color/eventqr_indigo"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            <ImageView
+                android:layout_width="@dimen/landing_logo_width"
+                android:layout_height="@dimen/landing_logo_height"
+                android:layout_marginTop="@dimen/landing_logo_margin_top"
+                android:adjustViewBounds="true"
+                android:contentDescription="EventQR logo"
+                android:scaleType="fitCenter"
+                android:src="@drawable/splash_logo_w_text_right" />
 
-        <Button
-            android:id="@+id/btnCreateAccount"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/landing_tagline_margin_top"
+                android:gravity="center"
+                android:lineSpacingExtra="3dp"
+                android:text="The complete QR-based solution for event registration, access control, attendance tracking, and reward management"
+                android:textColor="#F4F3FF"
+                android:textSize="@dimen/landing_tagline_size" />
+
+            <Button
+                android:id="@+id/btnSignIn"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/landing_btn_height"
+                android:layout_marginTop="@dimen/landing_btn_margin_top"
+                android:background="@drawable/bg_white_pill_button"
+                android:elevation="3dp"
+                android:text="Sign In"
+                android:textAllCaps="false"
+                android:textColor="@color/eventqr_indigo"
+                android:textSize="@dimen/landing_btn_text_size"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnCreateAccount"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/landing_btn_height"
+                android:layout_marginTop="@dimen/landing_btn_margin_top"
+                android:layout_marginBottom="@dimen/landing_btn_margin_bottom"
+                android:background="@drawable/bg_dark_outline_button"
+                android:text="Create Account"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="@dimen/landing_btn_text_size"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="30dp"
-            android:background="@drawable/bg_dark_outline_button"
-            android:text="Create Account"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/landing_feature_padding_h"
+            android:paddingTop="@dimen/landing_feature_padding_top"
+            android:paddingBottom="@dimen/landing_feature_padding_bottom">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Why Choose EventQR?"
+                android:textColor="#111827"
+                android:textSize="@dimen/landing_section_title_size"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/landing_card_margin_top"
+                android:background="@drawable/bg_card"
+                android:elevation="3dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/landing_card_horizontal_padding"
+                android:paddingTop="@dimen/landing_card_top_padding"
+                android:paddingBottom="@dimen/landing_card_bottom_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/landing_icon_size"
+                    android:layout_height="@dimen/landing_icon_size"
+                    android:background="@drawable/dark_ic_qr_code"
+                    android:padding="@dimen/landing_icon_padding"
+                    android:contentDescription="QR code icon"
+                    android:scaleType="centerInside" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/landing_card_text_margin_start"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="One QR, All Access"
+                        android:textColor="#111827"
+                        android:textSize="@dimen/landing_card_title_size"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Register once and use your unique QR code for all event activities"
+                        android:textColor="#6B7280"
+                        android:textSize="@dimen/landing_card_desc_size" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/landing_card_margin_top"
+                android:background="@drawable/bg_card"
+                android:elevation="3dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/landing_card_horizontal_padding"
+                android:paddingTop="@dimen/landing_card_top_padding"
+                android:paddingBottom="@dimen/landing_card_bottom_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/landing_icon_size"
+                    android:layout_height="@dimen/landing_icon_size"
+                    android:background="@drawable/dark_ic_check_mark"
+                    android:padding="@dimen/landing_icon_padding"
+                    android:contentDescription="QR code icon"
+                    android:scaleType="centerInside" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/landing_card_text_margin_start"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Instant Verification"
+                        android:textColor="#111827"
+                        android:textSize="@dimen/landing_card_title_size"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Quick identity verification and seamless entry logging"
+                        android:textColor="#6B7280"
+                        android:textSize="@dimen/landing_card_desc_size" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/landing_card_margin_top"
+                android:background="@drawable/bg_card"
+                android:elevation="3dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/landing_card_horizontal_padding"
+                android:paddingTop="@dimen/landing_card_top_padding"
+                android:paddingBottom="@dimen/landing_card_bottom_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/landing_icon_size"
+                    android:layout_height="@dimen/landing_icon_size"
+                    android:background="@drawable/dark_ic_star"
+                    android:padding="@dimen/landing_icon_padding"
+                    android:contentDescription="QR code icon"
+                    android:scaleType="centerInside" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/landing_card_text_margin_start"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rewards &amp; Benefits"
+                        android:textColor="#111827"
+                        android:textSize="@dimen/landing_card_title_size"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Earn points, claim benefits, and redeem rewards"
+                        android:textColor="#6B7280"
+                        android:textSize="@dimen/landing_card_desc_size" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="22dp"
-        android:paddingBottom="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Why Choose EventQR?"
-            android:textColor="#111827"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="78dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_card"
-            android:elevation="3dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/dark_ic_qr_code"
-                android:padding="9dp"
-                android:contentDescription="QR code icon"
-                android:scaleType="centerInside" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="One QR, All Access"
-                    android:textColor="#111827"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Register once and use your unique QR code for all event activities"
-                    android:textColor="#6B7280"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="78dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:elevation="3dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/dark_ic_check_mark"
-                android:padding="9dp"
-                android:contentDescription="QR code icon"
-                android:scaleType="centerInside" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Instant Verification"
-                    android:textColor="#111827"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Quick identity verification and seamless entry logging"
-                    android:textColor="#6B7280"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="78dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:elevation="3dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/dark_ic_star"
-                android:padding="9dp"
-                android:contentDescription="QR code icon"
-                android:scaleType="centerInside" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Rewards &amp; Benefits"
-                    android:textColor="#111827"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Earn points, claim benefits, and redeem rewards"
-                    android:textColor="#6B7280"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
+</ScrollView>
