@@ -35,6 +35,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     private lateinit var emptyState: TextView
     private lateinit var progress: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
+    private var isFirstResume = true
     private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
 
@@ -58,6 +59,15 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         swipeRefresh.setOnRefreshListener { loadEvents(showLoading = false) }
 
         setupBottomNav()
+        loadEvents()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
         loadEvents()
     }
 
