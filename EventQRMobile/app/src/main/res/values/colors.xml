@@ -37,4 +37,20 @@
     <color name="eventqr_badge_cancelled_text">#991B1B</color>
     <color name="eventqr_badge_pending_bg">#FEF3C7</color>
     <color name="eventqr_badge_pending_text">#92400E</color>
+
+    <color name="eventqr_event_status_upcoming">#F5A623</color>
+    <color name="eventqr_event_status_active">#10B981</color>
+    <color name="eventqr_event_status_completed">#6B7280</color>
+    <color name="eventqr_event_status_draft">#9CA3AF</color>
+    <color name="eventqr_event_status_pending_review">#F59E0B</color>
+    <color name="eventqr_event_status_rejected">#DC2626</color>
+    <color name="eventqr_event_status_cancelled">#991B1B</color>
+
+    <color name="eventqr_event_badge_upcoming_bg">#FEF3C7</color>
+    <color name="eventqr_event_badge_active_bg">#D1FAE5</color>
+    <color name="eventqr_event_badge_completed_bg">#E5E7EB</color>
+    <color name="eventqr_event_badge_draft_bg">#F3F4F6</color>
+    <color name="eventqr_event_badge_pending_review_bg">#FDF3D0</color>
+    <color name="eventqr_event_badge_rejected_bg">#FEE2E2</color>
+    <color name="eventqr_event_badge_cancelled_bg">#FBE3E3</color>
 </resources>

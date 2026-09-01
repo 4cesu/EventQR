@@ -59,6 +59,7 @@ data class AttendeeEventResponse(
     val eventEndAt: Instant? = null,
     val capacity: Int = 0,
     val currentAttendeeCount: Int = 0,
+    val status: EventStatus? = null,
     val rewardsEnabled: Boolean = false,
     val organizerUserId: UUID? = null,
 )

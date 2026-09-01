@@ -16,6 +16,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
@@ -137,15 +138,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         findViewById<View>(R.id.layoutDetailRewards)?.visibility = View.GONE
 
-        val now = Instant.now()
-        val statusText = when {
-            event.eventEndAt?.isBefore(now) == true -> "Completed"
-            event.eventStartAt?.isAfter(now) == true -> "Upcoming"
-            event.eventStartAt != null && event.eventEndAt != null &&
-                !event.eventStartAt.isAfter(now) && !event.eventEndAt.isBefore(now) -> "Active"
-            else -> "Scheduled"
-        }
-        findViewById<TextView>(R.id.txtDetailStatus).text = statusText
+        val status = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt)
+        findViewById<TextView>(R.id.txtDetailStatus).text = EventStatusBadgeStyler.displayLabel(status)
 
         checkOwnedEventThenAvailability(event)
     }
@@ -273,14 +267,13 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         val isOngoing = !isPast && event.eventStartAt != null && event.eventEndAt != null &&
                 !event.eventStartAt.isAfter(now) && !event.eventEndAt.isBefore(now)
 
-        if (isPast) {
-            statusView.text = "Completed"
-        } else if (isOngoing) {
-            statusView.text = "Active"
-        } else if (!availability.registrationOpen || availability.full) {
-            statusView.text = "Registration Closed"
-        } else {
-            statusView.text = "Upcoming"
+        val lifecycleStatus = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt, now)
+        statusView.text = when {
+            // NOTE: "Registration Closed" is an availability-window state, not a
+            // lifecycle status; it is intentionally kept separate from the styler.
+            !isPast && !isOngoing && (!availability.registrationOpen || availability.full) ->
+                "Registration Closed"
+            else -> EventStatusBadgeStyler.displayLabel(lifecycleStatus)
         }
 
         if (isAlreadyRegistered) {

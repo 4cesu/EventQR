@@ -5,6 +5,7 @@ import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.attendee.AttendeeRepository
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import kotlinx.coroutines.Job
@@ -141,12 +142,7 @@ class DashboardPresenter(
     }
 
     private fun computeEventStatus(event: AttendeeEventResponse, now: Instant): String {
-        val ended = event.eventEndAt?.isBefore(now) == true
-        val upcoming = event.eventStartAt?.isAfter(now) == true
-        return when {
-            ended -> "Completed"
-            upcoming -> "Upcoming"
-            else -> "Active"
-        }
+        val status = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt, now)
+        return EventStatusBadgeStyler.displayLabel(status)
     }
 }
