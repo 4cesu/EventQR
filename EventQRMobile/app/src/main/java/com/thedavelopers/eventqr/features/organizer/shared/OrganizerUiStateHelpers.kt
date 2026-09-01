@@ -1,16 +1,17 @@
 package com.thedavelopers.eventqr.features.organizer
 
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.Spinner
+import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.thedavelopers.eventqr.R
 
 internal fun AppCompatActivity.loadingState(message: String): View {
     return card(18).apply {
@@ -111,29 +112,98 @@ internal fun AppCompatActivity.eventSelector(
     events: List<OrganizerMvpEvent>,
     selectedEventId: String,
     onSelected: (OrganizerMvpEvent) -> Unit,
-): Spinner {
+): View {
     val approvedEvents = events.approvedOnly()
-    return Spinner(this).apply {
-        val labels = approvedEvents.map { event ->
-            event.title.ifBlank { "Untitled Event" }
-        }
-        adapter = ArrayAdapter(
-            this@eventSelector,
-            android.R.layout.simple_spinner_item,
-            labels,
-        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+    val titles = approvedEvents.map { it.title.ifBlank { "Untitled Event" } }
+    var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEventId }.takeIf { it >= 0 } ?: 0
+    if (approvedEvents.isEmpty()) selectedIndex = -1
 
-        val selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEventId }.takeIf { it >= 0 } ?: 0
-        if (approvedEvents.isNotEmpty()) {
-            setSelection(selectedIndex, false)
-        }
+    val titleText = text(titles.getOrNull(selectedIndex) ?: "Select Event", 15, false, TEXT)
+    val arrow = ImageView(this).apply {
+        setImageResource(R.drawable.ic_arrow_drop_down)
+        contentDescription = "Select event"
+    }
+    val card = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        setPadding(dp(16), 0, dp(16), 0)
+        minimumHeight = dp(52)
+        isClickable = approvedEvents.isNotEmpty()
+        isFocusable = approvedEvents.isNotEmpty()
+        background = rounded(Color.WHITE, 14, BORDER, density = resources.displayMetrics.density)
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+        addView(titleText.apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        addView(arrow.apply {
+            layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
+        })
+    }
 
-        onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                approvedEvents.getOrNull(position)?.let { onSelected(it) }
-            }
+    var popup: PopupWindow? = null
+    var isOpen = false
 
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+    fun buildDropdown(): LinearLayout = LinearLayout(this@eventSelector).apply {
+        orientation = LinearLayout.VERTICAL
+        background = rounded(Color.WHITE, 14, BORDER, density = resources.displayMetrics.density)
+        approvedEvents.forEachIndexed { index, event ->
+            val selected = index == selectedIndex
+            addView(LinearLayout(this@eventSelector).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(14), dp(16), dp(14))
+                setBackgroundColor(if (selected) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setOnClickListener {
+                    selectedIndex = index
+                    titleText.text = titles[index]
+                    titleText.setTextColor(TEXT)
+                    popup?.dismiss()
+                    isOpen = false
+                    arrow.rotation = 0f
+                    onSelected(event)
+                }
+                addView(TextView(this@eventSelector).apply {
+                    text = titles[index]
+                    setTextColor(if (selected) 0xFF4F46E5.toInt() else TEXT)
+                    textSize = 15f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+            })
         }
     }
+
+    fun open() {
+        if (approvedEvents.isEmpty()) return
+        popup?.dismiss()
+        popup = PopupWindow(
+            buildDropdown(),
+            card.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true,
+        ).apply {
+            isOutsideTouchable = true
+            elevation = dp(8).toFloat()
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { isOpen = false; arrow.rotation = 0f }
+        }
+        isOpen = true
+        arrow.rotation = 180f
+        popup?.showAsDropDown(card, 0, 0)
+    }
+
+    card.setOnClickListener {
+        if (isOpen) {
+            popup?.dismiss()
+            isOpen = false
+            arrow.rotation = 0f
+        } else {
+            open()
+        }
+    }
+
+    return card
 }
