@@ -137,8 +137,15 @@
                 android:paddingHorizontal="14dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeMinTextSize="9sp"
+                    android:autoSizeStepGranularity="1sp"
+                    android:autoSizeTextType="uniform"
+                    android:ellipsize="end"
+                    android:gravity="center_horizontal"
+                    android:maxLines="1"
                     android:text="Registered"
                     android:textColor="#D1D5DB"
                     android:textSize="14sp"
@@ -146,9 +153,11 @@
 
                 <TextView
                     android:id="@+id/txtTotalRegistrations"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:maxLines="1"
                     android:text="0"
                     android:textColor="#34D399"
                     android:textSize="20sp"
@@ -166,8 +175,15 @@
                 android:paddingHorizontal="14dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeMinTextSize="9sp"
+                    android:autoSizeStepGranularity="1sp"
+                    android:autoSizeTextType="uniform"
+                    android:ellipsize="end"
+                    android:gravity="center_horizontal"
+                    android:maxLines="1"
                     android:text="Upcoming"
                     android:textColor="#D1D5DB"
                     android:textSize="14sp"
@@ -175,9 +191,11 @@
 
                 <TextView
                     android:id="@+id/txtTotalEvents"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:maxLines="1"
                     android:text="0"
                     android:textColor="#FBBF24"
                     android:textSize="20sp"
@@ -195,8 +213,15 @@
                 android:paddingHorizontal="14dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeMinTextSize="9sp"
+                    android:autoSizeStepGranularity="1sp"
+                    android:autoSizeTextType="uniform"
+                    android:ellipsize="end"
+                    android:gravity="center_horizontal"
+                    android:maxLines="1"
                     android:text="Completed"
                     android:textColor="#D1D5DB"
                     android:textSize="14sp"
@@ -204,9 +229,11 @@
 
                 <TextView
                     android:id="@+id/txtTotalCompleted"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:maxLines="1"
                     android:text="0"
                     android:textColor="#22D3EE"
                     android:textSize="20sp"

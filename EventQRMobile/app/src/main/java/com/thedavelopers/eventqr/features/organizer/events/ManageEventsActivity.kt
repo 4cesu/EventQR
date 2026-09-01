@@ -28,6 +28,7 @@ open class ManageEventsActivity : AppCompatActivity() {
     private lateinit var filterRow: LinearLayout
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private var selectedFilter = "All"
+    private var isFirstResume = true
     private var eventsSource: OrganizerMvpLoad<List<OrganizerMvpEvent>> =
         OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
     private val organizerZone: ZoneId = ZoneId.of("Asia/Manila")
@@ -53,6 +54,15 @@ open class ManageEventsActivity : AppCompatActivity() {
         content.addView(eventList)
         renderFilters()
         eventList.addView(loadingState("Loading events..."))
+        loadEvents()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
         loadEvents()
     }
 
