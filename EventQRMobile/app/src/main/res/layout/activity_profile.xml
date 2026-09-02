@@ -177,17 +177,12 @@
                             android:layout_width="40dp"
                             android:layout_height="40dp">
 
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/bg_admin_icon_tile_blue" />
-
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_fileedit"
-                                app:tint="#4F46E5" />
+                                android:src="@drawable/ic_edit_pencil"
+                                app:tint="@color/text_primary" />
                         </FrameLayout>
 
                         <TextView
@@ -230,17 +225,12 @@
                             android:layout_width="40dp"
                             android:layout_height="40dp">
 
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/bg_admin_icon_tile_purple" />
-
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_nav_calendar"
-                                app:tint="#7C3AED" />
+                                app:tint="@color/text_primary" />
                         </FrameLayout>
 
                         <TextView
@@ -283,17 +273,12 @@
                             android:layout_width="40dp"
                             android:layout_height="40dp">
 
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/bg_admin_icon_tile_blue" />
-
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_trend_up"
-                                app:tint="#06B6D4" />
+                                android:src="@drawable/ic_chart_presentation"
+                                app:tint="@color/text_primary" />
                         </FrameLayout>
 
                         <TextView
@@ -336,17 +321,12 @@
                             android:layout_width="40dp"
                             android:layout_height="40dp">
 
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/bg_admin_icon_tile_green" />
-
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_nav_gift"
-                                app:tint="#10B981" />
+                                app:tint="@color/text_primary" />
                         </FrameLayout>
 
                         <TextView
@@ -389,17 +369,12 @@
                             android:layout_width="40dp"
                             android:layout_height="40dp">
 
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/bg_admin_icon_tile_yellow" />
-
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_fileedit"
-                                app:tint="#F59E0B" />
+                                android:src="@drawable/ic_edit_note"
+                                app:tint="@color/text_primary" />
                         </FrameLayout>
 
                         <TextView
