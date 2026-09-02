@@ -4,12 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.chip.Chip
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
@@ -19,12 +23,14 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     private lateinit var presenter: EventsPresenter
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyView: TextView
-    private lateinit var loadingView: TextView
+    private lateinit var emptySubView: TextView
+    private lateinit var emptyIcon: ImageView
+    private lateinit var progressLoading: CircularProgressIndicator
     private lateinit var retryButton: Button
-    private lateinit var allTab: TextView
-    private lateinit var upcomingTab: TextView
-    private lateinit var activeTab: TextView
-    private lateinit var pastTab: TextView
+    private lateinit var chipAll: Chip
+    private lateinit var chipUpcoming: Chip
+    private lateinit var chipActive: Chip
+    private lateinit var chipCompleted: Chip
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var adapter: AttendeeEventAdapter
     private var allEvents: List<AttendeeEventResponse> = emptyList()
@@ -41,12 +47,14 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         swipeRefresh = findViewById(R.id.swipeRefreshEvents)
         recyclerView = findViewById(R.id.recyclerEvents)
         emptyView = findViewById(R.id.txtEventsEmpty)
-        loadingView = findViewById(R.id.txtEventsLoading)
+        emptySubView = findViewById(R.id.txtEventsEmptySub)
+        emptyIcon = findViewById(R.id.imgEmptyIcon)
+        progressLoading = findViewById(R.id.progressLoading)
         retryButton = findViewById(R.id.btnRefreshEvents)
-        allTab = findViewById(R.id.tabEventsAll)
-        upcomingTab = findViewById(R.id.tabEventsUpcoming)
-        activeTab = findViewById(R.id.tabEventsActive)
-        pastTab = findViewById(R.id.tabEventsPast)
+        chipAll = findViewById(R.id.chipAll)
+        chipUpcoming = findViewById(R.id.chipUpcoming)
+        chipActive = findViewById(R.id.chipActive)
+        chipCompleted = findViewById(R.id.chipCompleted)
         adapter = AttendeeEventAdapter { event -> openEventDetail(event) }
 
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -54,10 +62,10 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
 
         swipeRefresh.setOnRefreshListener { presenter.loadEvents() }
         retryButton.setOnClickListener { presenter.loadEvents() }
-        allTab.setOnClickListener { selectFilter(EventFilter.ALL) }
-        upcomingTab.setOnClickListener { selectFilter(EventFilter.UPCOMING) }
-        activeTab.setOnClickListener { selectFilter(EventFilter.ACTIVE) }
-        pastTab.setOnClickListener { selectFilter(EventFilter.COMPLETED) }
+        chipAll.setOnClickListener { selectFilter(EventFilter.ALL) }
+        chipUpcoming.setOnClickListener { selectFilter(EventFilter.UPCOMING) }
+        chipActive.setOnClickListener { selectFilter(EventFilter.ACTIVE) }
+        chipCompleted.setOnClickListener { selectFilter(EventFilter.COMPLETED) }
         updateTabs()
         presenter.loadEvents()
 
@@ -78,7 +86,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         }
         adapter.submitItems(filtered)
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        emptyView.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+        showEmptyState(filtered.isEmpty())
     }
 
     private fun getFilteredByStatus(): List<AttendeeEventResponse> {
@@ -119,10 +127,12 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
 
     override fun showLoading(isLoading: Boolean) {
         if (!swipeRefresh.isRefreshing) {
-            loadingView.visibility = if (isLoading) View.VISIBLE else View.GONE
+            progressLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
         if (isLoading) {
+            emptyIcon.visibility = View.GONE
             emptyView.visibility = View.GONE
+            emptySubView.visibility = View.GONE
             retryButton.visibility = View.GONE
             recyclerView.visibility = View.GONE
         } else {
@@ -144,13 +154,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
         recyclerView.visibility = View.GONE
-        emptyView.visibility = View.VISIBLE
-        emptyView.text = when (selectedFilter) {
-            EventFilter.ALL -> "No events available yet."
-            EventFilter.UPCOMING -> "No upcoming events yet."
-            EventFilter.ACTIVE -> "No active events yet."
-            EventFilter.COMPLETED -> "No completed events yet."
-        }
+        progressLoading.visibility = View.GONE
+        showEmptyState(true)
         retryButton.visibility = View.VISIBLE
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
@@ -162,36 +167,65 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     }
 
     private fun updateTabs() {
-        val selectedBg = R.drawable.bg_event_filter_chip_selected
-        val unselectedBg = R.drawable.bg_event_filter_chip_unselected
-        val white = 0xFFFFFFFF.toInt()
-        val gray = 0xFF6B7280.toInt()
+        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
 
-        allTab.setBackgroundResource(if (selectedFilter == EventFilter.ALL) selectedBg else unselectedBg)
-        allTab.setTextColor(if (selectedFilter == EventFilter.ALL) white else gray)
+        val chips = mapOf(
+            EventFilter.ALL to chipAll,
+            EventFilter.UPCOMING to chipUpcoming,
+            EventFilter.ACTIVE to chipActive,
+            EventFilter.COMPLETED to chipCompleted,
+        )
 
-        upcomingTab.setBackgroundResource(if (selectedFilter == EventFilter.UPCOMING) selectedBg else unselectedBg)
-        upcomingTab.setTextColor(if (selectedFilter == EventFilter.UPCOMING) white else gray)
-
-        activeTab.setBackgroundResource(if (selectedFilter == EventFilter.ACTIVE) selectedBg else unselectedBg)
-        activeTab.setTextColor(if (selectedFilter == EventFilter.ACTIVE) white else gray)
-
-        pastTab.setBackgroundResource(if (selectedFilter == EventFilter.COMPLETED) selectedBg else unselectedBg)
-        pastTab.setTextColor(if (selectedFilter == EventFilter.COMPLETED) white else gray)
+        for ((filter, chip) in chips) {
+            val isSelected = filter == selectedFilter
+            chip.isChecked = isSelected
+            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.brand_on_primary) else textSecondary)
+            chip.setChipBackgroundColorResource(if (isSelected) R.color.eventqr_indigo else R.color.surface)
+            chip.chipStrokeWidth = if (isSelected) 0f else resources.displayMetrics.density
+            chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
+        }
     }
 
     private fun renderFilteredEvents() {
         val filtered = getFilteredByStatus()
         adapter.submitItems(filtered)
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        emptyView.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        emptyView.text = when (selectedFilter) {
-            EventFilter.ALL -> "No events available yet."
-            EventFilter.UPCOMING -> "No upcoming events yet."
-            EventFilter.ACTIVE -> "No active events yet."
-            EventFilter.COMPLETED -> "No completed events yet."
+        showEmptyState(filtered.isEmpty())
+    }
+
+    private fun showEmptyState(visible: Boolean) {
+        if (!visible) {
+            emptyIcon.visibility = View.GONE
+            emptyView.visibility = View.GONE
+            emptySubView.visibility = View.GONE
+            return
+        }
+        emptyIcon.visibility = View.VISIBLE
+        emptyView.visibility = View.VISIBLE
+        emptySubView.visibility = View.VISIBLE
+        when (selectedFilter) {
+            EventFilter.ALL -> {
+                emptyView.text = "No events available yet"
+                emptySubText = "Check back later for upcoming events"
+            }
+            EventFilter.UPCOMING -> {
+                emptyView.text = "No upcoming events"
+                emptySubText = "There are no upcoming events to show"
+            }
+            EventFilter.ACTIVE -> {
+                emptyView.text = "No active events"
+                emptySubText = "No events are currently in progress"
+            }
+            EventFilter.COMPLETED -> {
+                emptyView.text = "No completed events"
+                emptySubText = "Completed events will appear here"
+            }
         }
     }
+
+    private var emptySubText: String
+        get() = emptySubView.text.toString()
+        set(value) { emptySubView.text = value }
 
     private fun sortAll(items: List<AttendeeEventResponse>): List<AttendeeEventResponse> {
         val ongoing = items.filter { isOngoingEvent(it) }.sortedBy { it.eventStartAt }

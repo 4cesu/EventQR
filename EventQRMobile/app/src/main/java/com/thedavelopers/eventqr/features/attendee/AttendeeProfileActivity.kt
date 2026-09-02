@@ -44,8 +44,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
     private lateinit var txtProfileName: TextView
     private lateinit var txtProfileRole: TextView
-    private lateinit var txtProfileEmail: TextView
-    private lateinit var txtPhone: TextView
     private lateinit var imgProfileAvatar: ImageView
     private lateinit var imgProfileAvatarPlaceholder: View
     private lateinit var progressProfileLoading: ProgressBar
@@ -61,8 +59,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileRole = findViewById(R.id.txtProfileRole)
-        txtProfileEmail = findViewById(R.id.txtProfileEmail)
-        txtPhone = findViewById(R.id.txtPhone)
         imgProfileAvatar = findViewById(R.id.imgProfileAvatar)
         imgProfileAvatarPlaceholder = findViewById(R.id.imgProfileAvatarPlaceholder)
         progressProfileLoading = findViewById(R.id.progressProfileLoading)
@@ -85,9 +81,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.cardMyEventRequests).setOnClickListener {
             startActivity(Intent(this, MyEventRequestsActivity::class.java))
-        }
-        findViewById<View>(R.id.cardNotifications).setOnClickListener {
-            startActivity(Intent(this, AttendeeNotificationsActivity::class.java))
         }
 
         // EventQR - UI safeguard beyond SRS/SDD explicit spec (no confirm-dialog requirement stated for sign out)
@@ -170,8 +163,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
             ?.takeIf { it.isNotBlank() }
             ?.let { RoleMapper.getDisplayName(it) }
             .orEmpty()
-        txtProfileEmail.text = user?.email ?: sessionManager.getEmail().orEmpty()
-        txtPhone.text = user?.phoneNumber ?: sessionManager.getPhone().orEmpty()
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -196,7 +187,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
 
-    private lateinit var btnBack: ImageButton
+    private lateinit var btnBack: com.google.android.material.appbar.MaterialToolbar
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
@@ -251,7 +242,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
-        btnBack = findViewById(R.id.btnBackImage)
+        btnBack = findViewById(R.id.toolbarEditProfile)
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)

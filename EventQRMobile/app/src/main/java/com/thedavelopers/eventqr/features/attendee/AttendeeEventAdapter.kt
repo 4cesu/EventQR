@@ -38,8 +38,6 @@ class AttendeeEventAdapter(
         private val statusView: TextView = itemView.findViewById(R.id.txtAttendeeEventStatus)
         private val dateTimeView: TextView = itemView.findViewById(R.id.txtAttendeeEventDateTime)
         private val locationView: TextView = itemView.findViewById(R.id.txtAttendeeEventLocation)
-        private val topStrip: View = itemView.findViewById(R.id.viewEventTopStrip)
-        private val dateLayout: View = itemView.findViewById(R.id.layoutEventDate)
         private val dayView: TextView = itemView.findViewById(R.id.txtEventDay)
         private val monthView: TextView = itemView.findViewById(R.id.txtEventMonth)
         private val regCountView: TextView = itemView.findViewById(R.id.txtRegistrationCount)
@@ -48,26 +46,12 @@ class AttendeeEventAdapter(
 
         fun bind(item: AttendeeEventResponse) {
             val status = EventStatusBadgeStyler.resolve(item.status, item.eventStartAt, item.eventEndAt)
+            val ctx = itemView.context
 
             titleView.text = item.title.ifBlank { "Untitled event" }
 
-            // Status colors and drawables (centralized via EventStatusBadgeStyler)
-            val primaryColor = EventStatusBadgeStyler.primaryColor(itemView.context, status)
-
             EventStatusBadgeStyler.bind(statusView, status)
-            topStrip.setBackgroundColor(primaryColor)
-            dayView.setTextColor(primaryColor)
-            monthView.setTextColor(primaryColor)
-            dateLayout.setBackgroundResource(EventStatusBadgeStyler.backgroundRes(status))
-            progressBar.progressDrawable = itemView.context.getDrawable(
-                when (status) {
-                    EventStatus.ENDED -> R.drawable.pb_event_completed
-                    EventStatus.APPROVED -> R.drawable.pb_event_upcoming
-                    else -> R.drawable.pb_event_active
-                },
-            )
 
-            // Date formatting
             if (item.eventStartAt != null) {
                 val zonedDateTime = item.eventStartAt.atZone(java.time.ZoneId.of("Asia/Manila"))
                 dayView.text = zonedDateTime.dayOfMonth.toString()
@@ -83,14 +67,20 @@ class AttendeeEventAdapter(
 
             locationView.text = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
 
-            // Registration progress
             val capacity = item.capacity.coerceAtLeast(1)
             val current = item.currentAttendeeCount
             val percent = (current.toFloat() / capacity.toFloat() * 100).toInt().coerceIn(0, 100)
 
-            regCountView.text = "$current / $capacity registered"
+            regCountView.text = "$current/$capacity registered"
             regPercentView.text = "$percent%"
             progressBar.progress = percent
+            progressBar.progressDrawable = ctx.getDrawable(
+                when (status) {
+                    EventStatus.ENDED -> R.drawable.pb_event_completed
+                    EventStatus.APPROVED -> R.drawable.pb_event_upcoming
+                    else -> R.drawable.pb_event_active
+                },
+            )
 
             itemView.setOnClickListener { onClick(item) }
         }

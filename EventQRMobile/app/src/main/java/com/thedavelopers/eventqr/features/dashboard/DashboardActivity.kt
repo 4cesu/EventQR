@@ -14,6 +14,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
@@ -96,7 +97,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         discoverEventsSeeAll = findViewById(R.id.txtDiscoverEventsSeeAll)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
 
-        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefreshLayout.setColorSchemeResources(R.color.brand_primary)
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
             presenter.loadDashboard()
@@ -193,7 +194,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         }
 
         // Show only the closest upcoming event
-        upcomingEventsLayout.addView(createUpcomingEventRow(events[0], true))
+        upcomingEventsLayout.addView(createEventCard(events[0], true))
     }
 
     private fun renderDiscoverEvents(events: List<DashboardUpcomingEvent>) {
@@ -207,80 +208,13 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         }
 
         events.forEachIndexed { index, event ->
-            discoverEventsLayout.addView(createDiscoverEventCard(event, index == 0))
+            discoverEventsLayout.addView(createEventCard(event, index == 0))
         }
     }
 
-    private fun createUpcomingEventRow(event: DashboardUpcomingEvent, isFirst: Boolean): View {
-        val row = LinearLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply {
-                topMargin = if (isFirst) dp(14) else dp(10)
-            }
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setBackgroundResource(R.drawable.bg_card)
-            setPadding(dp(14), dp(12), dp(14), dp(12))
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { openEventDetail(event) }
-        }
-
-        row.addView(FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
-            setBackgroundResource(R.drawable.bg_event_date_upcoming)
-            addView(ImageView(context).apply {
-                layoutParams = FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER)
-                setImageResource(R.drawable.ic_qr_scan)
-                setColorFilter(0xFF4F46E5.toInt())
-            })
-        })
-
-        val textColumn = LinearLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = dp(12)
-                marginEnd = dp(8)
-            }
-            orientation = LinearLayout.VERTICAL
-        }
-
-        textColumn.addView(TextView(this).apply {
-            text = event.title.ifBlank { "Untitled event" }
-            setTextColor(0xFF111827.toInt())
-            textSize = 18f
-            typeface = Typeface.DEFAULT_BOLD
-            maxLines = 1
-        })
-
-        textColumn.addView(TextView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply {
-                topMargin = dp(4)
-            }
-            text = DateFormatters.formatInstant(event.eventStartAt)
-            setTextColor(0xFF6B7280.toInt())
-            textSize = 13f
-        })
-        row.addView(textColumn)
-
-        val badgeLabel = if (event.isRegistered) "Registered" else (event.status ?: "Upcoming")
-        val badge = TextView(this).apply {
-            text = badgeLabel
-            setPadding(dp(12), dp(5), dp(12), dp(5))
-            textSize = 12f
-            typeface = Typeface.DEFAULT_BOLD
-        }
-        applyStatusBadgeStyle(badge, badgeLabel, event.isRegistered)
-        row.addView(badge)
-        return row
-    }
-
-    private fun createDiscoverEventCard(event: DashboardUpcomingEvent, isFirst: Boolean): View {
-        val view = LayoutInflater.from(this).inflate(R.layout.item_attendee_event, discoverEventsLayout, false)
+    private fun createEventCard(event: DashboardUpcomingEvent, isFirst: Boolean): View {
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.item_attendee_event, discoverEventsLayout, false)
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -294,18 +228,22 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         val statusView = view.findViewById<TextView>(R.id.txtAttendeeEventStatus)
         val dateTimeView = view.findViewById<TextView>(R.id.txtAttendeeEventDateTime)
         val locationView = view.findViewById<TextView>(R.id.txtAttendeeEventLocation)
-        val topStrip = view.findViewById<View>(R.id.viewEventTopStrip)
-        val dateLayout = view.findViewById<View>(R.id.layoutEventDate)
         val dayView = view.findViewById<TextView>(R.id.txtEventDay)
         val monthView = view.findViewById<TextView>(R.id.txtEventMonth)
         val regCountView = view.findViewById<TextView>(R.id.txtRegistrationCount)
         val regPercentView = view.findViewById<TextView>(R.id.txtRegistrationPercent)
         val progressBar = view.findViewById<ProgressBar>(R.id.pbRegistration)
 
-        val statusLabel = event.status ?: "Upcoming"
         titleView.text = event.title.ifBlank { "Untitled event" }
+
+        val statusLabel = if (event.isRegistered) "Registered" else (event.status ?: "Upcoming")
         statusView.text = statusLabel
-        applyEventStatusUi(statusLabel, statusView, topStrip, dateLayout, dayView, monthView, progressBar)
+        if (event.isRegistered) {
+            statusView.setBackgroundResource(R.drawable.bg_dashboard_badge_registered)
+            statusView.setTextColor(ContextCompat.getColor(this, R.color.brand_primary))
+        } else {
+            applyEventStatusUi(statusLabel, statusView, progressBar)
+        }
 
         val manila = ZoneId.of("Asia/Manila")
         val startAt = event.eventStartAt
@@ -342,48 +280,55 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     private fun createEmptyStateView(message: String): View {
-        return TextView(this).apply {
+        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
+        val textDisabled = ContextCompat.getColor(this, R.color.text_disabled)
+
+        val container = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply {
-                topMargin = dp(14)
+                topMargin = dp(12)
             }
+            orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            text = message
-            setTextColor(0xFF6B7280.toInt())
-            textSize = 14f
-            setPadding(dp(12), dp(20), dp(12), dp(20))
+            setPadding(dp(16), dp(24), dp(16), dp(24))
         }
-    }
 
-    private fun applyStatusBadgeStyle(textView: TextView, label: String, isRegistered: Boolean) {
-        if (isRegistered) {
-            textView.setBackgroundResource(R.drawable.bg_event_status_registered)
-            textView.setTextColor(0xFF4F46E5.toInt())
-        } else {
-            EventStatusBadgeStyler.bind(textView, EventStatusBadgeStyler.fromLabel(label))
-        }
+        container.addView(FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
+            setBackgroundResource(R.drawable.bg_dashboard_empty_icon)
+            addView(ImageView(context).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER)
+                setImageResource(R.drawable.ic_nav_calendar)
+                setColorFilter(textDisabled)
+            })
+        })
+
+        container.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                topMargin = dp(12)
+            }
+            text = message
+            setTextColor(textSecondary)
+            textSize = 13f
+            gravity = Gravity.CENTER
+        })
+
+        return container
     }
 
     private fun applyEventStatusUi(
         status: String,
         statusView: TextView,
-        topStrip: View,
-        dateLayout: View,
-        dayView: TextView,
-        monthView: TextView,
         progressBar: ProgressBar,
     ) {
         val eventStatus = EventStatusBadgeStyler.fromLabel(status)
-        val primaryColor = EventStatusBadgeStyler.primaryColor(this, eventStatus)
 
         EventStatusBadgeStyler.bind(statusView, eventStatus)
-        topStrip.setBackgroundColor(primaryColor)
-        dayView.setTextColor(primaryColor)
-        monthView.setTextColor(primaryColor)
-
-        dateLayout.setBackgroundResource(EventStatusBadgeStyler.backgroundRes(eventStatus))
 
         progressBar.progressDrawable = getDrawable(
             when (eventStatus) {

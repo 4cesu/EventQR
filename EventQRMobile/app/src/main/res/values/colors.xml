@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Design System Tokens -->
+    <color name="brand_primary">#2E5EFF</color>
+    <color name="brand_primary_dark">#1E3FCC</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_alt">#F4F6FB</color>
+    <color name="outline">#E1E4EA</color>
+    <color name="text_primary">#14151A</color>
+    <color name="text_secondary">#5B5F6B</color>
+    <color name="text_disabled">#A0A4AD</color>
+
+    <!-- Semantic -->
+    <color name="success">#1E8E5A</color>
+    <color name="warning">#B8860B</color>
+    <color name="error">#C62828</color>
+
+    <!-- Icon tile backgrounds (12% opacity of icon color) -->
+    <color name="tile_blue">#E0E7FF</color>
+    <color name="tile_purple">#EDE9FE</color>
+    <color name="tile_green">#D1FAE5</color>
+    <color name="tile_yellow">#FEF3C7</color>
+    <color name="tile_pink">#FCE7F3</color>
+    <color name="tile_cyan">#CFFAFE</color>
+
     <color name="button">#4F46E5</color>
     <color name="purple">#7C3AED</color>
     <color name="cyan">#06B6D4</color>

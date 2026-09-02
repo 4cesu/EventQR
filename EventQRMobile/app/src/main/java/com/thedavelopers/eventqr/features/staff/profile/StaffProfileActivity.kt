@@ -91,8 +91,6 @@ open class StaffProfileActivity : AppCompatActivity() {
     private fun renderProfile() {
         findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "Staff User"
         findViewById<TextView>(R.id.txtProfileRole).text = RoleMapper.getDisplayName(sessionManager.getUserRole())
-        findViewById<TextView>(R.id.txtProfileEmail).text = sessionManager.getEmail() ?: "staff@eventqr.com"
-        findViewById<TextView>(R.id.txtPhone).text = sessionManager.getPhone() ?: "N/A"
     }
 
     private fun setupStaffBottomNav() {
