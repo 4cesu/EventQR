@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F9FAFB"
+    android:background="@color/surface_alt"
     android:orientation="vertical">
 
     <ScrollView
@@ -17,108 +17,92 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <FrameLayout
+            <!-- Header -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_eventqr_gradient"
-                android:paddingVertical="32dp">
+                android:background="@drawable/bg_dashboard_gradient"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="24dp"
+                android:paddingTop="32dp"
+                android:paddingBottom="28dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="24dp">
+                <FrameLayout
+                    android:layout_width="96dp"
+                    android:layout_height="96dp">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_circle_avatar" />
+
+                    <ImageView
+                        android:id="@+id/imgProfileAvatar"
+                        android:layout_width="88dp"
+                        android:layout_height="88dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Profile photo"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
 
                     <FrameLayout
-                        android:layout_width="104dp"
-                        android:layout_height="104dp">
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/bg_circle_avatar" />
+                        android:id="@+id/imgProfileAvatarPlaceholder"
+                        android:layout_width="88dp"
+                        android:layout_height="88dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_profile_avatar_gradient">
 
                         <ImageView
-                            android:id="@+id/imgProfileAvatar"
-                            android:layout_width="96dp"
-                            android:layout_height="96dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:layout_gravity="center"
-                            android:contentDescription="Profile photo"
-                            android:scaleType="centerCrop"
-                            android:visibility="gone" />
-
-                        <FrameLayout
-                            android:id="@+id/imgProfileAvatarPlaceholder"
-                            android:layout_width="96dp"
-                            android:layout_height="96dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/bg_profile_avatar_gradient">
-
-                            <ImageView
-                                android:layout_width="44dp"
-                                android:layout_height="44dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="Default profile icon"
-                                android:src="@drawable/ic_nav_profile"
-                                app:tint="@android:color/white" />
-                        </FrameLayout>
+                            android:contentDescription="Default profile icon"
+                            android:src="@drawable/ic_nav_profile"
+                            app:tint="@android:color/white" />
                     </FrameLayout>
+                </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/txtProfileName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/txtProfileName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/txtProfileRole"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_profile_role_badge"
-                        android:paddingHorizontal="24dp"
-                        android:paddingVertical="6dp"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/txtProfileRole"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_profile_role_badge"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="4dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/txtProfileEmail"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:textColor="#E0DFF6"
-                        android:textSize="14sp" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/txtPhone"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:textColor="#E0DFF6"
-                        android:textSize="14sp" />
-                </LinearLayout>
-            </FrameLayout>
-
+            <!-- Loading / Error -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingTop="12dp">
+                android:paddingHorizontal="16dp"
+                android:paddingTop="16dp">
 
-                <ProgressBar
+                <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/progressProfileLoading"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true"
+                    app:indicatorColor="@color/brand_primary"
+                    app:trackThickness="3dp"
                     android:visibility="gone" />
 
                 <TextView
@@ -127,29 +111,31 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:textColor="@color/eventqr_error"
+                    android:textColor="@color/error"
                     android:textSize="14sp"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnProfileRetry"
-                    android:layout_width="140dp"
-                    android:layout_height="44dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_primary_button"
                     android:text="Retry"
                     android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
+                    android:textColor="@color/brand_primary"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/brand_primary"
                     android:visibility="gone" />
             </LinearLayout>
 
+            <!-- Menu cards -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingTop="12dp"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="16dp"
                 android:paddingBottom="24dp">
 
                 <Button
@@ -164,19 +150,21 @@
                     android:paddingHorizontal="4dp"
                     android:paddingBottom="4dp"
                     android:text="Account"
-                    android:textColor="@color/eventqr_muted"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.05" />
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardEditProfile"
                     android:layout_width="match_parent"
                     android:layout_height="72dp"
                     android:layout_marginTop="4dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -208,7 +196,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="Edit Profile"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -216,18 +204,20 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_chevron_right"
-                            app:tint="#9CA3AF" />
+                            app:tint="@color/text_disabled" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardMyEvents"
                     android:layout_width="match_parent"
                     android:layout_height="72dp"
                     android:layout_marginTop="12dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -259,7 +249,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="My Registered Events"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -267,18 +257,20 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_chevron_right"
-                            app:tint="#9CA3AF" />
+                            app:tint="@color/text_disabled" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardTransactionHistory"
                     android:layout_width="match_parent"
                     android:layout_height="72dp"
                     android:layout_marginTop="12dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -310,7 +302,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="Transaction History"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -318,18 +310,20 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_chevron_right"
-                            app:tint="#9CA3AF" />
+                            app:tint="@color/text_disabled" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardClaimedRewards"
                     android:layout_width="match_parent"
                     android:layout_height="72dp"
                     android:layout_marginTop="12dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -361,7 +355,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="Claimed Rewards"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -369,18 +363,20 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_chevron_right"
-                            app:tint="#9CA3AF" />
+                            app:tint="@color/text_disabled" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardMyEventRequests"
                     android:layout_width="match_parent"
                     android:layout_height="72dp"
                     android:layout_marginTop="12dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -412,7 +408,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="My Event Requests"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -420,72 +416,26 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_chevron_right"
-                            app:tint="#9CA3AF" />
+                            app:tint="@color/text_disabled" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardNotifications"
-                    android:layout_width="match_parent"
-                    android:layout_height="72dp"
-                    android:layout_marginTop="12dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingHorizontal="16dp">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/bg_admin_icon_tile_pink" />
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/notification_bell"
-                                app:tint="#F43F5E" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:layout_weight="1"
-                            android:text="Notifications"
-                            android:textColor="#111827"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="#9CA3AF" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                <!-- Remove Notifications card - attendee profile does not show it -->
 
                 <Button
                     android:id="@+id/btnProfileLogout"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="32dp"
-                    android:background="@drawable/bg_logout_button"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="24dp"
                     android:text="Sign Out"
                     android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/error"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/error"
+                    app:strokeWidth="1dp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -514,15 +464,15 @@
                 android:contentDescription="Dashboard"
                 android:padding="8dp"
                 android:src="@drawable/ic_nav_home"
-                app:tint="#000000" />
+                android:tint="#000000" />
 
             <TextView
                 android:id="@+id/txtNavDashboard"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Dashboard"
-                android:textColor="#6B7280"
+                android:text="Home"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -543,7 +493,7 @@
                 android:contentDescription="Events"
                 android:padding="8dp"
                 android:src="@drawable/ic_nav_calendar"
-                app:tint="#000000" />
+                android:tint="#000000" />
 
             <TextView
                 android:id="@+id/txtNavEvents"
@@ -551,7 +501,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="Events"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -572,7 +522,7 @@
                 android:contentDescription="Rewards"
                 android:padding="8dp"
                 android:src="@drawable/ic_nav_gift"
-                app:tint="#000000" />
+                android:tint="#000000" />
 
             <TextView
                 android:id="@+id/txtNavRewards"
@@ -580,7 +530,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="7dp"
                 android:text="Rewards"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -601,7 +551,7 @@
                 android:contentDescription="Profile"
                 android:padding="8dp"
                 android:src="@drawable/ic_nav_profile"
-                app:tint="#FFFFFF" />
+                android:tint="#FFFFFF" />
 
             <TextView
                 android:id="@+id/txtNavProfile"
@@ -609,7 +559,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="7dp"
                 android:text="Profile"
-                android:textColor="#312E81"
+                android:textColor="@color/brand_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
