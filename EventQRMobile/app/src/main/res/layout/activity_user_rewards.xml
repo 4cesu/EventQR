@@ -19,22 +19,22 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ellipsize="end"
+            android:fontFamily="sans-serif-bold"
             android:maxLines="1"
             android:text="Rewards"
-            android:textColor="@color/eventqr_text"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="@color/text_primary"
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/txtMyClaims"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
             android:paddingHorizontal="4dp"
             android:paddingVertical="8dp"
             android:text="My Claims"
-            android:textColor="#4F46E5"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textColor="@color/brand_primary"
+            android:textSize="16sp" />
     </LinearLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -79,7 +79,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:text="Loading attendee rewards..."
-                        android:textColor="@color/eventqr_muted"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -114,25 +114,55 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtNoRegisteredEvents"
+                <LinearLayout
+                    android:id="@+id/layoutNoRegisteredEvents"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="No registered events yet."
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="16sp"
-                    android:visibility="gone" />
+                    android:orientation="vertical"
+                    android:paddingTop="32dp"
+                    android:paddingBottom="24dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/imgEmptyRewardsIcon"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:contentDescription="No registered events"
+                        android:src="@drawable/ic_nav_gift"
+                        android:tint="@color/text_disabled" />
+
+                    <TextView
+                        android:id="@+id/txtEmptyRewardsTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="No registered events yet"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtEmptyRewardsSub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="Register for an event to start earning rewards"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
                 <TextView
+                    android:id="@+id/txtSelectEventLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Select Registered Event"
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
 
                 <LinearLayout
                     android:id="@+id/cardSelectedEvent"
@@ -207,20 +237,20 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
+                        android:fontFamily="sans-serif-bold"
                         android:text="Event Points Balance"
                         android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/txtRewardsBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:fontFamily="sans-serif-bold"
                         android:text="0"
                         android:textColor="#FFFFFF"
-                        android:textSize="46sp"
-                        android:textStyle="bold" />
+                        android:textSize="46sp" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -236,21 +266,48 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
+                    android:fontFamily="sans-serif-bold"
                     android:text="Available Rewards"
-                    android:textColor="#111827"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp" />
 
-                <TextView
-                    android:id="@+id/txtRewardsEmpty"
+                <LinearLayout
+                    android:id="@+id/layoutRewardsEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="No rewards available for this event."
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="15sp"
-                    android:visibility="gone" />
+                    android:orientation="vertical"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="24dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:contentDescription="No rewards"
+                        android:src="@drawable/ic_nav_gift"
+                        android:tint="@color/text_disabled" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="No rewards available yet"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="Check back later for rewards for this event"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerRewards"

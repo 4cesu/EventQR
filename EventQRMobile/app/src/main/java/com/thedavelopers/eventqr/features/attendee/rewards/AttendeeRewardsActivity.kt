@@ -46,8 +46,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var errorContainer: View
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
-    private lateinit var emptyEventsText: TextView
-    private lateinit var emptyRewardsText: TextView
+    private lateinit var emptyEventsText: View
+    private lateinit var emptyRewardsText: View
     private lateinit var eventSpinner: Spinner
     private lateinit var eventTitleText: TextView
     private lateinit var balanceText: TextView
@@ -58,6 +58,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var spinnerArrow: ImageView
     private lateinit var cardSelectedEvent: View
     private lateinit var txtSelectedEventTitle: TextView
+    private lateinit var selectEventLabel: View
     private val eventOptions = mutableListOf<RegisteredEventOption>()
     private var selectedEventId: String? = null
     private var selectedEventTitle: String = ""
@@ -95,11 +96,12 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         errorContainer = findViewById(R.id.errorRewardsContainer)
         errorText = findViewById(R.id.txtRewardsError)
         retryButton = findViewById(R.id.btnRewardsRetry)
-        emptyEventsText = findViewById(R.id.txtNoRegisteredEvents)
-        emptyRewardsText = findViewById(R.id.txtRewardsEmpty)
+        emptyEventsText = findViewById(R.id.layoutNoRegisteredEvents)
+        emptyRewardsText = findViewById(R.id.layoutRewardsEmpty)
         eventSpinner = findViewById(R.id.spinnerRegisteredEvents)
         cardSelectedEvent = findViewById(R.id.cardSelectedEvent)
         txtSelectedEventTitle = findViewById(R.id.txtSelectedEventTitle)
+        selectEventLabel = findViewById(R.id.txtSelectEventLabel)
         eventTitleText = findViewById(R.id.txtRewardsEventTitle)
         balanceText = findViewById(R.id.txtRewardsBalance)
         rewardsSectionTitle = findViewById(R.id.txtRewardsSectionTitle)
@@ -210,6 +212,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         rewardsRecycler.visibility = View.GONE
         rewardsBalanceCard.visibility = View.GONE
         cardSelectedEvent.visibility = View.GONE
+        selectEventLabel.visibility = View.GONE
         spinnerArrow.visibility = View.GONE
         rewardsSectionTitle.visibility = View.GONE
         claimsAction.visibility = View.GONE
@@ -239,6 +242,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                         emptyEventsText.visibility = View.VISIBLE
                         cardSelectedEvent.visibility = View.GONE
                         spinnerArrow.visibility = View.GONE
+                        selectEventLabel.visibility = View.GONE
                         rewardsSectionTitle.visibility = View.GONE
                         claimsAction.visibility = View.GONE
                         rewardsBalanceCard.visibility = View.GONE
@@ -249,7 +253,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
                     emptyEventsText.visibility = View.GONE
                     cardSelectedEvent.visibility = View.VISIBLE
-                    spinnerArrow.visibility = if (eventOptions.size > 1) View.VISIBLE else View.GONE
+                    spinnerArrow.visibility = View.VISIBLE
+                    selectEventLabel.visibility = View.VISIBLE
                     rewardsSectionTitle.visibility = View.VISIBLE
                     claimsAction.visibility = View.VISIBLE
 
