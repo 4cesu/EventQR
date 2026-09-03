@@ -16,14 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
-import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
-import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse;
-import com.thedavelopers.eventqr.features.rewards.model.entity.PointRule;
 import com.thedavelopers.eventqr.features.rewards.model.entity.PointTransaction;
 import com.thedavelopers.eventqr.features.rewards.service.RewardService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
@@ -109,41 +106,6 @@ public class RewardRoutesController {
                                                                                               @PathVariable UUID eventId) {
         UUID userId = currentUserId(request);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRedemptions(eventId, userId)));
-    }
-
-    @GetMapping("/organizer/events/{eventId}/point-rules")
-    public ResponseEntity<ApiResponse<List<PointRule>>> pointRules(HttpServletRequest request,
-                                                               @PathVariable UUID eventId) {
-        requireOwnerOrStaff(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(rewardService.listPointRules(eventId)));
-    }
-
-    @PostMapping("/organizer/events/{eventId}/point-rules")
-    public ResponseEntity<ApiResponse<PointRuleRequest>> createPointRule(HttpServletRequest request,
-                                                                         @PathVariable UUID eventId,
-                                                                         @Valid @RequestBody PointRuleRequest body) {
-        requireOwnerOrStaff(request, eventId);
-        PointRuleRequest normalized = new PointRuleRequest(eventId, body.scanPurposeId(), body.points(), body.active());
-        return ResponseEntity.ok(ApiResponse.success("Point rule saved", rewardService.savePointRule(normalized)));
-    }
-
-    @PatchMapping("/organizer/events/{eventId}/point-rules/{ruleId}")
-    public ResponseEntity<ApiResponse<PointRuleRequest>> updatePointRule(HttpServletRequest request,
-                                                                         @PathVariable UUID eventId,
-                                                                         @PathVariable UUID ruleId,
-                                                                         @Valid @RequestBody PointRuleRequest body) {
-        requireOwnerOrStaff(request, eventId);
-        PointRuleRequest normalized = new PointRuleRequest(eventId, body.scanPurposeId(), body.points(), body.active());
-        return ResponseEntity.ok(ApiResponse.success("Point rule updated", rewardService.updatePointRule(eventId, ruleId, normalized)));
-    }
-
-    @DeleteMapping("/organizer/events/{eventId}/point-rules/{ruleId}")
-    public ResponseEntity<ApiResponse<Void>> deletePointRule(HttpServletRequest request,
-                                                             @PathVariable UUID eventId,
-                                                             @PathVariable UUID ruleId) {
-        requireOwnerOrStaff(request, eventId);
-        rewardService.deletePointRule(eventId, ruleId);
-        return ResponseEntity.ok(ApiResponse.success("Point rule deleted", null));
     }
 
     @GetMapping("/attendees/me/events/{eventId}/points")

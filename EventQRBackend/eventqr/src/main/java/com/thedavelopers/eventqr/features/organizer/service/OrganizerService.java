@@ -565,8 +565,8 @@ public class OrganizerService {
         if (rule.getId() == null) {
             rule.setDuplicateWindowMinutes(0);
             rule.setMaxUsesPerRegistration(1);
+            rule.setRequiresStaffAssignment(true);
         }
-        rule.setRequiresStaffAssignment(true);
         rule.setPointsAwarded(request.pointsEnabled() ? request.pointsValue() : 0);
         transactionRuleRepository.save(rule);
         OrganizerScanPurposeResponse response = toScanPurpose(purpose);

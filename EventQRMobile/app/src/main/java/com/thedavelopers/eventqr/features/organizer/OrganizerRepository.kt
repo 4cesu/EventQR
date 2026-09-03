@@ -29,7 +29,6 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerUserSearc
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentUpdateRequestDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSnapshot
-import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
@@ -293,7 +292,6 @@ class OrganizerRepository(private val context: Context) {
         val transactions = (getTransactionsByEvent(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
         val scanPurposes = (getScanPurposesByEvent(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
         val redemptions = (getRewardRedemptions(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
-        val pointRules = (getPointRules(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
         return OrganizerMvpEvent(
             id = event.eventId.toString(),
             title = event.title,
@@ -323,7 +321,7 @@ class OrganizerRepository(private val context: Context) {
             },
             totalPointsAwarded = transactions.filter { it.transactionResult == TransactionResult.APPROVED }.sumOf { it.pointsDelta }.coerceAtLeast(0),
             idTemplateStatus = "Backend status unavailable",
-            rewardsStatus = if (event.rewardsEnabled || pointRules.isNotEmpty()) "Enabled" else "Disabled",
+            rewardsStatus = if (event.rewardsEnabled) "Enabled" else "Disabled",
             staffCount = getOrganizerStaff(event.eventId.toString()).size,
             scanPurposesCount = scanPurposes.count { it.active },
         )
@@ -376,9 +374,7 @@ class OrganizerRepository(private val context: Context) {
     suspend fun getScanPurposesByEvent(eventId: String) = safeApiCall { apiService.getScanPurposesByEvent(eventId) }
 
     suspend fun saveReward(request: RewardRequest) = safeApiCall { apiService.saveReward(request) }
-    suspend fun savePointRule(request: PointRuleRequest) = safeApiCall { apiService.savePointRule(request) }
     suspend fun getRewardsByEvent(eventId: String) = safeApiCall { apiService.getRewardsByEvent(eventId) }
-    suspend fun getPointRules(eventId: String) = safeApiCall { apiService.getPointRules(eventId) }
     suspend fun getRewardRedemptions(eventId: String) = safeApiCall { apiService.getRewardRedemptions(eventId) }
 
     suspend fun getEventReport(eventId: String) = safeApiCall { apiService.getEventReport(eventId) }

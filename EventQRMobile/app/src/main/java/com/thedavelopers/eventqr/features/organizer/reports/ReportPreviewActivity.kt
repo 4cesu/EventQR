@@ -118,7 +118,6 @@ if (isCombined) {
         val reportTitle = if (isCombined) "Combined Report" else (singleReport?.reportTitle ?: "Report")
         content = organizerShell(
             title = "Report Preview",
-            subtitle = "$reportTitle • ${summary.eventName ?: ""}",
             selectedNav = NAV_REPORTS,
             showBack = true,
             topRightLabel = "Export",

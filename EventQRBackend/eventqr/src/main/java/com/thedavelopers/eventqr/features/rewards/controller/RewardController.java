@@ -16,12 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
-import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse;
-import com.thedavelopers.eventqr.features.rewards.model.entity.PointRule;
 import com.thedavelopers.eventqr.features.rewards.service.RewardService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
@@ -43,13 +41,6 @@ public class RewardController {
         this.eventService = eventService;
         this.jwtService = jwtService;
         this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
-    }
-
-    @PostMapping("/rules")
-    public ResponseEntity<ApiResponse<PointRuleRequest>> savePointRule(HttpServletRequest request,
-                                                                       @Valid @RequestBody PointRuleRequest body) {
-        requireEventAccess(request, body.eventId());
-        return ResponseEntity.ok(ApiResponse.success("Point rule saved", rewardService.savePointRule(body)));
     }
 
     @PostMapping
@@ -86,13 +77,6 @@ public class RewardController {
                                                                                        @PathVariable UUID eventId) {
         requireEventAccess(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRedemptions(eventId)));
-    }
-
-    @GetMapping("/rules/{eventId}")
-    public ResponseEntity<ApiResponse<List<PointRule>>> findRules(HttpServletRequest request,
-                                                                  @PathVariable UUID eventId) {
-        requireEventAccess(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(rewardService.listPointRules(eventId)));
     }
 
     private void requireEventAccess(HttpServletRequest request, UUID eventId) {
