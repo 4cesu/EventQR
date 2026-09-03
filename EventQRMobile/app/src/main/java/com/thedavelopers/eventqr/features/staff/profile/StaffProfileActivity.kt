@@ -89,8 +89,13 @@ open class StaffProfileActivity : AppCompatActivity() {
     }
 
     private fun renderProfile() {
-        findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "Staff User"
+        val name = sessionManager.getFullName() ?: "Staff User"
+        findViewById<TextView>(R.id.txtProfileName).text = name
         findViewById<TextView>(R.id.txtProfileRole).text = RoleMapper.getDisplayName(sessionManager.getUserRole())
+
+        // Initial avatar
+        findViewById<TextView>(R.id.txtProfileInitial)?.text =
+            name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     }
 
     private fun setupStaffBottomNav() {

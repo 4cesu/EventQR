@@ -1,30 +1,19 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.BitmapShader
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Shader
-import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.util.Log
-import android.util.Patterns
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
@@ -34,9 +23,6 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
-import kotlin.math.min
 
 private const val TAG = "AttendeeProfile"
 
@@ -45,8 +31,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
     private lateinit var txtProfileName: TextView
     private lateinit var txtProfileRole: TextView
-    private lateinit var imgProfileAvatar: ImageView
-    private lateinit var imgProfileAvatarPlaceholder: View
     private lateinit var progressProfileLoading: ProgressBar
     private lateinit var txtProfileError: TextView
     private lateinit var btnProfileRetry: Button
@@ -60,8 +44,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileRole = findViewById(R.id.txtProfileRole)
-        imgProfileAvatar = findViewById(R.id.imgProfileAvatar)
-        imgProfileAvatarPlaceholder = findViewById(R.id.imgProfileAvatarPlaceholder)
         progressProfileLoading = findViewById(R.id.progressProfileLoading)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
@@ -107,7 +89,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun performSignOut() {
-        clearAvatarCache(filesDir)
         RegistrationsCache.clear()
         sessionManager.clearSession()
         startActivity(
@@ -127,7 +108,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         clearErrorState()
 
         renderProfile(null)
-        renderAvatar(imgProfileAvatar, imgProfileAvatarPlaceholder, loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()))
 
         lifecycleScope.launch {
             when (val result = repository.getMyProfile()) {
@@ -135,19 +115,7 @@ open class AttendeeProfileActivity : AppCompatActivity() {
                     val user = result.data
                     sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
                     sessionManager.saveRole(user.role)
-                    sessionManager.saveAvatarFileId(user.avatarFileId)
                     renderProfile(user)
-
-                    val avatar = loadAvatarBitmapWithCache(
-                        repository = repository,
-                        filesDir = filesDir,
-                        userId = user.userId.toString(),
-                        avatarPath = user.avatarPath,
-                        avatarFileId = user.avatarFileId,
-                    ) ?: CachedAvatar(loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()), null)
-
-                    renderAvatar(imgProfileAvatar, imgProfileAvatarPlaceholder, avatar.bitmap)
-                    avatar.cachedFile?.let { sessionManager.setAvatarLocalPath(it.absolutePath) }
                     clearErrorState()
                 }
                 is NetworkResult.Error -> showErrorState(result.message.ifBlank { "Unable to load profile." })
@@ -164,6 +132,16 @@ open class AttendeeProfileActivity : AppCompatActivity() {
             ?.takeIf { it.isNotBlank() }
             ?.let { RoleMapper.getDisplayName(it) }
             .orEmpty()
+
+        // Initial avatar
+        val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        findViewById<TextView>(R.id.txtProfileInitial)?.text =
+            name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+
+        // Profile detail rows
+        findViewById<TextView>(R.id.txtProfileDetailName)?.text = user?.fullName
+        findViewById<TextView>(R.id.txtProfileDetailEmail)?.text = user?.email
+        findViewById<TextView>(R.id.txtProfileDetailPhone)?.text = user?.phoneNumber ?: "\u2014"
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -188,14 +166,11 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
 
-    private lateinit var btnBack: com.google.android.material.appbar.MaterialToolbar
+    private lateinit var btnBack: ImageButton
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
     private lateinit var tilPhone: TextInputLayout
-    private lateinit var imgAvatar: ImageView
-    private lateinit var imgAvatarPlaceholder: ImageView
-    private lateinit var btnChangePhoto: View
     private lateinit var cardError: View
     private lateinit var txtApiError: TextView
     private lateinit var btnRetryProfileLoad: Button
@@ -206,30 +181,9 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private var initialFullName: String = ""
     private var initialEmail: String = ""
     private var initialPhone: String = ""
-    private var initialAvatarFileId: String? = null
 
-    private var selectedAvatarFile: File? = null
-    private var avatarChanged: Boolean = false
     private var isLoadingProfile: Boolean = false
     private var isSavingProfile: Boolean = false
-
-    private val photoPicker = registerForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        if (uri == null) return@registerForActivityResult
-
-        clearApiError()
-        val avatarFile = cacheSelectedAvatar(uri)
-        if (avatarFile == null) {
-            showApiError("Unable to read selected photo. Please try a different image.")
-            return@registerForActivityResult
-        }
-
-        selectedAvatarFile = avatarFile
-        avatarChanged = true
-        renderAvatar(imgAvatar, imgAvatarPlaceholder, loadBitmapFromFile(avatarFile))
-        updateSaveButtonState()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -250,9 +204,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)
         tilPhone = findViewById(R.id.tilPhone)
-        imgAvatar = findViewById(R.id.imgAvatar)
-        imgAvatarPlaceholder = findViewById(R.id.imgAvatarPlaceholder)
-        btnChangePhoto = findViewById(R.id.btnChangePhoto)
         cardError = findViewById(R.id.cardError)
         txtApiError = findViewById(R.id.txtApiError)
         btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
@@ -264,10 +215,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun bindActions() {
         btnBack.setOnClickListener { finish() }
         btnRetryProfileLoad.setOnClickListener { loadCurrentProfile() }
-        btnChangePhoto.setOnClickListener {
-            if (isLoadingProfile || isSavingProfile) return@setOnClickListener
-            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        }
 
         btnSaveChanges.setOnClickListener { attemptSave() }
 
@@ -299,9 +246,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         val rawPhone = sessionManager.getPhone().orEmpty()
         edtPhone.setText(normalizePhoneDigits(rawPhone))
 
-        initialAvatarFileId = sessionManager.getAvatarFileId()
-        renderAvatar(imgAvatar, imgAvatarPlaceholder, loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()))
-
         captureInitialFormSnapshot()
         updateSaveButtonState()
     }
@@ -324,19 +268,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                         email = user.email
                     )
                     sessionManager.saveRole(user.role)
-                    sessionManager.saveAvatarFileId(user.avatarFileId)
-                    initialAvatarFileId = user.avatarFileId
-
-                    val avatar = loadAvatarBitmapWithCache(
-                        repository = repository,
-                        filesDir = filesDir,
-                        userId = user.userId.toString(),
-                        avatarPath = user.avatarPath,
-                        avatarFileId = user.avatarFileId,
-                    ) ?: CachedAvatar(loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()), null)
-
-                    renderAvatar(imgAvatar, imgAvatarPlaceholder, avatar.bitmap)
-                    avatar.cachedFile?.let { sessionManager.setAvatarLocalPath(it.absolutePath) }
 
                     // Show empty hint if phone is not set
                     txtEmptyHint.visibility = if (phoneDigits.isBlank()) View.VISIBLE else View.GONE
@@ -370,49 +301,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val updateResult = repository.updateProfile(fullName, phone)) {
                 is NetworkResult.Success -> {
-                    if (avatarChanged) {
-                        val avatarFile = selectedAvatarFile
-                        if (avatarFile == null || !avatarFile.exists()) {
-                            showApiError("Selected photo is unavailable. Please choose the image again.")
-                            isSavingProfile = false
-                            updateSaveButtonState()
-                            return@launch
-                        }
-                        when (val avatarResult = repository.uploadAvatar(avatarFile)) {
-                            is NetworkResult.Error -> {
-                                showApiError(avatarResult.message)
-                                isSavingProfile = false
-                                updateSaveButtonState()
-                                return@launch
-                            }
-
-                            is NetworkResult.Success -> {
-                                val uploadedAvatar = avatarResult.data
-                                val uploadedAvatarFileId = uploadedAvatar.fileId.toString()
-                                val cachedFile = copyAvatarFileToCache(
-                                    filesDir = filesDir,
-                                    userId = sessionManager.getUserId(),
-                                    avatarFileId = uploadedAvatarFileId,
-                                    sourceFile = avatarFile,
-                                ) ?: avatarFile
-
-                                selectedAvatarFile = cachedFile
-                                sessionManager.saveAvatarFileId(uploadedAvatarFileId)
-                                sessionManager.setAvatarLocalPath(cachedFile.absolutePath)
-                                initialAvatarFileId = uploadedAvatarFileId
-                                avatarChanged = false
-                                renderAvatar(imgAvatar, imgAvatarPlaceholder, loadBitmapFromFile(cachedFile))
-                            }
-
-                            else -> Unit
-                        }
-                    }
-
-                    refreshProfileStateFromBackend()
-
                     sessionManager.updateProfile(fullName, phone, initialEmail)
-                    sessionManager.saveAvatarFileId(initialAvatarFileId)
-                    selectedAvatarFile?.takeIf { it.exists() }?.let { sessionManager.setAvatarLocalPath(it.absolutePath) }
                     captureInitialFormSnapshot()
                     Toast.makeText(this@AttendeeEditProfileActivity, "Profile updated successfully.", Toast.LENGTH_SHORT).show()
                     setResult(RESULT_OK)
@@ -442,15 +331,9 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         return true
     }
 
-    private fun isPhoneValid(phone: String): Boolean {
-        val pattern = Regex("^[+]?[-0-9()\\s]{7,20}$")
-        val digits = phone.count { it.isDigit() }
-        return pattern.matches(phone) && digits in 7..15
-    }
-
-    // EventQR - name/email locked (display-only), only phone digits + avatar are updatable
+    // EventQR - name/email locked (display-only), only phone digits are updatable
     private fun hasChanges(): Boolean {
-        return sanitizePhone() != initialPhone || avatarChanged
+        return sanitizePhone() != initialPhone
     }
 
     private fun captureInitialFormSnapshot() {
@@ -518,9 +401,8 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         isLoadingProfile = loading
         progressLoading.visibility = if (loading) View.VISIBLE else View.GONE
 
-        // EventQR - name/email locked (display-only), only phone and avatar respond to loading state
+        // EventQR - name/email locked (display-only), only phone responds to loading state
         edtPhone.isEnabled = !loading
-        btnChangePhoto.isEnabled = !loading
 
         updateSaveButtonState()
     }
@@ -530,163 +412,4 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         btnSaveChanges.isEnabled = canSave
         btnSaveChanges.text = if (isSavingProfile) "Saving..." else "Save Changes"
     }
-
-    private fun cacheSelectedAvatar(uri: Uri): File? {
-        return runCatching {
-            val avatarDirectory = avatarCacheDirectory(filesDir)
-            val userKey = sessionManager.getUserId()?.takeIf { it.isNotBlank() } ?: "current"
-            val targetFile = File(avatarDirectory, "avatar_${userKey}_selected.jpg")
-
-            contentResolver.openInputStream(uri).use { input ->
-                if (input == null) return null
-                FileOutputStream(targetFile).use { output -> input.copyTo(output) }
-            }
-            targetFile
-        }.getOrNull()
-    }
-
-    private suspend fun refreshProfileStateFromBackend() {
-        when (val result = repository.getMyProfile()) {
-            is NetworkResult.Success -> {
-                val user = result.data
-                sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
-                sessionManager.saveRole(user.role)
-                sessionManager.saveAvatarFileId(user.avatarFileId)
-                initialAvatarFileId = user.avatarFileId
-
-                val avatar = loadAvatarBitmapWithCache(
-                    repository = repository,
-                    filesDir = filesDir,
-                    userId = user.userId.toString(),
-                    avatarPath = user.avatarPath,
-                    avatarFileId = user.avatarFileId,
-                ) ?: selectedAvatarFile?.let { CachedAvatar(loadBitmapFromFile(it), it) }
-                    ?: CachedAvatar(loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()), null)
-
-                renderAvatar(imgAvatar, imgAvatarPlaceholder, avatar.bitmap)
-                avatar.cachedFile?.let { sessionManager.setAvatarLocalPath(it.absolutePath) }
-                if (avatar.bitmap == null && !user.avatarFileId.isNullOrBlank()) {
-                    Log.w(TAG, "Profile refresh succeeded, but avatar preview data was not available.")
-                }
-            }
-
-            is NetworkResult.Error -> Log.w(TAG, "Profile refresh after save failed: ${result.message}")
-            else -> Unit
-        }
-    }
-}
-
-private data class CachedAvatar(
-    val bitmap: Bitmap?,
-    val cachedFile: File?,
-)
-
-private fun resolveAvatarPath(avatarPath: String?, avatarFileId: String?): String? {
-    return avatarPath?.takeIf { it.isNotBlank() }
-        ?: avatarFileId?.takeIf { it.isNotBlank() }?.let { "files/$it/content" }
-}
-
-private fun avatarCacheDirectory(filesDir: File): File {
-    return File(filesDir, "avatars").apply {
-        if (!exists()) mkdirs()
-    }
-}
-
-private fun avatarCacheKey(avatarPath: String?, avatarFileId: String?): String? {
-    return avatarFileId?.takeIf { it.isNotBlank() }
-        ?: avatarPath?.takeIf { it.isNotBlank() }?.hashCode()?.toString()
-}
-
-private fun resolveAvatarCacheFile(filesDir: File, userId: String?, avatarPath: String?, avatarFileId: String?): File? {
-    val cleanUserId = userId?.takeIf { it.isNotBlank() } ?: return null
-    val cleanKey = avatarCacheKey(avatarPath, avatarFileId) ?: return null
-    return File(avatarCacheDirectory(filesDir), "avatar_${cleanUserId}_$cleanKey.jpg")
-}
-
-private suspend fun loadAvatarBitmapWithCache(
-    repository: AttendeeRepository,
-    filesDir: File,
-    userId: String?,
-    avatarPath: String?,
-    avatarFileId: String?,
-): CachedAvatar? {
-    val remotePath = resolveAvatarPath(avatarPath, avatarFileId) ?: return null
-    val cacheFile = resolveAvatarCacheFile(filesDir, userId, remotePath, avatarFileId)
-
-    if (cacheFile?.exists() == true) {
-        loadBitmapFromFile(cacheFile)?.let { return CachedAvatar(it, cacheFile) }
-    }
-
-    return when (val result = repository.downloadAvatar(remotePath)) {
-        is NetworkResult.Success -> {
-            val bytes = result.data
-            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
-            val savedFile = cacheFile?.let { file ->
-                runCatching {
-                    FileOutputStream(file).use { output -> output.write(bytes) }
-                    file
-                }.onFailure { Log.w(TAG, "Unable to cache avatar image.", it) }.getOrNull()
-            }
-            CachedAvatar(bitmap, savedFile)
-        }
-        else -> null
-    }
-}
-
-private fun loadBitmapFromLocalPath(localPath: String?): Bitmap? {
-    val file = localPath
-        ?.takeIf { it.isNotBlank() }
-        ?.let { File(it) }
-        ?.takeIf { it.exists() && it.isFile }
-    return file?.let { loadBitmapFromFile(it) }
-}
-
-private fun loadBitmapFromFile(file: File): Bitmap? {
-    return runCatching { BitmapFactory.decodeFile(file.absolutePath) }
-        .onFailure { Log.w(TAG, "Unable to decode avatar file.", it) }
-        .getOrNull()
-}
-
-private fun copyAvatarFileToCache(filesDir: File, userId: String?, avatarFileId: String?, sourceFile: File): File? {
-    val targetFile = resolveAvatarCacheFile(filesDir, userId, "files/$avatarFileId/content", avatarFileId) ?: return null
-    return runCatching {
-        sourceFile.copyTo(targetFile, overwrite = true)
-        targetFile
-    }.onFailure { Log.w(TAG, "Unable to copy selected avatar into cache.", it) }.getOrNull()
-}
-
-private fun clearAvatarCache(filesDir: File) {
-    runCatching {
-        avatarCacheDirectory(filesDir).deleteRecursively()
-    }.onFailure { Log.w(TAG, "Unable to clear avatar cache.", it) }
-}
-
-private fun renderAvatar(imageView: ImageView, placeholder: View, bitmap: Bitmap?) {
-    if (bitmap == null) {
-        imageView.setImageDrawable(null)
-        imageView.visibility = View.GONE
-        placeholder.visibility = View.VISIBLE
-        return
-    }
-
-    imageView.setImageBitmap(toCircularBitmap(bitmap))
-    imageView.visibility = View.VISIBLE
-    placeholder.visibility = View.GONE
-}
-
-private fun toCircularBitmap(source: Bitmap): Bitmap {
-    val size = min(source.width, source.height)
-    if (size <= 0) return source
-
-    val x = (source.width - size) / 2
-    val y = (source.height - size) / 2
-    val square = Bitmap.createBitmap(source, x, y, size, size)
-    val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(output)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        shader = BitmapShader(square, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-    }
-    val radius = size / 2f
-    canvas.drawCircle(radius, radius, radius, paint)
-    return output
 }

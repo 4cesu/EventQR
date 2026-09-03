@@ -172,167 +172,211 @@
                 <GridLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="16dp"
                     android:columnCount="2"
                     android:rowCount="2">
 
+                    <!-- Total Events -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                        android:layout_margin="8dp"
+                        app:cardBackgroundColor="@android:color/transparent"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_admin_surface_card"
                             android:orientation="vertical"
-                            android:padding="14dp">
+                            android:padding="12dp">
 
-                            <ImageView
-                                android:layout_width="42dp"
-                                android:layout_height="42dp"
-                                android:padding="11dp"
-                                android:src="@drawable/ic_admin_calendar"
-                                app:tint="#000000" />
+                            <FrameLayout
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:background="@drawable/bg_admin_icon_tile_indigo">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="Total Events"
+                                    android:src="@drawable/ic_admin_calendar"
+                                    app:tint="@color/icon_tint_indigo" />
+                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatTotalEvents"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="8dp"
                                 android:text="0"
-                                android:textColor="#0F172A"
-                                android:textSize="36sp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="24sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Total Events"
-                                android:textColor="#475569"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
+                    <!-- Total Attendees -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                        android:layout_margin="8dp"
+                        app:cardBackgroundColor="@android:color/transparent"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_admin_surface_card"
                             android:orientation="vertical"
-                            android:padding="14dp">
+                            android:padding="12dp">
 
-                            <ImageView
-                                android:layout_width="42dp"
-                                android:layout_height="42dp"
-                                android:padding="11dp"
-                                android:src="@drawable/ic_admin_users"
-                                app:tint="#000000" />
+                            <FrameLayout
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:background="@drawable/bg_admin_icon_tile_blue">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="Total Attendees"
+                                    android:src="@drawable/ic_admin_users"
+                                    app:tint="@color/icon_tint_blue" />
+                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatTotalAttendees"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="8dp"
                                 android:text="0"
-                                android:textColor="#0F172A"
-                                android:textSize="36sp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="24sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Total Attendees"
-                                android:textColor="#475569"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
+                    <!-- Scans Today -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                        android:layout_margin="8dp"
+                        app:cardBackgroundColor="@android:color/transparent"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_admin_surface_card"
                             android:orientation="vertical"
-                            android:padding="14dp">
+                            android:padding="12dp">
 
-                            <ImageView
-                                android:layout_width="42dp"
-                                android:layout_height="42dp"
-                                android:padding="11dp"
-                                android:src="@drawable/ic_qr_scan"
-                                app:tint="#000000" />
+                            <FrameLayout
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:background="@drawable/bg_admin_icon_tile_green">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="Scans Today"
+                                    android:src="@drawable/ic_qr_scan"
+                                    app:tint="@color/icon_tint_green" />
+                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatScansToday"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="8dp"
                                 android:text="0"
-                                android:textColor="#0F172A"
-                                android:textSize="36sp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="24sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Scans Today"
-                                android:textColor="#475569"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
+                    <!-- Rewards Given -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
-                        android:layout_margin="6dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp">
+                        android:layout_margin="8dp"
+                        app:cardBackgroundColor="@android:color/transparent"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_admin_surface_card"
                             android:orientation="vertical"
-                            android:padding="14dp">
+                            android:padding="12dp">
 
-                            <ImageView
-                                android:layout_width="42dp"
-                                android:layout_height="42dp"
-                                android:padding="11dp"
-                                android:src="@drawable/ic_nav_gift"
-                                app:tint="#000000" />
+                            <FrameLayout
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:background="@drawable/bg_admin_icon_tile_yellow">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="Rewards Given"
+                                    android:src="@drawable/ic_nav_gift"
+                                    app:tint="@color/icon_tint_amber" />
+                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatRewardsGiven"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="8dp"
                                 android:text="0"
-                                android:textColor="#0F172A"
-                                android:textSize="36sp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="24sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Rewards Given"
-                                android:textColor="#475569"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>

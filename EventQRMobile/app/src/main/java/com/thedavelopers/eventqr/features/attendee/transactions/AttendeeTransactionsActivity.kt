@@ -1,9 +1,16 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
@@ -26,13 +33,17 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private lateinit var retryButton: Button
     private lateinit var filterSpinner: Spinner
     private lateinit var summaryCountText: TextView
-    private lateinit var summaryNetText: TextView
     private lateinit var recyclerView: RecyclerView
+    private lateinit var spinnerArrow: ImageView
+    private lateinit var cardSelectedEvent: View
+    private lateinit var txtSelectedEventTitle: TextView
 
     private var allTransactions: List<TransactionResponse> = emptyList()
     private var eventFilterOptions: List<Pair<String?, String>> = emptyList()
     private var selectedEventId: String? = null
     private var pendingInitialEventId: String? = null
+    private var eventPopup: PopupWindow? = null
+    private var isEventDropdownOpen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,13 +58,16 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         errorText = findViewById(R.id.txtTransactionsError)
         retryButton = findViewById(R.id.btnTransactionsRetry)
         filterSpinner = findViewById(R.id.spinnerEventFilter)
+        cardSelectedEvent = findViewById(R.id.cardSelectedEvent)
+        txtSelectedEventTitle = findViewById(R.id.txtSelectedEventTitle)
+        spinnerArrow = findViewById(R.id.spinnerArrow)
         summaryCountText = findViewById(R.id.txtHistoryTransactionCount)
-        summaryNetText = findViewById(R.id.txtHistoryNetPoints)
         recyclerView = findViewById(R.id.recyclerTransactions)
 
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
         retryButton.setOnClickListener { presenter.load(null) }
         swipeRefresh.setOnRefreshListener { presenter.load(null) }
+        cardSelectedEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
 
         pendingInitialEventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty().ifBlank { null }
 
@@ -68,6 +82,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun onDestroy() {
         presenter.detach()
+        eventPopup?.dismiss()
         super.onDestroy()
     }
 
@@ -94,8 +109,6 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         loadingView.visibility = View.GONE
 
         summaryCountText.text = "0 transactions"
-        summaryNetText.text = "+0 pts net"
-        summaryNetText.setTextColor(getColor(R.color.eventqr_success))
         errorText.text = message.ifBlank { "Unable to load transactions." }
         errorText.visibility = View.VISIBLE
         retryButton.visibility = View.VISIBLE
@@ -139,16 +152,81 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         selectedEventId = options[initialIndex].first
         pendingInitialEventId = null
         filterSpinner.setSelection(initialIndex, false)
+        bindSelectedEventHeader()
 
         filterSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                selectedEventId = eventFilterOptions.getOrNull(position)?.first
-                applySelectedFilter()
+                bindSelectedEventHeader()
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         }
     }
+
+    private fun bindSelectedEventHeader() {
+        val option = eventFilterOptions.getOrNull(filterSpinner.selectedItemPosition)
+        txtSelectedEventTitle.text = option?.second ?: "All Events"
+    }
+
+    private fun renderEventDropdown() {
+        eventPopup?.dismiss()
+        eventPopup = PopupWindow(buildEventDropdownView(), cardSelectedEvent.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
+            isOutsideTouchable = true
+            elevation = dp(8).toFloat()
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { isEventDropdownOpen = false; normalizeChevron(spinnerArrow, false) }
+        }
+    }
+
+    private fun buildEventDropdownView(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundResource(R.drawable.bg_card)
+        eventFilterOptions.forEachIndexed { index, option ->
+            addView(LinearLayout(this@AttendeeTransactionsActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(14), dp(16), dp(14))
+                setBackgroundColor(if (index == filterSpinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setOnClickListener {
+                    filterSpinner.setSelection(index, false)
+                    bindSelectedEventHeader()
+                    renderEventDropdown()
+                    setEventDropdownOpen(false)
+                    selectedEventId = option.first
+                    applySelectedFilter()
+                }
+                addView(TextView(this@AttendeeTransactionsActivity).apply {
+                    text = option.second
+                    setTextColor(if (index == filterSpinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
+                    textSize = 15f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+            })
+        }
+    }
+
+    private fun setEventDropdownOpen(open: Boolean) {
+        if (open && eventFilterOptions.isEmpty()) return
+        if (open) {
+            if (eventPopup == null || cardSelectedEvent.width > 0 && eventPopup?.width != cardSelectedEvent.width) renderEventDropdown()
+            isEventDropdownOpen = true
+            normalizeChevron(spinnerArrow, true)
+            eventPopup?.showAsDropDown(cardSelectedEvent, 0, 0)
+        } else {
+            eventPopup?.dismiss()
+            isEventDropdownOpen = false
+            normalizeChevron(spinnerArrow, false)
+        }
+    }
+
+    private fun normalizeChevron(view: View, open: Boolean) {
+        if (view is ImageView) {
+            view.rotation = if (open) 180f else 0f
+        }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun applySelectedFilter() {
         val filtered = if (selectedEventId.isNullOrBlank()) {
@@ -162,12 +240,6 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         emptyText.text = "No transactions found for the selected event."
 
-        val netPoints = filtered.sumOf { it.pointsDelta }
         summaryCountText.text = if (filtered.size == 1) "1 transaction" else "${filtered.size} transactions"
-        val netPrefix = if (netPoints >= 0) "+" else ""
-        summaryNetText.text = "$netPrefix$netPoints pts net"
-        summaryNetText.setTextColor(
-            if (netPoints >= 0) getColor(R.color.eventqr_success) else getColor(R.color.eventqr_error)
-        )
     }
 }
