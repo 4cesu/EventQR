@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Design System Tokens -->
-    <color name="brand_primary">#2E5EFF</color>
-    <color name="brand_primary_dark">#1E3FCC</color>
+    <color name="brand_primary">#2D2A7C</color>
+    <color name="brand_primary_dark">#1E1B5E</color>
+    <color name="brand_primary_light">#4A46A8</color>
     <color name="brand_on_primary">#FFFFFF</color>
 
     <color name="surface">#FFFFFF</color>

@@ -11,7 +11,6 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -25,7 +24,6 @@ import com.thedavelopers.eventqr.features.organizer.notifications.NotificationMa
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlin.math.min
-import kotlin.math.roundToInt
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -318,118 +316,32 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     private fun dashboardEventCard(
         event: OrganizerMvpEvent,
         onClick: () -> Unit,
-    ): LinearLayout {
-        val density = resources.displayMetrics.density
+    ): View {
         val parsedStart = parseEventStartDateTime(event)
         val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
         val day = parsedDate?.format(dayFormatter) ?: "--"
         val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: "---"
+        val time = parsedStart?.format(timeFormatter) ?: "-"
+        val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: "Location not set"
 
-        val timeText = parsedStart?.format(timeFormatter)
-        val locationText = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" }
-        val timeAndLocation = when {
-            !timeText.isNullOrBlank() && !locationText.isNullOrBlank() -> "$timeText · $locationText"
-            !timeText.isNullOrBlank() -> timeText
-            !locationText.isNullOrBlank() -> locationText
-            else -> "-"
-        }
+        val capacity = event.capacity.coerceAtLeast(1)
+        val count = event.currentAttendeeCount.coerceAtLeast(0)
+        val percent = if (capacity > 0) min((count.toFloat() / capacity.toFloat() * 100f).toInt(), 100) else 0
 
-        val capacity = event.capacity.coerceAtLeast(0)
-        val currentAttendeeCount = event.currentAttendeeCount.coerceAtLeast(0)
-        val ratio = if (capacity > 0) {
-            (currentAttendeeCount.toFloat() / capacity.toFloat()).coerceIn(0f, 1f)
-        } else {
-            0f
-        }
-        val percent = if (capacity > 0) min((ratio * 100f).roundToInt(), 100) else 0
-
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, dp(8), 0, dp(4)) }
-            background = rounded(Color.WHITE, 14, Color.parseColor("#E5E7EB"), density = density)
-            elevation = dp(1).toFloat()
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { onClick() }
-
-            addView(View(this@OrganizerDashboardActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(4),
-                )
-                background = rounded(Color.parseColor("#5B25C9"), 10, null, density = density)
-            })
-
-            addView(LinearLayout(this@OrganizerDashboardActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(dp(12), dp(12), dp(12), dp(12))
-
-                addView(LinearLayout(this@OrganizerDashboardActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = android.view.Gravity.CENTER
-                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(56))
-                    background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = density)
-                    addView(text(day, 16, true, Color.parseColor("#4F46E5")).apply { gravity = android.view.Gravity.CENTER })
-                    addView(text(month, 10, true, Color.parseColor("#4F46E5")).apply { gravity = android.view.Gravity.CENTER })
-                })
-
-                addView(LinearLayout(this@OrganizerDashboardActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                        marginStart = dp(12)
-                    }
-
-                    addView(LinearLayout(this@OrganizerDashboardActivity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = android.view.Gravity.CENTER_VERTICAL
-
-                        addView(text(event.title, 16, true, Color.parseColor("#0F172A")).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                        })
-                        addView(statusBadge(event.lifecycleStatus()))
-                    })
-
-                    addView(text(timeAndLocation, 12, false, Color.parseColor("#64748B")).apply {
-                        setPadding(0, dp(3), 0, 0)
-                    })
-
-                    addView(LinearLayout(this@OrganizerDashboardActivity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = android.view.Gravity.CENTER_VERTICAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                        ).apply { topMargin = dp(6) }
-
-                        addView(text("${formatCount(currentAttendeeCount)} / ${formatCount(capacity)} registered", 12, false, Color.parseColor("#6B7280")).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                        })
-                        addView(text("$percent%", 12, false, Color.parseColor("#6B7280")))
-                    })
-
-                    addView(LinearLayout(this@OrganizerDashboardActivity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            dp(5),
-                        ).apply { topMargin = dp(4) }
-
-                        addView(View(this@OrganizerDashboardActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, ratio)
-                            background = rounded(Color.parseColor("#5B25C9"), 8, null, density = density)
-                        })
-                        addView(View(this@OrganizerDashboardActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f - ratio)
-                            background = rounded(Color.parseColor("#E5E7EB"), 8, null, density = density)
-                        })
-                    })
-                })
-            })
-        }
+        return com.thedavelopers.eventqr.features.events.EventCardBinder.inflate(
+            context = this,
+            parent = null,
+            title = event.title,
+            status = event.lifecycleStatus(),
+            day = day,
+            month = month,
+            time = time,
+            location = location,
+            count = count,
+            capacity = capacity,
+            percent = percent,
+            onClick = { onClick() },
+        )
     }
 
     private fun parseEventStartDateTime(event: OrganizerMvpEvent): LocalDateTime? {

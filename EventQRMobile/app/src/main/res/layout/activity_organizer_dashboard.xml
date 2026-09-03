@@ -9,7 +9,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="108dp"
-        android:background="@drawable/background_gradient"
+        android:background="@drawable/bg_dashboard_gradient"
         android:paddingHorizontal="20dp"
         android:paddingTop="20dp"
         android:paddingBottom="16dp">
@@ -31,9 +31,10 @@
                     android:id="@+id/txtHeaderTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Organizer Portal"
                     android:textColor="#FFFFFF"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -48,11 +49,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
+                        android:fontFamily="sans-serif-light"
                         android:maxWidth="160dp"
                         android:maxLines="1"
                         android:text="Loading organizer profile"
                         android:textColor="#EDE9FE"
-                        android:textSize="12sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/txtHeaderSubtitleDot"
@@ -192,10 +194,9 @@
                             <ImageView
                                 android:layout_width="42dp"
                                 android:layout_height="42dp"
-                                android:background="@drawable/bg_admin_icon_tile_blue"
                                 android:padding="11dp"
                                 android:src="@drawable/ic_admin_calendar"
-                                app:tint="#4F46E5" />
+                                app:tint="#000000" />
 
                             <TextView
                                 android:id="@+id/txtStatTotalEvents"
@@ -233,10 +234,9 @@
                             <ImageView
                                 android:layout_width="42dp"
                                 android:layout_height="42dp"
-                                android:background="@drawable/bg_admin_icon_tile_green"
                                 android:padding="11dp"
                                 android:src="@drawable/ic_admin_users"
-                                app:tint="#059669" />
+                                app:tint="#000000" />
 
                             <TextView
                                 android:id="@+id/txtStatTotalAttendees"
@@ -274,10 +274,9 @@
                             <ImageView
                                 android:layout_width="42dp"
                                 android:layout_height="42dp"
-                                android:background="@drawable/bg_admin_icon_tile_purple"
                                 android:padding="11dp"
                                 android:src="@drawable/ic_qr_scan"
-                                app:tint="#7C3AED" />
+                                app:tint="#000000" />
 
                             <TextView
                                 android:id="@+id/txtStatScansToday"
@@ -315,10 +314,9 @@
                             <ImageView
                                 android:layout_width="42dp"
                                 android:layout_height="42dp"
-                                android:background="@drawable/bg_admin_icon_tile_yellow"
                                 android:padding="11dp"
                                 android:src="@drawable/ic_nav_gift"
-                                app:tint="#CA8A04" />
+                                app:tint="#000000" />
 
                             <TextView
                                 android:id="@+id/txtStatRewardsGiven"
@@ -366,10 +364,9 @@
                     <ImageView
                         android:layout_width="42dp"
                         android:layout_height="42dp"
-                        android:background="@drawable/bg_admin_icon_tile_blue"
                         android:padding="10dp"
                         android:src="@drawable/ic_admin_calendar"
-                        app:tint="#4F46E5" />
+                        app:tint="#000000" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -417,10 +414,9 @@
                     <ImageView
                         android:layout_width="42dp"
                         android:layout_height="42dp"
-                        android:background="@drawable/bg_admin_icon_tile_green"
                         android:padding="10dp"
                         android:src="@drawable/ic_admin_users"
-                        app:tint="#059669" />
+                        app:tint="#000000" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -468,10 +464,9 @@
                     <ImageView
                         android:layout_width="42dp"
                         android:layout_height="42dp"
-                        android:background="@drawable/bg_admin_icon_tile_purple"
                         android:padding="10dp"
                         android:src="@drawable/ic_organizer_reports"
-                        app:tint="#7C3AED" />
+                        app:tint="#000000" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -519,10 +514,9 @@
                     <ImageView
                         android:layout_width="42dp"
                         android:layout_height="42dp"
-                        android:background="@drawable/bg_admin_icon_tile_yellow"
                         android:padding="10dp"
                         android:src="@drawable/ic_nav_gift"
-                        app:tint="#CA8A04" />
+                        app:tint="#000000" />
 
                     <LinearLayout
                         android:layout_width="0dp"

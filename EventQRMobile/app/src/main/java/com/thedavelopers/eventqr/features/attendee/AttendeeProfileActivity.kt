@@ -22,6 +22,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import com.google.android.material.textfield.TextInputLayout
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -191,14 +192,16 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
-    private lateinit var txtPhoneCounter: TextView
+    private lateinit var tilPhone: TextInputLayout
     private lateinit var imgAvatar: ImageView
     private lateinit var imgAvatarPlaceholder: ImageView
-    private lateinit var txtChangePhoto: TextView
+    private lateinit var btnChangePhoto: View
+    private lateinit var cardError: View
     private lateinit var txtApiError: TextView
     private lateinit var btnRetryProfileLoad: Button
     private lateinit var progressLoading: ProgressBar
     private lateinit var btnSaveChanges: Button
+    private lateinit var txtEmptyHint: TextView
 
     private var initialFullName: String = ""
     private var initialEmail: String = ""
@@ -246,27 +249,29 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)
-        txtPhoneCounter = findViewById(R.id.txtPhoneCounter)
+        tilPhone = findViewById(R.id.tilPhone)
         imgAvatar = findViewById(R.id.imgAvatar)
         imgAvatarPlaceholder = findViewById(R.id.imgAvatarPlaceholder)
-        txtChangePhoto = findViewById(R.id.txtChangePhoto)
+        btnChangePhoto = findViewById(R.id.btnChangePhoto)
+        cardError = findViewById(R.id.cardError)
         txtApiError = findViewById(R.id.txtApiError)
         btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
         progressLoading = findViewById(R.id.progressLoading)
         btnSaveChanges = findViewById(R.id.btnSaveChanges)
+        txtEmptyHint = findViewById(R.id.txtEmptyHint)
     }
 
     private fun bindActions() {
         btnBack.setOnClickListener { finish() }
         btnRetryProfileLoad.setOnClickListener { loadCurrentProfile() }
-        txtChangePhoto.setOnClickListener {
+        btnChangePhoto.setOnClickListener {
             if (isLoadingProfile || isSavingProfile) return@setOnClickListener
             photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
 
         btnSaveChanges.setOnClickListener { attemptSave() }
 
-        findViewById<Button>(R.id.btnChangePassword).setOnClickListener {
+        findViewById<View>(R.id.btnChangePassword).setOnClickListener {
             startActivity(com.thedavelopers.eventqr.core.navigation.AppNavigator.changePassword(this))
         }
 
@@ -293,7 +298,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         // EventQR - phone update only, matches Register screen prefix/validation pattern
         val rawPhone = sessionManager.getPhone().orEmpty()
         edtPhone.setText(normalizePhoneDigits(rawPhone))
-        txtPhoneCounter.text = "${edtPhone.text.length}/10"
 
         initialAvatarFileId = sessionManager.getAvatarFileId()
         renderAvatar(imgAvatar, imgAvatarPlaceholder, loadBitmapFromLocalPath(sessionManager.getAvatarLocalPath()))
@@ -313,7 +317,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                     // EventQR - phone update only, matches Register screen prefix/validation pattern
                     val phoneDigits = normalizePhoneDigits(user.phoneNumber.orEmpty())
                     edtPhone.setText(phoneDigits)
-                    txtPhoneCounter.text = "${phoneDigits.length}/10"
 
                     sessionManager.updateProfile(
                         fullName = user.fullName,
@@ -334,6 +337,9 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
                     renderAvatar(imgAvatar, imgAvatarPlaceholder, avatar.bitmap)
                     avatar.cachedFile?.let { sessionManager.setAvatarLocalPath(it.absolutePath) }
+
+                    // Show empty hint if phone is not set
+                    txtEmptyHint.visibility = if (phoneDigits.isBlank()) View.VISIBLE else View.GONE
                 }
 
                 is NetworkResult.Error -> showApiError(profileResult.message)
@@ -462,7 +468,6 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
             override fun afterTextChanged(editable: Editable?) {
                 val current = editable ?: return
                 val normalized = normalizePhoneDigits(current.toString())
-                txtPhoneCounter.text = "${normalized.length}/10"
                 if (normalized != current.toString()) {
                     current.replace(0, current.length, normalized)
                     edtPhone.error = null
@@ -499,13 +504,13 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
     private fun showApiError(message: String) {
         txtApiError.text = message
-        txtApiError.visibility = View.VISIBLE
+        cardError.visibility = View.VISIBLE
         btnRetryProfileLoad.visibility = View.VISIBLE
     }
 
     private fun clearApiError() {
         txtApiError.text = ""
-        txtApiError.visibility = View.GONE
+        cardError.visibility = View.GONE
         btnRetryProfileLoad.visibility = View.GONE
     }
 
@@ -515,7 +520,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
         // EventQR - name/email locked (display-only), only phone and avatar respond to loading state
         edtPhone.isEnabled = !loading
-        txtChangePhoto.isEnabled = !loading
+        btnChangePhoto.isEnabled = !loading
 
         updateSaveButtonState()
     }

@@ -2,27 +2,24 @@ package com.thedavelopers.eventqr.features.auth.changepassword
 
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
-import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.Validators
 
 open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.View {
     private lateinit var presenter: ChangePasswordPresenter
-    private lateinit var currentPasswordInput: EditText
-    private lateinit var newPasswordInput: EditText
-    private lateinit var confirmPasswordInput: EditText
-    private lateinit var changeButton: Button
+    private lateinit var currentPasswordInput: TextInputEditText
+    private lateinit var newPasswordInput: TextInputEditText
+    private lateinit var confirmPasswordInput: TextInputEditText
+    private lateinit var changeButton: MaterialButton
     private lateinit var progressBar: ProgressBar
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
@@ -48,9 +45,14 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
 
-        configurePasswordToggle(currentPasswordInput)
-        configurePasswordToggle(newPasswordInput)
-        configurePasswordToggle(confirmPasswordInput)
+        // Requirements only show when new password field is focused or has text
+        newPasswordInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus || newPasswordInput.text.toString().isNotEmpty()) {
+                updateRequirements(newPasswordInput.text.toString())
+            } else {
+                requirementsLayout.visibility = View.GONE
+            }
+        }
 
         newPasswordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -63,7 +65,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         confirmPasswordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                updateRequirements(newPasswordInput.text.toString())
+                validateButtonState()
             }
             override fun afterTextChanged(s: Editable?) = Unit
         })
@@ -71,7 +73,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         currentPasswordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                updateRequirements(newPasswordInput.text.toString())
+                validateButtonState()
             }
             override fun afterTextChanged(s: Editable?) = Unit
         })
@@ -84,9 +86,8 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
             )
         }
 
-        findViewById<android.widget.ImageButton>(R.id.btnBack).setOnClickListener {
-            presenter.navigateBack()
-        }
+        findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbarChangePassword)
+            .setNavigationOnClickListener { presenter.navigateBack() }
     }
 
     override fun onDestroy() {
@@ -96,7 +97,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
     override fun showLoading(isLoading: Boolean) {
         changeButton.isEnabled = !isLoading
-        changeButton.text = if (isLoading) "Changing..." else "Change Password"
+        changeButton.text = if (isLoading) "Changing\u2026" else "Change Password"
         progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
@@ -134,6 +135,11 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
 
+        validateButtonState()
+    }
+
+    private fun validateButtonState() {
+        val requirements = Validators.passwordRequirements(newPasswordInput.text.toString())
         changeButton.isEnabled = requirements.isValid
                 && newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
                 && currentPasswordInput.text.toString().isNotBlank()
@@ -141,36 +147,6 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
         view.text = "${if (isMet) "\u2713" else "\u25CB"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.eventqr_success else R.color.eventqr_muted))
-    }
-
-    private fun configurePasswordToggle(input: EditText) {
-        input.setOnTouchListener { view, event ->
-            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
-                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
-                if (isVisible) {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
-                        null
-                    )
-                } else {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
-                        null
-                    )
-                }
-                input.setSelection(input.text.length)
-                view.performClick()
-                true
-            } else {
-                false
-            }
-        }
+        view.setTextColor(getColor(if (isMet) R.color.success else R.color.text_disabled))
     }
 }
