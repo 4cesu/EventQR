@@ -1,16 +1,25 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
 import android.os.Bundle
-import android.graphics.Color
-import android.view.Gravity
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.chip.Chip
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.events.EventCardBinder
 import com.thedavelopers.eventqr.features.organizer.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlin.math.min
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -19,14 +28,23 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.min
-import kotlin.math.roundToInt
 
 open class ManageEventsActivity : AppCompatActivity() {
+
     private lateinit var repository: OrganizerRepository
-    private lateinit var eventList: LinearLayout
-    private lateinit var filterRow: LinearLayout
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var emptyView: android.widget.TextView
+    private lateinit var emptySubView: android.widget.TextView
+    private lateinit var emptyIcon: android.widget.ImageView
+    private lateinit var progressLoading: CircularProgressIndicator
+    private lateinit var retryButton: android.widget.Button
+    private lateinit var chipAll: Chip
+    private lateinit var chipUpcoming: Chip
+    private lateinit var chipActive: Chip
+    private lateinit var chipCompleted: Chip
     private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var adapter: OrganizerEventAdapter
+    private var allEvents: List<OrganizerMvpEvent> = emptyList()
     private var selectedFilter = "All"
     private var isFirstResume = true
     private var eventsSource: OrganizerMvpLoad<List<OrganizerMvpEvent>> =
@@ -39,21 +57,45 @@ open class ManageEventsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
-        val shell = organizerRefreshShell("My Events", selectedNav = NAV_EVENTS, onRefresh = { loadEvents(showInitialLoading = false) })
-        val content = shell.content
-        swipeRefresh = shell.swipeRefreshLayout
-        filterRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dp(8)) }
+        setContentView(R.layout.activity_organizer_events)
+
+        swipeRefresh = findViewById(R.id.swipeRefreshEvents)
+        recyclerView = findViewById(R.id.recyclerEvents)
+        emptyView = findViewById(R.id.txtEventsEmpty)
+        emptySubView = findViewById(R.id.txtEventsEmptySub)
+        emptyIcon = findViewById(R.id.imgEmptyIcon)
+        progressLoading = findViewById(R.id.progressLoading)
+        retryButton = findViewById(R.id.btnRefreshEvents)
+        chipAll = findViewById(R.id.chipAll)
+        chipUpcoming = findViewById(R.id.chipUpcoming)
+        chipActive = findViewById(R.id.chipActive)
+        chipCompleted = findViewById(R.id.chipCompleted)
+
+        adapter = OrganizerEventAdapter { event ->
+            openOrganizerPage(EventManagementHubActivity::class.java, event.id, event.title)
         }
-        eventList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(filterRow)
-        content.addView(eventList)
-        renderFilters()
-        eventList.addView(loadingState("Loading events..."))
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+
+        swipeRefresh.setOnRefreshListener { loadEvents() }
+        retryButton.setOnClickListener { loadEvents() }
+        chipAll.setOnClickListener { selectFilter("All") }
+        chipUpcoming.setOnClickListener { selectFilter("Upcoming") }
+        chipActive.setOnClickListener { selectFilter("Active") }
+        chipCompleted.setOnClickListener { selectFilter("Completed") }
+
+        findViewById<EditText>(R.id.inputEventSearch).addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                renderFilteredEvents()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        val navContainer = findViewById<LinearLayout>(R.id.layoutOrganizerBottomNav)
+        navContainer.addView(bottomNav(NAV_EVENTS))
+
+        updateTabs()
         loadEvents()
     }
 
@@ -66,172 +108,111 @@ open class ManageEventsActivity : AppCompatActivity() {
         loadEvents()
     }
 
-    private fun renderFilters() {
-        filterRow.removeAllViews()
-        listOf("All", "Upcoming", "Active", "Completed").forEach { label ->
-            val isActive = selectedFilter == label
-            filterRow.addView(chip(label, isActive, PURPLE).apply {
-                if (!isActive) setTextColor(Color.BLACK)
-                setOnClickListener {
-                    selectedFilter = label
-                    renderFilters()
-                    render()
-                }
-            })
+    private fun selectFilter(filter: String) {
+        selectedFilter = filter
+        updateTabs()
+        renderFilteredEvents()
+    }
+
+    private fun updateTabs() {
+        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
+        val chips = mapOf(
+            "All" to chipAll,
+            "Upcoming" to chipUpcoming,
+            "Active" to chipActive,
+            "Completed" to chipCompleted,
+        )
+        for ((label, chip) in chips) {
+            val isSelected = label == selectedFilter
+            chip.isChecked = isSelected
+            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.brand_on_primary) else textSecondary)
+            chip.setChipBackgroundColorResource(if (isSelected) R.color.eventqr_indigo else R.color.surface)
+            chip.chipStrokeWidth = if (isSelected) 0f else resources.displayMetrics.density
+            chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
         }
     }
 
-    private fun loadEvents(showInitialLoading: Boolean = true) {
-        if (showInitialLoading && !swipeRefresh.isRefreshing) {
-            eventList.removeAllViews()
-            eventList.addView(loadingState("Loading events..."))
+    private fun loadEvents() {
+        if (!swipeRefresh.isRefreshing) {
+            showLoading()
         }
         MainScope().launch {
             eventsSource = repository.loadEventsForMvp()
             swipeRefresh.isRefreshing = false
-            render()
+            allEvents = eventsSource.data
+            retryButton.visibility = View.GONE
+            renderFilteredEvents()
         }
     }
 
-    private fun render() {
-        val events = eventsSource.data.approvedOnly().filter {
-            selectedFilter == "All" || it.lifecycleStatus() == selectedFilter
+    private fun getFilteredByStatus(): List<OrganizerMvpEvent> {
+        val approved = allEvents.approvedOnly()
+        return when (selectedFilter) {
+            "All" -> approved
+            "Upcoming" -> approved.filter { it.lifecycleStatus() == "Upcoming" }
+            "Active" -> approved.filter { it.lifecycleStatus() == "Active" }
+            "Completed" -> approved.filter { it.lifecycleStatus() == "Completed" }
+            else -> approved
         }
-        eventList.removeAllViews()
-        dataSourceBanner(eventsSource)?.let { eventList.addView(it) }
-        if (events.isEmpty()) {
-            eventList.addView(
-                if (eventsSource.source == OrganizerMvpDataSource.ERROR) {
-                    errorState(eventsSource.message ?: "Organizer events could not be loaded.") { loadEvents() }
-                } else {
-                    emptyState("No events available for the selected filter.")
-                }
-            )
+    }
+
+    private fun getSearchQuery(): String {
+        val editText = findViewById<EditText>(R.id.inputEventSearch)
+        return editText.text.toString()
+    }
+
+    private fun renderFilteredEvents() {
+        val query = getSearchQuery()
+        val filtered = getFilteredByStatus().let { list ->
+            if (query.isBlank()) list
+            else list.filter { it.title.contains(query, ignoreCase = true) }
+        }
+        adapter.submitItems(filtered)
+        recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
+        showEmptyOrError(filtered.isEmpty())
+    }
+
+    private fun showLoading() {
+        recyclerView.visibility = View.GONE
+        emptyIcon.visibility = View.GONE
+        emptyView.visibility = View.GONE
+        emptySubView.visibility = View.GONE
+        retryButton.visibility = View.GONE
+        progressLoading.visibility = View.VISIBLE
+    }
+
+    private fun showEmptyOrError(isEmpty: Boolean) {
+        progressLoading.visibility = View.GONE
+        swipeRefresh.isRefreshing = false
+        if (!isEmpty) {
+            emptyIcon.visibility = View.GONE
+            emptyView.visibility = View.GONE
+            emptySubView.visibility = View.GONE
+            retryButton.visibility = View.GONE
             return
         }
-        events.forEach { event ->
-            eventList.addView(myEventsEventCard(event) {
-                openOrganizerPage(EventManagementHubActivity::class.java, event.id, event.title)
-            })
-        }
-    }
-
-    private fun myEventsEventCard(
-        event: OrganizerMvpEvent,
-        onClick: () -> Unit,
-    ): LinearLayout {
-        val density = resources.displayMetrics.density
-        val parsedStart = parseEventStartDateTime(event)
-        val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
-        val day = parsedDate?.format(dayFormatter) ?: "--"
-        val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: "---"
-
-        val timeText = parsedStart?.format(timeFormatter)
-        val locationText = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" }
-        val timeAndLocation = when {
-            !timeText.isNullOrBlank() && !locationText.isNullOrBlank() -> "$timeText · $locationText"
-            !timeText.isNullOrBlank() -> timeText
-            !locationText.isNullOrBlank() -> locationText
-            else -> "-"
-        }
-
-        val capacity = event.capacity.coerceAtLeast(0)
-        val currentAttendeeCount = event.currentAttendeeCount.coerceAtLeast(0)
-        val ratio = if (capacity > 0) {
-            (currentAttendeeCount.toFloat() / capacity.toFloat()).coerceIn(0f, 1f)
+        emptyIcon.visibility = View.VISIBLE
+        emptyView.visibility = View.VISIBLE
+        emptySubView.visibility = View.VISIBLE
+        if (eventsSource.source == OrganizerMvpDataSource.ERROR) {
+            emptyView.text = eventsSource.message ?: "Organizer events could be loaded."
+            emptySubText = "Pull down to refresh or tap retry"
+            retryButton.visibility = View.VISIBLE
         } else {
-            0f
-        }
-        val percent = if (capacity > 0) min((ratio * 100f).roundToInt(), 100) else 0
-
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, dp(8), 0, dp(4)) }
-            background = rounded(Color.WHITE, 14, Color.parseColor("#E5E7EB"), density = density)
-            elevation = dp(1).toFloat()
-            setOnClickListener { onClick() }
-
-            addView(View(this@ManageEventsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4))
-                background = rounded(PURPLE, 10, null, density = density)
-            })
-
-            addView(LinearLayout(this@ManageEventsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(12), dp(12), dp(12), dp(12))
-
-                addView(LinearLayout(this@ManageEventsActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER
-                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(56))
-                    background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = density)
-                    addView(text(day, 16, true, PURPLE).apply { gravity = Gravity.CENTER })
-                    addView(text(month, 10, true, PURPLE).apply { gravity = Gravity.CENTER })
-                })
-
-                addView(LinearLayout(this@ManageEventsActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                        setMargins(dp(12), 0, 0, 0)
-                    }
-
-                    addView(LinearLayout(this@ManageEventsActivity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
-                        addView(text(event.title, 16, true).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                        })
-                        addView(statusBadge(event.lifecycleStatus()))
-                    })
-
-                    addView(text(timeAndLocation, 12, false, MUTED).apply {
-                        setPadding(0, dp(3), 0, 0)
-                    })
-
-                    addView(LinearLayout(this@ManageEventsActivity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ).apply { topMargin = dp(6) }
-
-                        addView(text("${formatCount(currentAttendeeCount)} / ${formatCount(capacity)} registered", 12, false, MUTED).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                        })
-                        addView(text("$percent%", 12, false, MUTED))
-                    })
-
-                    addView(LinearLayout(this@ManageEventsActivity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            dp(5),
-                        ).apply { topMargin = dp(4) }
-
-                        addView(View(this@ManageEventsActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, ratio)
-                            background = rounded(PURPLE, 8, null, density = density)
-                        })
-                        addView(View(this@ManageEventsActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f - ratio)
-                            background = rounded(Color.parseColor("#E5E7EB"), 8, null, density = density)
-                        })
-                    })
-                })
-            })
+            emptyView.text = "No events available for the selected filter."
+            emptySubText = "Try adjusting your search or filters"
+            retryButton.visibility = View.GONE
         }
     }
+
+    private var emptySubText: String
+        get() = emptySubView.text.toString()
+        set(value) { emptySubView.text = value }
 
     private fun parseEventStartDateTime(event: OrganizerMvpEvent): LocalDateTime? {
         val candidates = listOfNotNull(event.dateTime, event.shortDate)
             .map { it.trim() }
             .filter { it.isNotBlank() && it != "-" }
-
         candidates.forEach { raw ->
             val firstPart = raw.substringBefore(" - ").trim()
             parseDateTimeValue(firstPart)?.let { return it }
@@ -244,7 +225,6 @@ open class ManageEventsActivity : AppCompatActivity() {
         val candidates = listOfNotNull(event.shortDate, event.dateTime)
             .map { it.trim() }
             .filter { it.isNotBlank() && it != "-" }
-
         candidates.forEach { raw ->
             val firstPart = raw.substringBefore(" - ").trim()
             parseDateValue(firstPart)?.let { return it }
@@ -271,5 +251,70 @@ open class ManageEventsActivity : AppCompatActivity() {
             ?: runCatching { LocalDate.parse(normalized, DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) }.getOrNull()
             ?: runCatching { LocalDate.parse(normalized, DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)) }.getOrNull()
             ?: parseDateTimeValue(normalized)?.toLocalDate()
+    }
+
+    inner class OrganizerEventAdapter(
+        private val onClick: (OrganizerMvpEvent) -> Unit,
+    ) : RecyclerView.Adapter<OrganizerEventAdapter.ViewHolder>() {
+
+        private val items = mutableListOf<OrganizerMvpEvent>()
+
+        fun submitItems(newItems: List<OrganizerMvpEvent>) {
+            items.clear()
+            items.addAll(newItems)
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = EventCardBinder.inflate(
+                context = this@ManageEventsActivity,
+                parent = parent,
+                title = "",
+                status = "",
+                day = "",
+                month = "",
+                time = "",
+                location = "",
+                count = 0,
+                capacity = 1,
+                percent = 0,
+                onClick = {},
+            )
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(items[position])
+        }
+
+        override fun getItemCount(): Int = items.size
+
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            fun bind(event: OrganizerMvpEvent) {
+                val parsedStart = parseEventStartDateTime(event)
+                val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
+                val day = parsedDate?.format(dayFormatter) ?: "--"
+                val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: "---"
+                val time = parsedStart?.format(timeFormatter) ?: "-"
+                val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: "Location not set"
+                val capacity = event.capacity.coerceAtLeast(1)
+                val count = event.currentAttendeeCount.coerceAtLeast(0)
+                val percent = if (capacity > 0) min((count.toFloat() / capacity.toFloat() * 100f).toInt(), 100) else 0
+
+                EventCardBinder.bind(
+                    view = itemView,
+                    title = event.title,
+                    status = event.lifecycleStatus(),
+                    day = day,
+                    month = month,
+                    time = time,
+                    location = location,
+                    count = count,
+                    capacity = capacity,
+                    percent = percent,
+                    onClick = { onClick(event) },
+                )
+            }
+        }
     }
 }
