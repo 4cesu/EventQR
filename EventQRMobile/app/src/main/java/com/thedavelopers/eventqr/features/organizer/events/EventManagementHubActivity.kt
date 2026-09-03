@@ -128,7 +128,6 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 add(Triple("Transaction Rules", com.thedavelopers.eventqr.R.drawable.ic_admin_shield, TransactionRulesActivity::class.java))
                 add(Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_file, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java))
                 add(Triple("Rewards", com.thedavelopers.eventqr.R.drawable.ic_gift, ManageRewardsActivity::class.java))
-                add(Triple("Point Rules", com.thedavelopers.eventqr.R.drawable.ic_trend_up, PointRulesPlaceholderActivity::class.java))
             }
 
             // Colors keyed by label, not position: inserting/reordering rows must never

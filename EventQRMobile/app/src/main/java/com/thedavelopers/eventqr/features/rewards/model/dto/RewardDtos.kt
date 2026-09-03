@@ -11,23 +11,6 @@ data class PointBalanceResponse(
     val pointsBalance: Int,
 )
 
-data class PointRuleRequest(
-    val eventId: UUID,
-    val scanPurposeId: UUID,
-    val points: Int,
-    val active: Boolean,
-)
-
-data class PointRuleResponse(
-    val id: UUID,
-    val eventId: UUID,
-    val scanPurposeId: UUID,
-    val points: Int,
-    val active: Boolean,
-    val createdAt: Instant? = null,
-    val updatedAt: Instant? = null,
-)
-
 data class RewardRedemptionRequest(
     val eventId: UUID,
     val attendeeUserId: UUID,

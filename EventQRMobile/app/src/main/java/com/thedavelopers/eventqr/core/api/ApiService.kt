@@ -50,8 +50,6 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterSta
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
-import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest
-import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest
@@ -446,9 +444,6 @@ interface ApiService {
     @GET("dashboard")
     suspend fun getDashboard(): ApiResponse<DashboardSummary>
 
-    @POST("rewards/rules")
-    suspend fun savePointRule(@Body request: PointRuleRequest): ApiResponse<PointRuleRequest>
-
     @POST("rewards")
     suspend fun saveReward(@Body request: RewardRequest): ApiResponse<RewardResponse>
 
@@ -475,9 +470,6 @@ interface ApiService {
 
     @GET("attendees/me/events/{eventId}/claimed-rewards")
     suspend fun getMyClaimedRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardRedemptionResponse>>
-
-    @GET("rewards/rules/{eventId}")
-    suspend fun getPointRules(@Path("eventId") eventId: String): ApiResponse<List<PointRuleResponse>>
 
     @GET("reports/event/{eventId}")
     suspend fun getEventReport(@Path("eventId") eventId: String): ApiResponse<EventReportSnapshot>

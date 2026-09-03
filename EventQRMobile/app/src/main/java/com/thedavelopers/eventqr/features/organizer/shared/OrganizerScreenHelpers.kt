@@ -24,6 +24,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
+import android.util.TypedValue
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -370,33 +371,49 @@ internal fun AppCompatActivity.organizerRefreshShell(
     }
     setContentView(root)
 
-    val headerColor = if (darkHeader) PURPLE else Color.WHITE
+    // Standardized header: 56dp height, bg_header_surface_outline, center_vertical, horizontal
     val header = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        setPadding(dp(16), dp(18), dp(16), dp(if (darkHeader) 22 else 12))
-        setBackgroundColor(headerColor)
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    }
-    val headerRow = row()
-    if (showBack) {
-        val backIcon = text("←", 24, false, if (darkHeader) Color.WHITE else TEXT).apply {
-            gravity = Gravity.CENTER
-            setOnClickListener { finish() }
-            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
-            background = rounded(if (darkHeader) Color.parseColor("#33FFFFFF") else Color.parseColor("#F3F4F6"), 20, null, density = resources.displayMetrics.density)
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        if (darkHeader) {
+            setBackgroundColor(PURPLE)
+        } else {
+            setBackgroundResource(com.thedavelopers.eventqr.R.drawable.bg_header_surface_outline)
         }
-        headerRow.addView(backIcon)
-        headerRow.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(dp(12), 1) })
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            dp(56),
+        )
+        setPadding(dp(8), 0, dp(16), 0)
     }
-    val titleBox = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+
+    if (showBack) {
+        val outVal = TypedValue()
+        theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true)
+        val backIcon = ImageView(this).apply {
+            setImageResource(com.thedavelopers.eventqr.R.drawable.ic_back_chevron)
+            setColorFilter(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
+            contentDescription = "Back"
+            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setBackgroundResource(outVal.resourceId)
+            setOnClickListener { finish() }
+        }
+        header.addView(backIcon)
     }
-    titleBox.addView(text(title, 20, true, if (darkHeader) Color.WHITE else TEXT))
-    subtitle?.takeIf { it.isNotBlank() }?.let {
-        titleBox.addView(text(it, 13, false, if (darkHeader) Color.parseColor("#D7D4F8") else MUTED))
-    }
-    headerRow.addView(titleBox)
+
+    header.addView(TextView(this).apply {
+        text = title
+        textSize = 18f
+        setTextColor(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
+        setTypeface(typeface, android.graphics.Typeface.BOLD)
+        ellipsize = android.text.TextUtils.TruncateAt.END
+        maxLines = 1
+        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+            marginStart = dp(12)
+        }
+    })
+
     if (topRightLabel != null) {
         val topBtn = Button(this).apply {
             text = topRightLabel
@@ -408,10 +425,17 @@ internal fun AppCompatActivity.organizerRefreshShell(
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38))
             setPadding(dp(12), 0, dp(12), 0)
         }
-        headerRow.addView(topBtn)
+        header.addView(topBtn)
     }
-    header.addView(headerRow)
+
     root.addView(header)
+
+    // Subtitle below header bar (for non-report screens that still pass subtitle)
+    subtitle?.takeIf { it.isNotBlank() }?.let {
+        root.addView(text(it, 13, false, if (darkHeader) Color.parseColor("#D7D4F8") else MUTED).apply {
+            setPadding(dp(16), dp(8), dp(16), dp(4))
+        })
+    }
 
     val swipeRefreshLayout = SwipeRefreshLayout(this).apply {
         setColorSchemeColors(PURPLE)
@@ -449,36 +473,48 @@ internal fun AppCompatActivity.organizerShell(
     }
     setContentView(root)
 
-    val headerColor = if (darkHeader) PURPLE else Color.WHITE
+    // Standardized header: 56dp height, bg_header_surface_outline, center_vertical, horizontal
     val header = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        setPadding(dp(16), dp(18), dp(16), dp(if (darkHeader) 22 else 12))
-        setBackgroundColor(headerColor)
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        if (darkHeader) {
+            setBackgroundColor(PURPLE)
+        } else {
+            setBackgroundResource(com.thedavelopers.eventqr.R.drawable.bg_header_surface_outline)
+        }
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
+            dp(56),
         )
+        setPadding(dp(8), 0, dp(16), 0)
     }
-    val headerRow = row()
+
     if (showBack) {
-        val backIcon = text("←", 24, false, if (darkHeader) Color.WHITE else TEXT).apply {
-            gravity = Gravity.CENTER
-            setOnClickListener { finish() }
+        val outVal = TypedValue()
+        theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true)
+        val backIcon = ImageView(this).apply {
+            setImageResource(com.thedavelopers.eventqr.R.drawable.ic_back_chevron)
+            setColorFilter(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
+            contentDescription = "Back"
             layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
-            background = rounded(if (darkHeader) Color.parseColor("#33FFFFFF") else Color.parseColor("#F3F4F6"), 20, null, density = resources.displayMetrics.density)
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setBackgroundResource(outVal.resourceId)
+            setOnClickListener { finish() }
         }
-        headerRow.addView(backIcon)
-        headerRow.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(dp(12), 1) })
+        header.addView(backIcon)
     }
-    val titleBox = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-    }
-    titleBox.addView(text(title, 20, true, if (darkHeader) Color.WHITE else TEXT))
-    subtitle?.takeIf { it.isNotBlank() }?.let {
-        titleBox.addView(text(it, 13, false, if (darkHeader) Color.parseColor("#D7D4F8") else MUTED))
-    }
-    headerRow.addView(titleBox)
+
+    header.addView(TextView(this).apply {
+        text = title
+        textSize = 18f
+        setTextColor(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
+        setTypeface(typeface, android.graphics.Typeface.BOLD)
+        ellipsize = android.text.TextUtils.TruncateAt.END
+        maxLines = 1
+        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+            marginStart = dp(12)
+        }
+    })
 
     if (topRightLabel != null) {
         val topBtn = Button(this).apply {
@@ -491,10 +527,17 @@ internal fun AppCompatActivity.organizerShell(
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38))
             setPadding(dp(12), 0, dp(12), 0)
         }
-        headerRow.addView(topBtn)
+        header.addView(topBtn)
     }
-    header.addView(headerRow)
+
     root.addView(header)
+
+    // Subtitle below header bar (for non-report screens that still pass subtitle)
+    subtitle?.takeIf { it.isNotBlank() }?.let {
+        root.addView(text(it, 13, false, if (darkHeader) Color.parseColor("#D7D4F8") else MUTED).apply {
+            setPadding(dp(16), dp(8), dp(16), dp(4))
+        })
+    }
 
     val scroll = ScrollView(this).apply {
         isFillViewport = false

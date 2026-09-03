@@ -9,22 +9,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
-import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse;
 import com.thedavelopers.eventqr.features.rewards.model.entity.AttendeePointBalance;
-import com.thedavelopers.eventqr.features.rewards.model.entity.EventBenefit;
-import com.thedavelopers.eventqr.features.rewards.model.entity.EventActivity;
-import com.thedavelopers.eventqr.features.rewards.model.entity.PointRule;
 import com.thedavelopers.eventqr.features.rewards.model.entity.PointTransaction;
 import com.thedavelopers.eventqr.features.rewards.model.entity.Reward;
 import com.thedavelopers.eventqr.features.rewards.model.entity.RewardRedemption;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.AttendeePointBalanceRepository;
-import com.thedavelopers.eventqr.features.rewards.repository.PointRuleRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRepository;
@@ -43,7 +38,6 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 @Transactional
 public class RewardService {
 
-    private final PointRuleRepository pointRuleRepository;
     private final AttendeePointBalanceRepository attendeePointBalanceRepository;
     private final PointTransactionRepository pointTransactionRepository;
     private final RewardRepository rewardRepository;
@@ -51,53 +45,18 @@ public class RewardService {
     private final EventRepository eventRepository;
     private final ScanPurposeRepository scanPurposeRepository;
 
-    public RewardService(PointRuleRepository pointRuleRepository,
-                         AttendeePointBalanceRepository attendeePointBalanceRepository,
+    public RewardService(AttendeePointBalanceRepository attendeePointBalanceRepository,
                          PointTransactionRepository pointTransactionRepository,
                          RewardRepository rewardRepository,
                          RewardRedemptionRepository rewardRedemptionRepository,
                          EventRepository eventRepository,
                          ScanPurposeRepository scanPurposeRepository) {
-        this.pointRuleRepository = pointRuleRepository;
         this.attendeePointBalanceRepository = attendeePointBalanceRepository;
         this.pointTransactionRepository = pointTransactionRepository;
         this.rewardRepository = rewardRepository;
         this.rewardRedemptionRepository = rewardRedemptionRepository;
         this.eventRepository = eventRepository;
         this.scanPurposeRepository = scanPurposeRepository;
-    }
-
-    public PointRuleRequest savePointRule(PointRuleRequest request) {
-        PointRule rule = pointRuleRepository.findByEventIdAndScanPurposeId(request.eventId(), request.scanPurposeId())
-                .orElseGet(PointRule::new);
-        rule.setEventId(request.eventId());
-        rule.setScanPurposeId(request.scanPurposeId());
-        rule.setPoints(request.points());
-        rule.setActive(request.active());
-        pointRuleRepository.save(rule);
-        return request;
-    }
-
-    public PointRuleRequest updatePointRule(UUID eventId, UUID ruleId, PointRuleRequest request) {
-        PointRule rule = pointRuleRepository.findById(ruleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Point rule not found"));
-        if (!rule.getEventId().equals(eventId)) {
-            throw new ResourceNotFoundException("Point rule not found for event");
-        }
-        rule.setScanPurposeId(request.scanPurposeId());
-        rule.setPoints(request.points());
-        rule.setActive(request.active());
-        pointRuleRepository.save(rule);
-        return request;
-    }
-
-    public void deletePointRule(UUID eventId, UUID ruleId) {
-        PointRule rule = pointRuleRepository.findById(ruleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Point rule not found"));
-        if (!rule.getEventId().equals(eventId)) {
-            throw new ResourceNotFoundException("Point rule not found for event");
-        }
-        pointRuleRepository.delete(rule);
     }
 
     public RewardResponse saveReward(RewardRequest request) {
@@ -284,14 +243,7 @@ public class RewardService {
             return;
         }
         if (event.pointsDelta() <= 0) {
-            PointRule pointRule = pointRuleRepository.findByEventIdAndScanPurposeId(event.eventId(), event.scanPurposeId())
-                    .orElse(null);
-            if (pointRule == null || !pointRule.isActive()) {
-                return;
-            }
-            event = new TransactionRecordedEvent(event.transactionId(), event.eventId(), event.attendeeUserId(),
-                    event.registrationId(), event.qrCredentialId(), event.scanPurposeId(), event.transactionType(),
-                    event.transactionResult(), pointRule.getPoints(), event.staffUserId(), event.reason());
+            return;
         }
         if (event.transactionType() == TransactionType.REWARD_REDEMPTION_SCAN || event.transactionType() == TransactionType.REWARD_REDEMPTION) {
             return;
@@ -308,10 +260,6 @@ public class RewardService {
         transaction.setOccurredAt(Instant.now());
         transaction.setReason(event.reason() == null ? "Scan reward points" : event.reason());
         pointTransactionRepository.save(transaction);
-    }
-
-    public List<PointRule> listPointRules(UUID eventId) {
-        return pointRuleRepository.findByEventId(eventId);
     }
 
     private AttendeePointBalance balanceFor(UUID eventId, UUID attendeeUserId) {
