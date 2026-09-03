@@ -17,13 +17,10 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResp
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.io.IOException
 import java.util.UUID
 
 class AttendeeRepository(context: Context) {
@@ -40,35 +37,12 @@ class AttendeeRepository(context: Context) {
     suspend fun updateProfile(fullName: String, phoneNumber: String?) = safeApiCall {
         apiService.updateUsersMe(com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest(fullName, phoneNumber))
     }
-    suspend fun uploadAvatar(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
-        val contentType = detectImageMediaType(file) ?: "image/jpeg"
-        val requestBody = file.asRequestBody(contentType.toMediaTypeOrNull())
-        val uploadName = ensureImageExtension(file.name, contentType)
-        val part = MultipartBody.Part.createFormData("file", uploadName, requestBody)
-        apiService.uploadAvatar(part)
-    }
     suspend fun uploadEventPoster(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
         val contentType = detectImageMediaType(file) ?: "image/jpeg"
         val requestBody = file.asRequestBody(contentType.toMediaTypeOrNull())
         val uploadName = ensureImageExtension(file.name, contentType)
         val part = MultipartBody.Part.createFormData("file", uploadName, requestBody)
         apiService.uploadEventLogo(part)
-    }
-    suspend fun downloadAvatar(avatarPath: String): NetworkResult<ByteArray> = withContext(Dispatchers.IO) {
-        runCatching {
-            apiService.downloadAvatar(avatarPath).bytes()
-        }.fold(
-            onSuccess = { bytes ->
-                if (bytes.isNotEmpty()) {
-                    NetworkResult.Success(bytes)
-                } else {
-                    NetworkResult.Error("Avatar image is empty")
-                }
-            },
-            onFailure = { throwable ->
-                NetworkResult.Error(throwable.message ?: "Unable to load avatar image", throwable)
-            }
-        )
     }
     suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
     suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
@@ -99,7 +73,7 @@ class AttendeeRepository(context: Context) {
     suspend fun markAllNotificationsRead() = safeApiCall { apiService.markAllNotificationsRead() }
     suspend fun getNotificationsByRecipient(recipientUserId: String) = safeApiCall { apiService.getNotificationsByRecipient(recipientUserId) }
     suspend fun getDashboardSummary() = safeApiCall { apiService.getDashboard() }
-    suspend fun parseUuid(value: String?): UUID? = withContext(Dispatchers.Default) {
+    suspend fun parseUuid(value: String?): UUID? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
         runCatching { UUID.fromString(value.orEmpty()) }.getOrNull()
     }
 

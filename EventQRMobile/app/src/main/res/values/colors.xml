@@ -25,6 +25,17 @@
     <color name="tile_yellow">#FEF3C7</color>
     <color name="tile_pink">#FCE7F3</color>
     <color name="tile_cyan">#CFFAFE</color>
+    <color name="tile_indigo">#D6D9FF</color>
+
+    <!-- Icon tint colors (darker shades for legibility on pale tiles) -->
+    <color name="icon_tint_indigo">#4338CA</color>
+    <color name="icon_tint_blue">#2563EB</color>
+    <color name="icon_tint_green">#059669</color>
+    <color name="icon_tint_amber">#D97706</color>
+    <color name="icon_tint_pink">#BE185D</color>
+
+    <color name="avatar_gradient_start">#1E1B5E</color>
+    <color name="avatar_gradient_end">#4A46A8</color>
 
     <color name="button">#4F46E5</color>
     <color name="purple">#7C3AED</color>
