@@ -2,6 +2,8 @@ package com.thedavelopers.eventqr.features.transactions.service;
 
 import java.time.Instant;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -214,6 +216,15 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
+    public List<TransactionResponse> findByEventToday(UUID eventId) {
+        Instant startOfToday = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
+        return transactionLogRepository.findByEventIdAndScannedAtGreaterThanEqual(eventId, startOfToday)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<TransactionResponse> findByAttendee(UUID attendeeUserId) {
         return transactionLogRepository.findByAttendeeUserId(attendeeUserId).stream().map(this::toResponse).toList();
     }
@@ -224,6 +235,21 @@ public class TransactionService {
                 .filter(log -> log.getAttendeeUserId().equals(attendeeUserId))
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> findForStaff(UUID staffUserId, UUID eventId, UUID scanPurposeId) {
+        List<TransactionLog> logs;
+        if (eventId != null && scanPurposeId != null) {
+            logs = transactionLogRepository.findByStaffUserIdAndEventIdAndScanPurposeIdOrderByScannedAtDesc(staffUserId, eventId, scanPurposeId);
+        } else if (eventId != null) {
+            logs = transactionLogRepository.findByStaffUserIdAndEventIdOrderByScannedAtDesc(staffUserId, eventId);
+        } else if (scanPurposeId != null) {
+            logs = transactionLogRepository.findByStaffUserIdAndScanPurposeIdOrderByScannedAtDesc(staffUserId, scanPurposeId);
+        } else {
+            logs = transactionLogRepository.findByStaffUserIdOrderByScannedAtDesc(staffUserId);
+        }
+        return logs.stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)

@@ -77,10 +77,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
     private fun applyActionLabels() {
         val purposeCode = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE).orEmpty()
-        val purposeName = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME).orUnknown("Entry")
         findViewById<Button>(R.id.btnContinueTransaction).text =
             if (purposeCode == ScanPurposeCode.ID_PRINT.name) "Print ID"
-            else "Log $purposeName Transaction"
+            else "Log Transaction"
     }
 
     private fun bindStaticFields(isValid: Boolean) {

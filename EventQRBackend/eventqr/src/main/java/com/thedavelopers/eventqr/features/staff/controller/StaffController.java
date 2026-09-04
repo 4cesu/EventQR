@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
@@ -96,6 +97,17 @@ public class StaffController {
         return ResponseEntity.ok(ApiResponse.success(eventService.findOne(eventId)));
     }
 
+    @GetMapping("/transactions")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> myTransactions(HttpServletRequest request,
+                                                                                  @RequestParam(required = false) UUID eventId,
+                                                                                  @RequestParam(required = false) UUID purposeId) {
+        UUID staffUserId = currentUserId(request);
+        if (eventId != null) {
+            requireActiveAssignment(request, eventId);
+        }
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findForStaff(staffUserId, eventId, purposeId)));
+    }
+
     @GetMapping("/events/{eventId}/scan-purposes")
     public ResponseEntity<ApiResponse<List<ScanPurposeSnapshot>>> scanPurposes(HttpServletRequest request,
                                                                               @PathVariable UUID eventId) {
@@ -179,6 +191,13 @@ public class StaffController {
                                                                                @PathVariable UUID eventId) {
         requireActiveAssignment(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(transactionService.findByEvent(eventId)));
+    }
+
+    @GetMapping("/events/{eventId}/transactions/today")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> transactionsToday(HttpServletRequest request,
+                                                                                   @PathVariable UUID eventId) {
+        requireActiveAssignment(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findByEventToday(eventId)));
     }
 
     @GetMapping("/events/{eventId}/attendees/{attendeeId}/transactions")

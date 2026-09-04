@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.rewards.RewardAdapter
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
@@ -255,7 +256,15 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         rewardsBalanceCard.visibility = View.VISIBLE
         claimsAction.visibility = View.GONE
 
-        val showSkeleton = !swipeRefresh.isRefreshing
+        // If we already know from cache that the user has no registered events,
+        // skip the skeleton loading and immediately show the empty state.
+        val cacheSaysNoRegistrations = RegistrationsCache.get()?.none {
+            it.status != RegistrationStatus.CANCELLED &&
+                it.status != RegistrationStatus.NO_SHOW &&
+                it.eventId.toString().isNotBlank()
+        } == true
+
+        val showSkeleton = !swipeRefresh.isRefreshing && !cacheSaysNoRegistrations
         layoutDropdownContent.visibility = if (showSkeleton) View.GONE else View.VISIBLE
         skeletonDropdown.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
@@ -263,7 +272,15 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         balanceText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
         skeletonPointsValue.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
-        layoutRewardsContent.visibility = View.VISIBLE
+        layoutRewardsContent.visibility = if (cacheSaysNoRegistrations) View.GONE else View.VISIBLE
+
+        if (cacheSaysNoRegistrations) {
+            swipeRefresh.isRefreshing = false
+            selectedEventId = null
+            selectedEventTitle = ""
+            emptyEventsText.visibility = View.VISIBLE
+            claimsAction.visibility = View.GONE
+        }
 
         lifecycleScope.launch {
             when (val registrationsResult = repository.getMyRegistrations()) {

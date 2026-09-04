@@ -376,14 +376,14 @@
                 android:layout_marginTop="20dp"
                 android:visibility="gone" />
 
-            <!-- Actions -->
+            <!-- Action buttons -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnContinueTransaction"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_primary_button"
-                android:text="Log Entry Transaction"
+                android:text="Log Transaction"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
@@ -417,4 +417,5 @@
                 app:backgroundTint="@null" />
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+
+    </LinearLayout>
