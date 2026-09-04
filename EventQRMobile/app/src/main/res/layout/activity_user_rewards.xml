@@ -58,31 +58,7 @@
                 android:paddingTop="16dp"
                 android:paddingBottom="24dp">
 
-                <LinearLayout
-                    android:id="@+id/loadingRewardsContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="12dp"
-                    android:visibility="gone">
-
-                    <ProgressBar
-                        android:id="@+id/progressRewardsLoading"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp" />
-
-                    <TextView
-                        android:id="@+id/txtRewardsLoading"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="Loading attendee rewards..."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
+                <!-- Error state -->
                 <LinearLayout
                     android:id="@+id/errorRewardsContainer"
                     android:layout_width="match_parent"
@@ -114,6 +90,7 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
+                <!-- Empty events state -->
                 <LinearLayout
                     android:id="@+id/layoutNoRegisteredEvents"
                     android:layout_width="match_parent"
@@ -154,169 +131,302 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtSelectEventLabel"
+                <!-- Main content wrapper -->
+                <LinearLayout
+                    android:id="@+id/layoutRewardsContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Select Registered Event"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="15sp" />
+                    android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/cardSelectedEvent"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_rewards_dropdown"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp">
-
+                    <!-- "Select Registered Event" label (always visible) -->
                     <TextView
-                        android:id="@+id/txtSelectedEventTitle"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="Select event"
-                        android:textColor="@color/eventqr_text"
-                        android:textSize="15sp" />
-
-                    <ImageView
-                        android:id="@+id/spinnerArrow"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_marginStart="8dp"
-                        android:contentDescription="Dropdown"
-                        android:src="@drawable/ic_arrow_drop_down"
-                        android:tint="#6B7280" />
-                </LinearLayout>
-
-                <Spinner
-                    android:id="@+id/spinnerRegisteredEvents"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
-
-                <LinearLayout
-                    android:id="@+id/layoutEventDropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card"
-                    android:orientation="vertical"
-                    android:visibility="gone" />
-
-                <LinearLayout
-                    android:id="@+id/cardRewardsBalance"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:background="@drawable/bg_reward_points"
-                    android:elevation="5dp"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="24dp"
-                    android:paddingTop="22dp"
-                    android:paddingBottom="20dp">
-
-                    <TextView
-                        android:id="@+id/txtRewardsEventTitle"
+                        android:id="@+id/txtSelectEventLabel"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxLines="2"
-                        android:textColor="#DDD6FE"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:fontFamily="sans-serif-bold"
-                        android:text="Event Points Balance"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:id="@+id/txtRewardsBalance"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:fontFamily="sans-serif-bold"
-                        android:text="0"
-                        android:textColor="#FFFFFF"
-                        android:textSize="46sp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="points available for this event"
-                        android:textColor="#EDE9FE"
-                        android:textSize="15sp" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txtRewardsSectionTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:fontFamily="sans-serif-bold"
-                    android:text="Available Rewards"
-                    android:textColor="@color/text_primary"
-                    android:textSize="20sp" />
-
-                <LinearLayout
-                    android:id="@+id/layoutRewardsEmpty"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingTop="24dp"
-                    android:paddingBottom="24dp"
-                    android:visibility="gone">
-
-                    <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:contentDescription="No rewards"
-                        android:src="@drawable/ic_nav_gift"
-                        android:tint="@color/text_disabled" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:text="No rewards available yet"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:fontFamily="sans-serif-medium"
+                        android:text="Select Registered Event"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="15sp" />
 
+                    <!-- Dropdown card (always visible, contains text + skeleton bar) -->
+                    <FrameLayout
+                        android:id="@+id/cardSelectedEvent"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_rewards_dropdown"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <!-- Actual dropdown text -->
+                        <LinearLayout
+                            android:id="@+id/layoutDropdownContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="16dp">
+
+                            <TextView
+                                android:id="@+id/txtSelectedEventTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:text="Select event"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="15sp" />
+
+                            <ImageView
+                                android:id="@+id/spinnerArrow"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginStart="8dp"
+                                android:contentDescription="Dropdown"
+                                android:src="@drawable/ic_arrow_drop_down"
+                                android:tint="#6B7280" />
+                        </LinearLayout>
+
+                        <!-- Dropdown skeleton bar -->
+                        <View
+                            android:id="@+id/skeletonDropdown"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <Spinner
+                        android:id="@+id/spinnerRegisteredEvents"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutEventDropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_card"
+                        android:orientation="vertical"
+                        android:visibility="gone" />
+
+                    <!-- Purple points balance card (always visible) -->
+                    <LinearLayout
+                        android:id="@+id/cardRewardsBalance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:background="@drawable/bg_reward_points"
+                        android:elevation="5dp"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="24dp"
+                        android:paddingTop="22dp"
+                        android:paddingBottom="20dp">
+
+                        <!-- Event name (toggle between text and skeleton) -->
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/txtRewardsEventTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:maxLines="2"
+                                android:textColor="#DDD6FE"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <View
+                                android:id="@+id/skeletonEventName"
+                                android:layout_width="160dp"
+                                android:layout_height="12dp"
+                                android:background="@drawable/bg_staff_skeleton_bar_light"
+                                android:visibility="gone" />
+                        </FrameLayout>
+
+                        <!-- "Event Points Balance" label (always visible) -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="sans-serif-bold"
+                            android:text="Event Points Balance"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+
+                        <!-- Points value (toggle between text and skeleton) -->
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp">
+
+                            <TextView
+                                android:id="@+id/txtRewardsBalance"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-bold"
+                                android:text="0"
+                                android:textColor="#FFFFFF"
+                                android:textSize="46sp" />
+
+                            <View
+                                android:id="@+id/skeletonPointsValue"
+                                android:layout_width="90dp"
+                                android:layout_height="36dp"
+                                android:background="@drawable/bg_staff_skeleton_bar_light"
+                                android:visibility="gone" />
+                        </FrameLayout>
+
+                        <!-- "points available" subtitle (always visible) -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="points available for this event"
+                            android:textColor="#EDE9FE"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <!-- "Available Rewards" section header (always visible) -->
                     <TextView
+                        android:id="@+id/txtRewardsSectionTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:text="Check back later for rewards for this event"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
-                </LinearLayout>
+                        android:layout_marginTop="22dp"
+                        android:fontFamily="sans-serif-bold"
+                        android:text="Available Rewards"
+                        android:textColor="@color/text_primary"
+                        android:textSize="20sp" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerRewards"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:clipToPadding="false"
-                    android:nestedScrollingEnabled="false"
-                    android:visibility="gone" />
+                    <!-- Rewards empty state -->
+                    <LinearLayout
+                        android:id="@+id/layoutRewardsEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingTop="24dp"
+                        android:paddingBottom="24dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:contentDescription="No rewards"
+                            android:src="@drawable/ic_nav_gift"
+                            android:tint="@color/text_disabled" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:text="No rewards available yet"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
+                            android:text="Check back later for rewards for this event"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Rewards list skeleton (shown during loading) -->
+                    <LinearLayout
+                        android:id="@+id/layoutRewardsSkeleton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <!-- Reward card skeleton 1 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:background="@drawable/bg_staff_skeleton_card"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="14dp"
+                                android:background="@drawable/bg_staff_skeleton_bar" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="80dp"
+                                    android:layout_height="28dp"
+                                    android:background="@drawable/bg_staff_skeleton_date_block" />
+
+                                <View
+                                    android:layout_width="60dp"
+                                    android:layout_height="10dp"
+                                    android:layout_marginStart="12dp"
+                                    android:background="@drawable/bg_staff_skeleton_bar" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Reward card skeleton 2 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_staff_skeleton_card"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="14dp"
+                                android:background="@drawable/bg_staff_skeleton_bar" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="80dp"
+                                    android:layout_height="28dp"
+                                    android:background="@drawable/bg_staff_skeleton_date_block" />
+
+                                <View
+                                    android:layout_width="60dp"
+                                    android:layout_height="10dp"
+                                    android:layout_marginStart="12dp"
+                                    android:background="@drawable/bg_staff_skeleton_bar" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Actual rewards recycler -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerRewards"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:clipToPadding="false"
+                        android:nestedScrollingEnabled="false"
+                        android:visibility="gone" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -38,272 +38,282 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <ScrollView
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshEditProfile"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:overScrollMode="never">
+        android:layout_weight="1">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="24dp"
-            android:paddingBottom="32dp">
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:overScrollMode="never">
 
-            <ProgressBar
-                android:id="@+id/progressLoading"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="8dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/txtEmptyHint"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="Complete your profile to help organizers reach you."
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="32dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:text="Personal Information"
-                android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
+                <!-- Skeleton loading -->
+                <include layout="@layout/include_skeleton_edit_profile" />
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/outline"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
+                <TextView
+                    android:id="@+id/txtEmptyHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginBottom="8dp"
+                    android:text="Complete your profile to help organizers reach you."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilFullName"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Full Name"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
-                        app:boxStrokeColor="@color/outline"
-                        android:enabled="false"
-                        app:helperText="Managed by administrator"
-                        app:hintTextColor="@color/text_secondary"
-                        app:placeholderTextColor="@color/text_disabled">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edtFullName"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:enabled="false"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
-                            android:inputType="textPersonName"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_disabled"
-                            android:textSize="14sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilEmail"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:hint="Email Address"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
-                        app:boxStrokeColor="@color/outline"
-                        android:enabled="false"
-                        app:helperText="Contact support to update"
-                        app:hintTextColor="@color/text_secondary"
-                        app:placeholderTextColor="@color/text_disabled">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edtEmail"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:enabled="false"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
-                            android:inputType="textEmailAddress"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_disabled"
-                            android:textSize="14sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilPhone"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:hint="Phone Number"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
-                        app:boxStrokeColor="@color/outline"
-                        app:counterEnabled="true"
-                        app:counterMaxLength="10"
-                        app:helperText="Enter your 10-digit mobile number"
-                        app:hintTextColor="@color/text_secondary"
-                        app:prefixText="+63"
-                        app:prefixTextColor="@color/text_primary">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edtPhone"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="9123456789"
-                            android:inputType="number"
-                            android:maxLength="10"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_disabled"
-                            android:textSize="14sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:text="Security"
-                android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/outline"
-                app:strokeWidth="1dp">
-
+                <!-- Editable content below skeleton -->
                 <LinearLayout
-                    android:id="@+id/btnChangePassword"
+                    android:id="@+id/layoutEditProfileContent"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:contentDescription="Security icon"
-                        android:src="@drawable/ic_lock"
-                        app:tint="@color/text_secondary" />
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:text="Change Password"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
+                        android:layout_marginBottom="4dp"
+                        android:text="Personal Information"
+                        android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:contentDescription="Navigate"
-                        android:src="@drawable/ic_chevron_right"
-                        app:tint="@color/text_disabled" />
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:strokeColor="@color/outline"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/tilFullName"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Full Name"
+                                app:boxCornerRadiusBottomEnd="8dp"
+                                app:boxCornerRadiusBottomStart="8dp"
+                                app:boxCornerRadiusTopEnd="8dp"
+                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxStrokeColor="@color/outline"
+                                android:enabled="false"
+                                app:helperText="Managed by administrator"
+                                app:hintTextColor="@color/text_secondary"
+                                app:placeholderTextColor="@color/text_disabled">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/edtFullName"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:enabled="false"
+                                    android:focusable="false"
+                                    android:focusableInTouchMode="false"
+                                    android:inputType="textPersonName"
+                                    android:textColor="@color/text_primary"
+                                    android:textColorHint="@color/text_disabled"
+                                    android:textSize="14sp" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/tilEmail"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:hint="Email Address"
+                                app:boxCornerRadiusBottomEnd="8dp"
+                                app:boxCornerRadiusBottomStart="8dp"
+                                app:boxCornerRadiusTopEnd="8dp"
+                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxStrokeColor="@color/outline"
+                                android:enabled="false"
+                                app:helperText="Contact support to update"
+                                app:hintTextColor="@color/text_secondary"
+                                app:placeholderTextColor="@color/text_disabled">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/edtEmail"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:enabled="false"
+                                    android:focusable="false"
+                                    android:focusableInTouchMode="false"
+                                    android:inputType="textEmailAddress"
+                                    android:textColor="@color/text_primary"
+                                    android:textColorHint="@color/text_disabled"
+                                    android:textSize="14sp" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/tilPhone"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:hint="Phone Number"
+                                app:boxCornerRadiusBottomEnd="8dp"
+                                app:boxCornerRadiusBottomStart="8dp"
+                                app:boxCornerRadiusTopEnd="8dp"
+                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxStrokeColor="@color/outline"
+                                app:counterEnabled="true"
+                                app:counterMaxLength="10"
+                                app:helperText="Enter your 10-digit mobile number"
+                                app:hintTextColor="@color/text_secondary"
+                                app:prefixText="+63"
+                                app:prefixTextColor="@color/text_primary">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/edtPhone"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:hint="9123456789"
+                                    android:inputType="number"
+                                    android:maxLength="10"
+                                    android:textColor="@color/text_primary"
+                                    android:textColorHint="@color/text_disabled"
+                                    android:textSize="14sp" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="Security"
+                        android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:strokeColor="@color/outline"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:id="@+id/btnChangePassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="16dp">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:contentDescription="Security icon"
+                                android:src="@drawable/ic_lock"
+                                app:tint="@color/text_secondary" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:text="Change Password"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:contentDescription="Navigate"
+                                android:src="@drawable/ic_chevron_right"
+                                app:tint="@color/text_disabled" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSaveChanges"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="Save Changes"
+                        android:textAllCaps="false"
+                        android:textColor="@color/brand_on_primary"
+                        android:textSize="14sp"
+                        android:letterSpacing="0.02"
+                        app:backgroundTint="@color/brand_primary"
+                        app:cornerRadius="8dp"
+                        app:rippleColor="@color/brand_primary_dark" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardError"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/error"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
+                <!-- Error card (outside content container so it can show during errors) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/error"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:contentDescription="Error"
-                            android:src="@drawable/ic_error"
-                            app:tint="@color/error" />
-
-                        <TextView
-                            android:id="@+id/txtApiError"
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:contentDescription="Error"
+                                android:src="@drawable/ic_error"
+                                app:tint="@color/error" />
+
+                            <TextView
+                                android:id="@+id/txtApiError"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:textColor="@color/error"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <Button
+                            android:id="@+id/btnRetryProfileLoad"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="8dp"
+                            android:text="Retry"
+                            android:textAllCaps="false"
                             android:textColor="@color/error"
-                            android:textSize="14sp" />
+                            android:textSize="12sp" />
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                    <Button
-                        android:id="@+id/btnRetryProfileLoad"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="48dp"
-                        android:layout_gravity="end"
-                        android:layout_marginTop="8dp"
-                        android:text="Retry"
-                        android:textAllCaps="false"
-                        android:textColor="@color/error"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveChanges"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Save Changes"
-                android:textAllCaps="false"
-                android:textColor="@color/brand_on_primary"
-                android:textSize="14sp"
-                android:letterSpacing="0.02"
-                app:backgroundTint="@color/brand_primary"
-                app:cornerRadius="8dp"
-                app:rippleColor="@color/brand_primary_dark" />
-
-        </LinearLayout>
-    </ScrollView>
+            </LinearLayout>
+        </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

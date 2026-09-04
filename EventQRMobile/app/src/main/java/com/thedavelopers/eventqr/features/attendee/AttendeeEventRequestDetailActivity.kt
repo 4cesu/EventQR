@@ -5,10 +5,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
@@ -22,7 +22,8 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
     private lateinit var requestId: String
 
-    private lateinit var progress: ProgressBar
+    private lateinit var skeletonLoading: View
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
     private lateinit var content: LinearLayout
@@ -42,7 +43,8 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
         requestId = intent.getStringExtra(EXTRA_EVENT_REQUEST_ID).orEmpty()
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        progress = findViewById(R.id.progressRequestDetails)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
+        swipeRefresh = findViewById(R.id.swipeRefreshRequestDetail)
         errorText = findViewById(R.id.txtRequestDetailsError)
         retryButton = findViewById(R.id.btnRequestDetailsRetry)
         content = findViewById(R.id.contentRequestDetails)
@@ -50,6 +52,9 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
         noteCard = findViewById(R.id.noteCard)
         noteTitle = findViewById(R.id.txtNoteTitle)
         noteBody = findViewById(R.id.txtNoteBody)
+
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefresh.setOnRefreshListener { loadRequest() }
 
         retryButton.setOnClickListener { loadRequest() }
         loadRequest()
@@ -72,14 +77,17 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
     }
 
     private fun showLoading() {
-        progress.visibility = View.VISIBLE
+        if (!swipeRefresh.isRefreshing) {
+            skeletonLoading.visibility = View.VISIBLE
+        }
         errorText.visibility = View.GONE
         retryButton.visibility = View.GONE
         content.visibility = View.GONE
     }
 
     private fun showError(message: String) {
-        progress.visibility = View.GONE
+        swipeRefresh.isRefreshing = false
+        skeletonLoading.visibility = View.GONE
         content.visibility = View.GONE
         errorText.visibility = View.VISIBLE
         retryButton.visibility = View.VISIBLE
@@ -87,7 +95,8 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
     }
 
     private fun render(request: EventRequestResponse) {
-        progress.visibility = View.GONE
+        swipeRefresh.isRefreshing = false
+        skeletonLoading.visibility = View.GONE
         errorText.visibility = View.GONE
         retryButton.visibility = View.GONE
         content.visibility = View.VISIBLE

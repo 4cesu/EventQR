@@ -10,12 +10,12 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -31,7 +31,9 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
     private lateinit var txtProfileName: TextView
     private lateinit var txtProfileRole: TextView
-    private lateinit var progressProfileLoading: ProgressBar
+    private lateinit var skeletonLoading: View
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var layoutProfileMenu: View
     private lateinit var txtProfileError: TextView
     private lateinit var btnProfileRetry: Button
 
@@ -44,9 +46,14 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileRole = findViewById(R.id.txtProfileRole)
-        progressProfileLoading = findViewById(R.id.progressProfileLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
+        swipeRefresh = findViewById(R.id.swipeRefreshProfile)
+        layoutProfileMenu = findViewById(R.id.layoutProfileMenu)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
+
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefresh.setOnRefreshListener { loadProfile() }
 
         btnProfileRetry.setOnClickListener { loadProfile() }
 
@@ -145,12 +152,22 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun setLoadingState(loading: Boolean) {
-        progressProfileLoading.visibility = if (loading) View.VISIBLE else View.GONE
-        btnProfileRetry.visibility = View.GONE
-        txtProfileError.visibility = View.GONE
+        if (!swipeRefresh.isRefreshing) {
+            skeletonLoading.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+        if (loading) {
+            layoutProfileMenu.visibility = View.GONE
+            btnProfileRetry.visibility = View.GONE
+            txtProfileError.visibility = View.GONE
+        } else {
+            swipeRefresh.isRefreshing = false
+            layoutProfileMenu.visibility = View.VISIBLE
+        }
     }
 
     private fun showErrorState(message: String) {
+        skeletonLoading.visibility = View.GONE
+        layoutProfileMenu.visibility = View.VISIBLE
         txtProfileError.text = message
         txtProfileError.visibility = View.VISIBLE
         btnProfileRetry.visibility = View.VISIBLE
@@ -174,7 +191,9 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var cardError: View
     private lateinit var txtApiError: TextView
     private lateinit var btnRetryProfileLoad: Button
-    private lateinit var progressLoading: ProgressBar
+    private lateinit var skeletonLoading: View
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var layoutEditProfileContent: View
     private lateinit var btnSaveChanges: Button
     private lateinit var txtEmptyHint: TextView
 
@@ -207,9 +226,14 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         cardError = findViewById(R.id.cardError)
         txtApiError = findViewById(R.id.txtApiError)
         btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
-        progressLoading = findViewById(R.id.progressLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
+        swipeRefresh = findViewById(R.id.swipeRefreshEditProfile)
+        layoutEditProfileContent = findViewById(R.id.layoutEditProfileContent)
         btnSaveChanges = findViewById(R.id.btnSaveChanges)
         txtEmptyHint = findViewById(R.id.txtEmptyHint)
+
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefresh.setOnRefreshListener { loadCurrentProfile() }
     }
 
     private fun bindActions() {
@@ -386,6 +410,8 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     }
 
     private fun showApiError(message: String) {
+        skeletonLoading.visibility = View.GONE
+        layoutEditProfileContent.visibility = View.VISIBLE
         txtApiError.text = message
         cardError.visibility = View.VISIBLE
         btnRetryProfileLoad.visibility = View.VISIBLE
@@ -399,7 +425,16 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
     private fun setLoadingState(loading: Boolean) {
         isLoadingProfile = loading
-        progressLoading.visibility = if (loading) View.VISIBLE else View.GONE
+        if (!swipeRefresh.isRefreshing) {
+            skeletonLoading.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+        if (loading) {
+            layoutEditProfileContent.visibility = View.GONE
+            txtEmptyHint.visibility = View.GONE
+        } else {
+            swipeRefresh.isRefreshing = false
+            layoutEditProfileContent.visibility = View.VISIBLE
+        }
 
         // EventQR - name/email locked (display-only), only phone responds to loading state
         edtPhone.isEnabled = !loading

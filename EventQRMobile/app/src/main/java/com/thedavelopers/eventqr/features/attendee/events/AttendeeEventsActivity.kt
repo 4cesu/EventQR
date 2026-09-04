@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.chip.Chip
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
@@ -25,7 +24,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     private lateinit var emptyView: TextView
     private lateinit var emptySubView: TextView
     private lateinit var emptyIcon: ImageView
-    private lateinit var progressLoading: CircularProgressIndicator
+    private lateinit var skeletonLoading: View
     private lateinit var retryButton: Button
     private lateinit var chipAll: Chip
     private lateinit var chipUpcoming: Chip
@@ -49,7 +48,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         emptyView = findViewById(R.id.txtEventsEmpty)
         emptySubView = findViewById(R.id.txtEventsEmptySub)
         emptyIcon = findViewById(R.id.imgEmptyIcon)
-        progressLoading = findViewById(R.id.progressLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         retryButton = findViewById(R.id.btnRefreshEvents)
         chipAll = findViewById(R.id.chipAll)
         chipUpcoming = findViewById(R.id.chipUpcoming)
@@ -127,7 +126,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
 
     override fun showLoading(isLoading: Boolean) {
         if (!swipeRefresh.isRefreshing) {
-            progressLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
+            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
         if (isLoading) {
             emptyIcon.visibility = View.GONE
@@ -154,7 +153,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
         recyclerView.visibility = View.GONE
-        progressLoading.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         showEmptyState(true)
         retryButton.visibility = View.VISIBLE
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

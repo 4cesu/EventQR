@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.attendee
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +21,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
     private lateinit var presenter: ClaimedRewardsPresenter
     private lateinit var adapter: com.thedavelopers.eventqr.features.rewards.ClaimedRewardAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var loadingView: ProgressBar
+    private lateinit var skeletonLoading: View
     private lateinit var emptyView: TextView
     private lateinit var errorView: TextView
     private lateinit var retryButton: Button
@@ -37,7 +36,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         adapter = com.thedavelopers.eventqr.features.rewards.ClaimedRewardAdapter()
 
         swipeRefresh = findViewById(R.id.swipeRefreshClaimedRewards)
-        loadingView = findViewById(R.id.progressClaimedRewardsLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         emptyView = findViewById(R.id.txtClaimedRewardsEmpty)
         errorView = findViewById(R.id.txtClaimedRewardsError)
         retryButton = findViewById(R.id.btnClaimedRewardsRetry)
@@ -64,7 +63,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
 
     override fun showLoading(isLoading: Boolean) {
         if (!swipeRefresh.isRefreshing) {
-            loadingView.visibility = if (isLoading) View.VISIBLE else View.GONE
+            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
         if (isLoading) {
             emptyView.visibility = View.GONE
@@ -82,7 +81,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
 
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
-        loadingView.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
 
         errorView.text = message.ifBlank { "Unable to load claimed rewards." }
         errorView.visibility = View.VISIBLE
@@ -97,7 +96,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         rewardNamesById: Map<String, String>,
     ) {
         swipeRefresh.isRefreshing = false
-        loadingView.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         errorView.visibility = View.GONE
         retryButton.visibility = View.GONE
 
@@ -126,7 +125,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
                     val selectedEventId = selectedRegistration?.eventId?.toString().orEmpty()
                     if (selectedEventId.isBlank()) {
                         swipeRefresh.isRefreshing = false
-                        loadingView.visibility = View.GONE
+                        skeletonLoading.visibility = View.GONE
                         emptyView.text = "No claimed rewards yet."
                         emptyView.visibility = View.VISIBLE
                         retryButton.visibility = View.GONE
