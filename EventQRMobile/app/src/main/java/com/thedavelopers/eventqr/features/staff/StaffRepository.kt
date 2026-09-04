@@ -44,6 +44,12 @@ class StaffRepository(context: Context) {
 
     suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getStaffTransactions(eventId) }
 
+    suspend fun getMyTransactions(eventId: String? = null, purposeId: String? = null) = safeApiCall {
+        apiService.getStaffMyTransactions(eventId, purposeId)
+    }
+
+    suspend fun getTodayTransactionsByEvent(eventId: String) = safeApiCall { apiService.getStaffTodayTransactions(eventId) }
+
     suspend fun getAttendeeTransactions(eventId: String, attendeeId: String) = safeApiCall { apiService.getStaffAttendeeTransactions(eventId, attendeeId) }
 
     suspend fun getAttendeeByEvent(eventId: String, attendeeId: String) = safeApiCall {

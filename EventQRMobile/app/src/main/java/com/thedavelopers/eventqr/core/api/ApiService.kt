@@ -516,6 +516,15 @@ interface ApiService {
     @GET("staff/events/{eventId}/transactions")
     suspend fun getStaffTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
 
+    @GET("staff/transactions")
+    suspend fun getStaffMyTransactions(
+        @Query("eventId") eventId: String? = null,
+        @Query("purposeId") purposeId: String? = null,
+    ): ApiResponse<List<TransactionResponse>>
+
+    @GET("staff/events/{eventId}/transactions/today")
+    suspend fun getStaffTodayTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
+
     @GET("staff/events/{eventId}/attendees/{attendeeId}/transactions")
     suspend fun getStaffAttendeeTransactions(@Path("eventId") eventId: String, @Path("attendeeId") attendeeId: String): ApiResponse<List<TransactionResponse>>
 

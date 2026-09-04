@@ -29,7 +29,7 @@ class StaffDashboardPresenter(
                     } else {
                         val recentTransactions = mutableListOf<TransactionResponse>()
                         for (event in result.data) {
-                            when (val trans = repository.getTransactionsByEvent(event.eventId.toString())) {
+                            when (val trans = repository.getTodayTransactionsByEvent(event.eventId.toString())) {
                                 is NetworkResult.Success -> recentTransactions.addAll(trans.data)
                                 is NetworkResult.Error -> Unit
                                 NetworkResult.Loading -> Unit

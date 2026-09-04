@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.transactions.repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +13,8 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
 
     List<TransactionLog> findByEventId(UUID eventId);
 
+    List<TransactionLog> findByEventIdAndScannedAtGreaterThanEqual(UUID eventId, Instant scannedAt);
+
     List<TransactionLog> findByEventIdOrderByScannedAtDesc(UUID eventId);
 
     List<TransactionLog> findByRegistrationIdAndScanPurposeIdOrderByScannedAtDesc(UUID registrationId, UUID scanPurposeId);
@@ -23,4 +26,12 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
     java.util.Optional<TransactionLog> findFirstByEventIdOrderByScannedAtDesc(UUID eventId);
 
     List<TransactionLog> findTop5ByEventIdAndAttendeeUserIdOrderByScannedAtDesc(UUID eventId, UUID attendeeUserId);
+
+    List<TransactionLog> findByStaffUserIdOrderByScannedAtDesc(UUID staffUserId);
+
+    List<TransactionLog> findByStaffUserIdAndEventIdOrderByScannedAtDesc(UUID staffUserId, UUID eventId);
+
+    List<TransactionLog> findByStaffUserIdAndScanPurposeIdOrderByScannedAtDesc(UUID staffUserId, UUID scanPurposeId);
+
+    List<TransactionLog> findByStaffUserIdAndEventIdAndScanPurposeIdOrderByScannedAtDesc(UUID staffUserId, UUID eventId, UUID scanPurposeId);
 }
