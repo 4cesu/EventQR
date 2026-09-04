@@ -44,6 +44,8 @@ class StaffRepository(context: Context) {
 
     suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getStaffTransactions(eventId) }
 
+    suspend fun getAttendeeTransactions(eventId: String, attendeeId: String) = safeApiCall { apiService.getStaffAttendeeTransactions(eventId, attendeeId) }
+
     suspend fun getAttendeeByEvent(eventId: String, attendeeId: String) = safeApiCall {
         apiService.getStaffAttendee(eventId, attendeeId)
     }
@@ -78,4 +80,6 @@ class StaffRepository(context: Context) {
     suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
 
     suspend fun getNotificationsByRecipient(recipientUserId: String) = safeApiCall { apiService.getNotificationsByRecipient(recipientUserId) }
+
+    suspend fun getMyNotifications(): NetworkResult<List<NotificationResponse>> = safeApiCall { apiService.getMyNotifications() }
 }

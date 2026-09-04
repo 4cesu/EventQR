@@ -230,7 +230,7 @@
                     android:layout_height="48dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_event_filter_chip_unselected"
+                    android:background="@drawable/bg_scan_again_button"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
@@ -267,8 +267,42 @@
             <TextView android:id="@+id/txtDetailAttendanceStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
             <TextView android:id="@+id/txtDetailExitStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
             <TextView android:id="@+id/txtDetailRegistrationDate" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-            <TextView android:id="@+id/txtDetailRecentTransactionsEmpty" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerDetailTransactions" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <LinearLayout
+                android:id="@+id/layoutRecentTransactions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Recent Transactions"
+                    android:textColor="#111827"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtDetailRecentTransactionsEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_card"
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:text="No transactions recorded yet"
+                    android:textColor="#9CA3AF"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerDetailTransactions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:overScrollMode="never" />
+            </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

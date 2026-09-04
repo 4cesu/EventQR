@@ -227,6 +227,15 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
+    public List<TransactionResponse> findRecentByEventAndAttendee(UUID eventId, UUID attendeeUserId, int limit) {
+        return transactionLogRepository.findTop5ByEventIdAndAttendeeUserIdOrderByScannedAtDesc(eventId, attendeeUserId)
+                .stream()
+                .limit(limit)
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public TransactionResponse findOne(UUID transactionId) {
         TransactionLog log = transactionLogRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));

@@ -21,4 +21,6 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
     List<TransactionLog> findByAttendeeUserId(UUID attendeeUserId);
 
     java.util.Optional<TransactionLog> findFirstByEventIdOrderByScannedAtDesc(UUID eventId);
+
+    List<TransactionLog> findTop5ByEventIdAndAttendeeUserIdOrderByScannedAtDesc(UUID eventId, UUID attendeeUserId);
 }
