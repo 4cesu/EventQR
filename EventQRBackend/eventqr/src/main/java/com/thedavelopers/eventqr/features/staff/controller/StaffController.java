@@ -176,9 +176,17 @@ public class StaffController {
 
     @GetMapping("/events/{eventId}/transactions")
     public ResponseEntity<ApiResponse<List<TransactionResponse>>> transactions(HttpServletRequest request,
-                                                                              @PathVariable UUID eventId) {
+                                                                               @PathVariable UUID eventId) {
         requireActiveAssignment(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(transactionService.findByEvent(eventId)));
+    }
+
+    @GetMapping("/events/{eventId}/attendees/{attendeeId}/transactions")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> attendeeTransactions(HttpServletRequest request,
+                                                                                        @PathVariable UUID eventId,
+                                                                                        @PathVariable UUID attendeeId) {
+        requireActiveAssignment(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findRecentByEventAndAttendee(eventId, attendeeId, 5)));
     }
 
     @GetMapping("/events/{eventId}/attendees/{attendeeId}")

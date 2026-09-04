@@ -7,6 +7,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -20,6 +22,7 @@ import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.orUnknown
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
+import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -31,6 +34,7 @@ import java.util.UUID
 open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private lateinit var repository: StaffRepository
     private lateinit var sessionManager: SessionManager
+    private lateinit var transactionAdapter: TransactionLogAdapter
     private var eventId: String = ""
     private var attendeeId: String = ""
     private var registrationId: String = ""
@@ -60,6 +64,11 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         attendeeId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID).orEmpty()
         registrationId = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_ID).orEmpty()
         qrCredentialId = intent.getStringExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID).orEmpty()
+
+        transactionAdapter = TransactionLogAdapter()
+        val recyclerTransactions = findViewById<RecyclerView>(R.id.recyclerDetailTransactions)
+        recyclerTransactions.layoutManager = LinearLayoutManager(this)
+        recyclerTransactions.adapter = transactionAdapter
 
         findViewById<View>(R.id.btnBackToTransactionResult).setOnClickListener { finish() }
         findViewById<View>(R.id.btnPrintOrReprintId).setOnClickListener { printId() }
@@ -125,13 +134,39 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     }
 
     private fun loadTransactions() {
+        val layoutTransactions = findViewById<View>(R.id.layoutRecentTransactions)
+        val recyclerTransactions = findViewById<RecyclerView>(R.id.recyclerDetailTransactions)
+        val emptyText = findViewById<TextView>(R.id.txtDetailRecentTransactionsEmpty)
+        val countText = findViewById<TextView>(R.id.txtDetailTransactionCount)
+
         MainScope().launch {
             when (val txResult = repository.getTransactionsByEvent(eventId)) {
                 is NetworkResult.Success -> {
                     val count = txResult.data.count { it.attendeeUserId.toString() == attendeeId }
-                    findViewById<TextView>(R.id.txtDetailTransactionCount).text = count.toString()
+                    countText.text = count.toString()
                 }
-                is NetworkResult.Error -> findViewById<TextView>(R.id.txtDetailTransactionCount).text = "0"
+                is NetworkResult.Error -> countText.text = "0"
+                NetworkResult.Loading -> Unit
+            }
+
+            when (val recentResult = repository.getAttendeeTransactions(eventId, attendeeId)) {
+                is NetworkResult.Success -> {
+                    layoutTransactions.visibility = View.VISIBLE
+                    val transactions = recentResult.data
+                    if (transactions.isEmpty()) {
+                        recyclerTransactions.visibility = View.GONE
+                        emptyText.visibility = View.VISIBLE
+                    } else {
+                        recyclerTransactions.visibility = View.VISIBLE
+                        emptyText.visibility = View.GONE
+                        transactionAdapter.submitItems(transactions)
+                    }
+                }
+                is NetworkResult.Error -> {
+                    layoutTransactions.visibility = View.VISIBLE
+                    recyclerTransactions.visibility = View.GONE
+                    emptyText.visibility = View.VISIBLE
+                }
                 NetworkResult.Loading -> Unit
             }
         }

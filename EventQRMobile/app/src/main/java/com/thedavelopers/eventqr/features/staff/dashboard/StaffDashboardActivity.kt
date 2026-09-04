@@ -36,6 +36,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private lateinit var eventAdapter: StaffEventAdapter
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var activePurposesHost: LinearLayout
+    private lateinit var skeletonLoading: View
     private var isSwipeRefreshing = false
     private var activePurposeJob: Job? = null
 
@@ -60,6 +61,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             startActivity(intent)
         }
         activePurposesHost = findViewById(R.id.layoutActiveScanPurposes)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
 
         findViewById<RecyclerView?>(R.id.recyclerRecentScans)?.apply {
             layoutManager = LinearLayoutManager(this@StaffDashboardActivity)
@@ -214,6 +216,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun renderEvents(items: List<com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse>) {
+        skeletonLoading.visibility = View.GONE
         findViewById<TextView?>(R.id.txtAssignedCount)?.text = items.size.toString()
         eventAdapter.submitItems(items)
         findViewById<TextView?>(R.id.txtAssignedEmptyState)?.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
@@ -242,12 +245,15 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    override fun showNotificationBadge(hasUnread: Boolean) {
+        findViewById<View>(R.id.viewNotificationDot).visibility = if (hasUnread) View.VISIBLE else View.GONE
+    }
+
     override fun showLoading(isLoading: Boolean) {
         if (isSwipeRefreshing) {
             if (!isLoading) stopSwipeRefresh()
-            findViewById<View>(R.id.progressScanner)?.visibility = View.GONE
         } else {
-            findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
+            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
         findViewById<View>(R.id.btnQuickScan)?.isEnabled = !isLoading
     }

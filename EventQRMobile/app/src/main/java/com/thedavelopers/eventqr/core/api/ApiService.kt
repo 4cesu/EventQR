@@ -516,6 +516,9 @@ interface ApiService {
     @GET("staff/events/{eventId}/transactions")
     suspend fun getStaffTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
 
+    @GET("staff/events/{eventId}/attendees/{attendeeId}/transactions")
+    suspend fun getStaffAttendeeTransactions(@Path("eventId") eventId: String, @Path("attendeeId") attendeeId: String): ApiResponse<List<TransactionResponse>>
+
     @POST("notifications")
     suspend fun createNotification(@Body request: NotificationRequest): ApiResponse<NotificationResponse>
 

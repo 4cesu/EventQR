@@ -137,6 +137,12 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="14dp">
 
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="#9CA3AF" />
+
                     <EditText
                         android:id="@+id/edtRegistrationSearch"
                         android:layout_width="0dp"
@@ -150,12 +156,6 @@
                         android:textColor="#111827"
                         android:textColorHint="#9CA3AF"
                         android:textSize="15sp" />
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@android:drawable/ic_menu_search"
-                        app:tint="#9CA3AF" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -225,12 +225,10 @@
                     android:paddingBottom="8dp" />
             </LinearLayout>
 
-            <ProgressBar
-                android:id="@+id/progressScanner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="gone" />
+            <include
+                layout="@layout/include_skeleton_cards"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
             <EditText
                 android:id="@+id/edtRegistrationsEventId"

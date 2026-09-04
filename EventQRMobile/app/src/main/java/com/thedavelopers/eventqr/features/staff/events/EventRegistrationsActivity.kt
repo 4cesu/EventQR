@@ -49,6 +49,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private lateinit var totalView: TextView
     private lateinit var checkedInView: TextView
     private lateinit var registeredView: TextView
+    private lateinit var skeletonLoading: View
 
     private lateinit var badgeSelection: TextView
     private lateinit var btnSelectForPrint: ImageButton
@@ -145,6 +146,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         totalView = findViewById(R.id.txtAttendeeTotal)
         checkedInView = findViewById(R.id.txtAttendeeCheckedIn)
         registeredView = findViewById(R.id.txtAttendeeRegistered)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
 
         badgeSelection = findViewById(R.id.badgeSelectionCount)
         btnSelectForPrint = findViewById(R.id.btnSelectForPrint)
@@ -181,6 +183,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     }
 
     override fun renderRegistrations(items: List<RegistrationResponse>) {
+        skeletonLoading.visibility = View.GONE
         allRegistrations = items
         val title = items.firstOrNull()?.eventTitle?.takeIf { it.isNotBlank() }
             ?: intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE)?.takeIf { it.isNotBlank() }
@@ -215,8 +218,14 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     }
 
     override fun showLoading(isLoading: Boolean) {
-        findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading && !swipeRefresh.isRefreshing) View.VISIBLE else View.GONE
-        swipeRefresh.isRefreshing = isLoading && swipeRefresh.isRefreshing
+        if (isLoading && !swipeRefresh.isRefreshing) {
+            skeletonLoading.visibility = View.VISIBLE
+        } else if (!isLoading) {
+            skeletonLoading.visibility = View.GONE
+            if (swipeRefresh.isRefreshing) {
+                swipeRefresh.isRefreshing = false
+            }
+        }
         findViewById<View>(R.id.btnLoadEventRegistrations)?.isEnabled = !isLoading
     }
 

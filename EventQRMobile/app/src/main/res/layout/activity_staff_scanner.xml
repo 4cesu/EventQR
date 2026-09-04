@@ -7,16 +7,22 @@
     android:background="#F3F4F6"
     android:orientation="vertical">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="#FFFFFF"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_header_surface_outline"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:text="Scan QR"
-        android:textColor="#111827"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan QR"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"

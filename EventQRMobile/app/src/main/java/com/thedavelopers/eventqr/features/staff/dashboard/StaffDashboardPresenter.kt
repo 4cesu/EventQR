@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.staff
 
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -40,6 +41,14 @@ class StaffDashboardPresenter(
                     }
                 }
                 is NetworkResult.Error -> view?.showMessage(result.message)
+                NetworkResult.Loading -> Unit
+            }
+            when (val notifResult = repository.getMyNotifications()) {
+                is NetworkResult.Success -> {
+                    val unreadCount = notifResult.data.count { it.status != NotificationStatus.READ && it.readAt == null }
+                    view?.showNotificationBadge(unreadCount > 0)
+                }
+                is NetworkResult.Error -> view?.showNotificationBadge(false)
                 NetworkResult.Loading -> Unit
             }
             view?.showLoading(false)

@@ -25,6 +25,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private lateinit var repository: StaffRepository
     private lateinit var adapter: TransactionLogAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var skeletonLoading: View
     private var selectedEventId: String = ""
     private var assignedEventIds: List<String> = emptyList()
 
@@ -50,6 +51,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         swipeRefresh = findViewById(R.id.swipeRefreshStaffTransactions)
         swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadAllAssignedTransactions() }
+
+        skeletonLoading = findViewById(R.id.skeletonLoading)
 
         findViewById<RecyclerView>(R.id.recyclerStaffTransactions).apply {
             layoutManager = LinearLayoutManager(this@StaffTransactionsActivity)
@@ -124,6 +127,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     override fun renderTransactions(items: List<TransactionResponse>) {
         swipeRefresh.isRefreshing = false
+        skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
         findViewById<TextView>(R.id.txtTotalScans).text = items.size.toString()
         findViewById<TextView>(R.id.txtSuccessfulScans).text = items.count { it.transactionResult.name == "APPROVED" || it.transactionResult.name == "SUCCESS" }.toString()
@@ -138,8 +142,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     }
 
     override fun showLoading(isLoading: Boolean) {
-        if (!swipeRefresh.isRefreshing) {
-            findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (isLoading && !swipeRefresh.isRefreshing) {
+            skeletonLoading.visibility = View.VISIBLE
         }
         if (!isLoading) {
             swipeRefresh.isRefreshing = false

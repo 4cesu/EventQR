@@ -10,5 +10,6 @@ interface StaffDashboardContract {
         fun updateStats(scans: Int, checkins: Int)
         fun showMessage(message: String)
         fun showLoading(isLoading: Boolean)
+        fun showNotificationBadge(hasUnread: Boolean)
     }
 }
