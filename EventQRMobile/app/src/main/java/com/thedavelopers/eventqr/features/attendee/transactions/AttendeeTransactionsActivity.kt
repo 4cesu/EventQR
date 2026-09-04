@@ -11,7 +11,6 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
-import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -27,7 +26,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private lateinit var presenter: TransactionHistoryPresenter
     private lateinit var adapter: TransactionAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var loadingView: ProgressBar
+    private lateinit var skeletonLoading: View
     private lateinit var emptyText: TextView
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
@@ -53,7 +52,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         presenter = TransactionHistoryPresenter(this, AttendeeRepository(this))
 
         swipeRefresh = findViewById(R.id.swipeRefreshTransactions)
-        loadingView = findViewById(R.id.progressTransactionsLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         emptyText = findViewById(R.id.txtTransactionsEmpty)
         errorText = findViewById(R.id.txtTransactionsError)
         retryButton = findViewById(R.id.btnTransactionsRetry)
@@ -88,7 +87,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun showLoading(isLoading: Boolean) {
         if (!swipeRefresh.isRefreshing) {
-            loadingView.visibility = if (isLoading) View.VISIBLE else View.GONE
+            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
         if (isLoading) {
             retryButton.visibility = View.GONE
@@ -106,7 +105,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
-        loadingView.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
 
         summaryCountText.text = "0 transactions"
         errorText.text = message.ifBlank { "Unable to load transactions." }
@@ -118,7 +117,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun renderTransactions(items: List<TransactionResponse>) {
         swipeRefresh.isRefreshing = false
-        loadingView.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         retryButton.visibility = View.GONE
         errorText.visibility = View.GONE
         allTransactions = items

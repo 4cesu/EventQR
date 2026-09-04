@@ -41,8 +41,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var repository: AttendeeRepository
     private lateinit var adapter: RewardAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var loadingContainer: View
-    private lateinit var loadingText: TextView
     private lateinit var errorContainer: View
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
@@ -59,6 +57,14 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var cardSelectedEvent: View
     private lateinit var txtSelectedEventTitle: TextView
     private lateinit var selectEventLabel: View
+    private lateinit var layoutRewardsContent: View
+
+    private lateinit var layoutDropdownContent: View
+    private lateinit var skeletonDropdown: View
+    private lateinit var skeletonEventName: View
+    private lateinit var skeletonPointsValue: View
+    private lateinit var layoutRewardsSkeleton: View
+
     private val eventOptions = mutableListOf<RegisteredEventOption>()
     private var selectedEventId: String? = null
     private var selectedEventTitle: String = ""
@@ -91,8 +97,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         }
 
         swipeRefresh = findViewById(R.id.swipeRefreshRewards)
-        loadingContainer = findViewById(R.id.loadingRewardsContainer)
-        loadingText = findViewById(R.id.txtRewardsLoading)
         errorContainer = findViewById(R.id.errorRewardsContainer)
         errorText = findViewById(R.id.txtRewardsError)
         retryButton = findViewById(R.id.btnRewardsRetry)
@@ -102,6 +106,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         cardSelectedEvent = findViewById(R.id.cardSelectedEvent)
         txtSelectedEventTitle = findViewById(R.id.txtSelectedEventTitle)
         selectEventLabel = findViewById(R.id.txtSelectEventLabel)
+        layoutRewardsContent = findViewById(R.id.layoutRewardsContent)
         eventTitleText = findViewById(R.id.txtRewardsEventTitle)
         balanceText = findViewById(R.id.txtRewardsBalance)
         rewardsSectionTitle = findViewById(R.id.txtRewardsSectionTitle)
@@ -109,6 +114,12 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         rewardsRecycler = findViewById(R.id.recyclerRewards)
         rewardsBalanceCard = findViewById(R.id.cardRewardsBalance)
         spinnerArrow = findViewById(R.id.spinnerArrow)
+
+        layoutDropdownContent = findViewById(R.id.layoutDropdownContent)
+        skeletonDropdown = findViewById(R.id.skeletonDropdown)
+        skeletonEventName = findViewById(R.id.skeletonEventName)
+        skeletonPointsValue = findViewById(R.id.skeletonPointsValue)
+        layoutRewardsSkeleton = findViewById(R.id.layoutRewardsSkeleton)
 
         rewardsRecycler.apply {
             layoutManager = LinearLayoutManager(this@AttendeeRewardsActivity)
@@ -137,18 +148,36 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     }
 
     override fun showLoading(isLoading: Boolean) {
-        if (!swipeRefresh.isRefreshing) {
-            loadingContainer.visibility = if (isLoading) View.VISIBLE else View.GONE
-            loadingText.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
+        val showSkeleton = isLoading && !swipeRefresh.isRefreshing
         if (isLoading) {
             errorContainer.visibility = View.GONE
             errorText.visibility = View.GONE
             retryButton.visibility = View.GONE
             emptyRewardsText.visibility = View.GONE
+
+            layoutDropdownContent.visibility = if (showSkeleton) View.GONE else View.VISIBLE
+            skeletonDropdown.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+
+            eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
+            skeletonEventName.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+
+            balanceText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
+            skeletonPointsValue.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+
             rewardsRecycler.visibility = View.GONE
-            rewardsBalanceCard.visibility = View.GONE
+            layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         } else {
+            layoutDropdownContent.visibility = View.VISIBLE
+            skeletonDropdown.visibility = View.GONE
+
+            eventTitleText.visibility = View.VISIBLE
+            skeletonEventName.visibility = View.GONE
+
+            balanceText.visibility = View.VISIBLE
+            skeletonPointsValue.visibility = View.GONE
+
+            layoutRewardsSkeleton.visibility = View.GONE
+
             swipeRefresh.isRefreshing = false
         }
     }
@@ -159,14 +188,23 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
-        loadingContainer.visibility = View.GONE
-        loadingText.visibility = View.GONE
         errorContainer.visibility = View.VISIBLE
         errorText.text = message.ifBlank { "Unable to load rewards." }
         errorText.visibility = View.VISIBLE
         retryButton.visibility = View.VISIBLE
         emptyEventsText.visibility = View.GONE
         emptyRewardsText.visibility = View.GONE
+
+        layoutDropdownContent.visibility = View.VISIBLE
+        skeletonDropdown.visibility = View.GONE
+
+        eventTitleText.visibility = View.VISIBLE
+        skeletonEventName.visibility = View.GONE
+
+        balanceText.visibility = View.VISIBLE
+        skeletonPointsValue.visibility = View.GONE
+
+        layoutRewardsSkeleton.visibility = View.GONE
         rewardsRecycler.visibility = View.GONE
         rewardsBalanceCard.visibility = View.GONE
     }
@@ -179,12 +217,21 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     override fun renderRewards(items: List<RewardResponse>) {
         swipeRefresh.isRefreshing = false
         adapter.submitItems(items)
-        loadingContainer.visibility = View.GONE
-        loadingText.visibility = View.GONE
         errorContainer.visibility = View.GONE
         errorText.visibility = View.GONE
         retryButton.visibility = View.GONE
         rewardsBalanceCard.visibility = View.VISIBLE
+
+        layoutDropdownContent.visibility = View.VISIBLE
+        skeletonDropdown.visibility = View.GONE
+
+        eventTitleText.visibility = View.VISIBLE
+        skeletonEventName.visibility = View.GONE
+
+        balanceText.visibility = View.VISIBLE
+        skeletonPointsValue.visibility = View.GONE
+
+        layoutRewardsSkeleton.visibility = View.GONE
         emptyRewardsText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         rewardsRecycler.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
     }
@@ -199,23 +246,24 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     }
 
     private fun loadRegisteredEvents(preferredEventId: String? = selectedEventId ?: intent.getStringExtra(EXTRA_EVENT_ID).orEmpty().ifBlank { null }) {
-        if (!swipeRefresh.isRefreshing) {
-            loadingContainer.visibility = View.VISIBLE
-            loadingText.visibility = View.VISIBLE
-        }
-        loadingText.text = "Loading attendee rewards..."
         errorContainer.visibility = View.GONE
         errorText.visibility = View.GONE
         retryButton.visibility = View.GONE
         emptyEventsText.visibility = View.GONE
         emptyRewardsText.visibility = View.GONE
         rewardsRecycler.visibility = View.GONE
-        rewardsBalanceCard.visibility = View.GONE
-        cardSelectedEvent.visibility = View.GONE
-        selectEventLabel.visibility = View.GONE
-        spinnerArrow.visibility = View.GONE
-        rewardsSectionTitle.visibility = View.GONE
+        rewardsBalanceCard.visibility = View.VISIBLE
         claimsAction.visibility = View.GONE
+
+        val showSkeleton = !swipeRefresh.isRefreshing
+        layoutDropdownContent.visibility = if (showSkeleton) View.GONE else View.VISIBLE
+        skeletonDropdown.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+        eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
+        skeletonEventName.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+        balanceText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
+        skeletonPointsValue.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+        layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+        layoutRewardsContent.visibility = View.VISIBLE
 
         lifecycleScope.launch {
             when (val registrationsResult = repository.getMyRegistrations()) {
@@ -233,30 +281,20 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
                     eventOptions.clear()
                     eventOptions.addAll(options)
-                    loadingContainer.visibility = View.GONE
 
                     if (eventOptions.isEmpty()) {
                         swipeRefresh.isRefreshing = false
                         selectedEventId = null
                         selectedEventTitle = ""
                         emptyEventsText.visibility = View.VISIBLE
-                        cardSelectedEvent.visibility = View.GONE
-                        spinnerArrow.visibility = View.GONE
-                        selectEventLabel.visibility = View.GONE
-                        rewardsSectionTitle.visibility = View.GONE
+                        layoutRewardsContent.visibility = View.GONE
                         claimsAction.visibility = View.GONE
-                        rewardsBalanceCard.visibility = View.GONE
-                        rewardsRecycler.visibility = View.GONE
-                        emptyRewardsText.visibility = View.GONE
                         return@launch
                     }
 
-                    emptyEventsText.visibility = View.GONE
-                    cardSelectedEvent.visibility = View.VISIBLE
-                    spinnerArrow.visibility = View.VISIBLE
-                    selectEventLabel.visibility = View.VISIBLE
-                    rewardsSectionTitle.visibility = View.VISIBLE
+                    layoutRewardsContent.visibility = View.VISIBLE
                     claimsAction.visibility = View.VISIBLE
+                    emptyEventsText.visibility = View.GONE
 
                     val spinnerAdapter = ArrayAdapter(
                         this@AttendeeRewardsActivity,
@@ -351,6 +389,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         selectedEventTitle = option.title
         eventTitleText.text = option.title.uppercase(Locale.getDefault())
         eventTitleText.visibility = View.VISIBLE
+        skeletonEventName.visibility = View.GONE
         presenter.load(option.eventId, attendeeUserId)
     }
 

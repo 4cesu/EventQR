@@ -71,6 +71,8 @@
                 android:paddingTop="16dp"
                 android:paddingBottom="24dp" />
 
+            <include layout="@layout/include_skeleton_cards" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -78,12 +80,6 @@
                 android:gravity="center"
                 android:orientation="vertical"
                 android:paddingHorizontal="16dp">
-
-                <ProgressBar
-                    android:id="@+id/progressMyRequestsLoading"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/txtMyRequestsEmpty"

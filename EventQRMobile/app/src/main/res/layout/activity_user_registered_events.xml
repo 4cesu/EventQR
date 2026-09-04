@@ -140,6 +140,8 @@
                 android:padding="16dp"
                 tools:listitem="@layout/item_registered_event" />
 
+            <include layout="@layout/include_skeleton_cards" />
+
             <TextView
                 android:id="@+id/txtRegisteredEventsEmpty"
                 android:layout_width="match_parent"

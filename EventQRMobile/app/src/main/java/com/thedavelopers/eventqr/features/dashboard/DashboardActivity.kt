@@ -52,7 +52,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var summaryEvents: TextView
     private lateinit var summaryRegistrations: TextView
     private lateinit var summaryCompleted: TextView
-    private lateinit var loadingText: TextView
+    private lateinit var skeletonLoading: View
     private lateinit var attendeeCard: View
     private lateinit var staffCard: View
     private lateinit var organizerCard: View
@@ -85,7 +85,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         summaryEvents = findViewById(R.id.txtTotalEvents)
         summaryRegistrations = findViewById(R.id.txtTotalRegistrations)
         summaryCompleted = findViewById(R.id.txtTotalCompleted)
-        loadingText = findViewById(R.id.txtDashboardLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         attendeeCard = findViewById(R.id.btnAttendeeHub)
         staffCard = findViewById(R.id.btnStaffHub)
         organizerCard = findViewById(R.id.btnTransactionHistory)
@@ -134,17 +134,15 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             if (!isLoading) {
                 stopSwipeRefresh()
             }
-            loadingText.visibility = View.GONE
             return
         }
 
-        loadingText.text = "Loading dashboard..."
-        loadingText.visibility = if (isLoading) View.VISIBLE else View.GONE
+        skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     override fun showSummary(summary: DashboardSummary) {
         stopSwipeRefresh()
-        loadingText.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
 
         nameText.text = summary.fullName?.takeIf { it.isNotBlank() }
             ?: sessionManager.getFullName()?.takeIf { it.isNotBlank() }
@@ -163,8 +161,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     override fun showError(message: String) {
         stopSwipeRefresh()
         setupPortalSwitcher()
-        loadingText.text = message
-        loadingText.visibility = View.VISIBLE
+        skeletonLoading.visibility = View.GONE
         renderUpcomingEvents(emptyList())
         renderDiscoverEvents(emptyList())
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

@@ -18,7 +18,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private lateinit var presenter: RegisteredEventsPresenter
     private lateinit var adapter: RegisteredEventAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var loadingView: View
+    private lateinit var skeletonLoading: View
     private lateinit var chipAll: TextView
     private lateinit var chipRegistered: TextView
     private lateinit var chipCompleted: TextView
@@ -32,7 +32,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
         presenter = RegisteredEventsPresenter(this, AttendeeRepository(this))
         swipeRefresh = findViewById(R.id.swipeRefreshRegisteredEvents)
-        loadingView = findViewById(R.id.txtRegisteredEventsEmpty)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
             finish()
@@ -105,7 +105,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
     override fun showLoading(isLoading: Boolean) {
         if (!swipeRefresh.isRefreshing) {
-            loadingView.visibility = if (isLoading) View.VISIBLE else View.GONE
+            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
         findViewById<RecyclerView>(R.id.recyclerRegisteredEvents).visibility = if (isLoading) View.GONE else View.VISIBLE
         if (!isLoading) {
@@ -120,6 +120,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
     override fun showRegisteredEvents(items: List<RegistrationResponse>) {
         swipeRefresh.isRefreshing = false
+        skeletonLoading.visibility = View.GONE
         allItems = items
         renderFilteredEvents()
     }

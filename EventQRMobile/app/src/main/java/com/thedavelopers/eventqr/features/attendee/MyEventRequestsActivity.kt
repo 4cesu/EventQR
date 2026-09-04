@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -28,7 +27,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
     private lateinit var btnBack: ImageButton
     private lateinit var recyclerRequests: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var progressLoading: ProgressBar
+    private lateinit var skeletonLoading: View
     private lateinit var txtEmpty: TextView
     private lateinit var txtError: TextView
     private lateinit var btnRetry: Button
@@ -49,7 +48,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
         btnBack = findViewById(R.id.btnBack)
         swipeRefresh = findViewById(R.id.swipeRefreshMyEventRequests)
         recyclerRequests = findViewById(R.id.recyclerMyEventRequests)
-        progressLoading = findViewById(R.id.progressMyRequestsLoading)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         txtEmpty = findViewById(R.id.txtMyRequestsEmpty)
         txtError = findViewById(R.id.txtMyRequestsError)
         btnRetry = findViewById(R.id.btnMyRequestsRetry)
@@ -97,7 +96,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
 
     private fun showLoadingState() {
         if (!swipeRefresh.isRefreshing) {
-            progressLoading.visibility = View.VISIBLE
+            skeletonLoading.visibility = View.VISIBLE
         }
         txtEmpty.visibility = View.GONE
         txtError.visibility = View.GONE
@@ -107,7 +106,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
 
     private fun showDataState(requests: List<EventRequestResponse>) {
         swipeRefresh.isRefreshing = false
-        progressLoading.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         txtError.visibility = View.GONE
         btnRetry.visibility = View.GONE
 
@@ -126,7 +125,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
 
     private fun showErrorState(message: String) {
         swipeRefresh.isRefreshing = false
-        progressLoading.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         recyclerRequests.visibility = View.GONE
         txtEmpty.visibility = View.GONE
 
