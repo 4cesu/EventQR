@@ -43,6 +43,7 @@ open class ManageEventsActivity : AppCompatActivity() {
     private lateinit var chipActive: Chip
     private lateinit var chipCompleted: Chip
     private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var skeletonLoading: View
     private lateinit var adapter: OrganizerEventAdapter
     private var allEvents: List<OrganizerMvpEvent> = emptyList()
     private var selectedFilter = "All"
@@ -60,6 +61,7 @@ open class ManageEventsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_organizer_events)
 
         swipeRefresh = findViewById(R.id.swipeRefreshEvents)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         recyclerView = findViewById(R.id.recyclerEvents)
         emptyView = findViewById(R.id.txtEventsEmpty)
         emptySubView = findViewById(R.id.txtEventsEmptySub)
@@ -178,11 +180,15 @@ open class ManageEventsActivity : AppCompatActivity() {
         emptyView.visibility = View.GONE
         emptySubView.visibility = View.GONE
         retryButton.visibility = View.GONE
-        progressLoading.visibility = View.VISIBLE
+        progressLoading.visibility = View.GONE
+        if (!swipeRefresh.isRefreshing) {
+            skeletonLoading.visibility = View.VISIBLE
+        }
     }
 
     private fun showEmptyOrError(isEmpty: Boolean) {
         progressLoading.visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         swipeRefresh.isRefreshing = false
         if (!isEmpty) {
             emptyIcon.visibility = View.GONE

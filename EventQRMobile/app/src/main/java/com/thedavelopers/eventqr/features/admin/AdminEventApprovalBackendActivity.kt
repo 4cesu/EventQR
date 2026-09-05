@@ -97,21 +97,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     }
 
     private fun bindNavigation() {
-        navDashboard.setOnClickListener {
-            startActivity(Intent(this, AdminDashboardActivity::class.java))
-            finish()
-        }
-        navRequests.setOnClickListener {
-            // current tab
-        }
-        navAccounts.setOnClickListener {
-            startActivity(Intent(this, AdminAccountManagementActivity::class.java))
-            finish()
-        }
-        navLogs.setOnClickListener {
-            startActivity(Intent(this, AdminAuditLogsActivity::class.java))
-            finish()
-        }
+        configureAdminBottomNav(AdminBottomNavItem.REQUESTS)
     }
 
     private fun bindFilters() {

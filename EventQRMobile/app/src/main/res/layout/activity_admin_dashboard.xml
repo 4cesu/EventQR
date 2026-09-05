@@ -16,6 +16,7 @@
         android:paddingBottom="20dp">
 
         <TextView
+            android:id="@+id/textAdminPortalTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Admin Portal"
@@ -246,7 +247,7 @@
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_admin_calendar"
+                            android:src="@drawable/ic_calendar"
                             android:tint="#10B981" />
                     </FrameLayout>
 

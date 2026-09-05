@@ -575,7 +575,7 @@ internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
         Triple(NAV_DASHBOARD, com.thedavelopers.eventqr.R.drawable.ic_nav_home, {
             if (this@bottomNav !is OrganizerDashboardActivity) openOrganizerPage(OrganizerDashboardActivity::class.java)
         }),
-        Triple(NAV_EVENTS, com.thedavelopers.eventqr.R.drawable.ic_nav_calendar, {
+        Triple(NAV_EVENTS, com.thedavelopers.eventqr.R.drawable.ic_calendar, {
             if (this@bottomNav !is ManageEventsActivity) openOrganizerPage(ManageEventsActivity::class.java, currentEventId)
         }),
         Triple(NAV_ATTENDEES, com.thedavelopers.eventqr.R.drawable.ic_group, {

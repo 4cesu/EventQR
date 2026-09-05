@@ -81,7 +81,7 @@
                 android:layout_height="14dp"
                 android:layout_marginStart="12dp"
                 android:contentDescription="Event location"
-                android:src="@drawable/ic_location_pin"
+                android:src="@drawable/ic_location"
                 app:tint="#94A3B8" />
 
             <TextView

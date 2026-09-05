@@ -31,6 +31,7 @@
         <activity android:name=".features.attendee.AttendeeTransactionsActivity" android:exported="false" />
         <activity android:name=".features.attendee.RegisteredEventsActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeQrCredentialActivity" android:exported="false" />
+        <activity android:name=".features.attendee.QrDisplayActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeRegistrationActivity" android:exported="false" />
         <activity android:name=".features.attendee.EventDetailActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeEventsActivity" android:exported="false" />

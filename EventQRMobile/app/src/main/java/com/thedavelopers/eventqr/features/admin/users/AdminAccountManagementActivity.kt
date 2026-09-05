@@ -22,8 +22,10 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.AccountStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
+import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
@@ -117,42 +119,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     }
 
     private fun bindNav() {
-        val isSuper = isSuperAdmin()
-        if (isSuper) {
-            // SUPER_ADMIN gets same full nav as ADMIN
-            findViewById<View>(R.id.navDashboard).setOnClickListener {
-                startActivity(Intent(this, AdminDashboardActivity::class.java))
-                finish()
-            }
-            findViewById<View>(R.id.navRequests).setOnClickListener {
-                startActivity(Intent(this, AdminEventApprovalBackendActivity::class.java))
-                finish()
-            }
-            findViewById<View>(R.id.navAccounts).setOnClickListener {
-                // current tab
-            }
-            findViewById<View>(R.id.navLogs).setOnClickListener {
-                startActivity(Intent(this, AdminAuditLogsActivity::class.java))
-                finish()
-            }
-            return
-        }
-
-        findViewById<View>(R.id.navDashboard).setOnClickListener {
-            startActivity(Intent(this, AdminDashboardActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navRequests).setOnClickListener {
-            startActivity(Intent(this, AdminEventApprovalBackendActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navAccounts).setOnClickListener {
-            // current tab
-        }
-        findViewById<View>(R.id.navLogs).setOnClickListener {
-            startActivity(Intent(this, AdminAuditLogsActivity::class.java))
-            finish()
-        }
+        configureAdminBottomNav(AdminBottomNavItem.ACCOUNTS)
     }
 
     private fun bindSearch() {

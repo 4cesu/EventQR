@@ -327,20 +327,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun setupBottomNav() {
-        findViewById<View>(R.id.navDashboard)?.setOnClickListener {
-            startActivity(Intent(this, StaffDashboardActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navScanner)?.setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java).apply {
-                selectedEventId?.takeIf { it.isNotBlank() }?.let { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it) }
-            })
-            finish()
-        }
-        findViewById<View>(R.id.navEvents)?.setOnClickListener {
-            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
-            finish()
-        }
+        configureStaffBottomNav(StaffBottomNavItem.LOGS, selectedEventId)
     }
 
     override fun onDestroy() {

@@ -22,7 +22,6 @@ class StaffDashboardPresenter(
         job = kotlinx.coroutines.MainScope().launch {
             when (val result = repository.getEvents()) {
                 is NetworkResult.Success -> {
-                    view?.renderEvents(result.data)
                     if (result.data.isEmpty()) {
                         view?.renderRecentScans(emptyList())
                         view?.updateStats(0, 0)

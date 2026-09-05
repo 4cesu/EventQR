@@ -1,9 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
 import android.content.Intent
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -11,34 +8,27 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
-import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity
-import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
     private lateinit var presenter: StaffDashboardPresenter
     private lateinit var repository: StaffRepository
     private lateinit var adapter: TransactionLogAdapter
-    private lateinit var eventAdapter: StaffEventAdapter
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
-    private lateinit var activePurposesHost: LinearLayout
     private lateinit var skeletonLoading: View
     private var isSwipeRefreshing = false
-    private var activePurposeJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,12 +45,6 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         repository = StaffRepository(this)
         presenter = StaffDashboardPresenter(this, repository)
         adapter = TransactionLogAdapter()
-        eventAdapter = StaffEventAdapter { event ->
-            val intent = Intent(this, ScannerActivity::class.java)
-            intent.putExtra(StaffScreenExtras.EXTRA_EVENT_ID, event.eventId.toString())
-            startActivity(intent)
-        }
-        activePurposesHost = findViewById(R.id.layoutActiveScanPurposes)
         skeletonLoading = findViewById(R.id.skeletonLoading)
 
         findViewById<RecyclerView?>(R.id.recyclerRecentScans)?.apply {
@@ -68,25 +52,9 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             adapter = this@StaffDashboardActivity.adapter
         }
 
-        findViewById<RecyclerView?>(R.id.recyclerAssignedEvents)?.apply {
-            layoutManager = LinearLayoutManager(this@StaffDashboardActivity)
-            adapter = eventAdapter
-        }
-
         findViewById<TextView>(R.id.txtStaffName).text = sessionManager.getFullName() ?: sessionManager.getEmail() ?: "Staff User"
         findViewById<View>(R.id.btnNotification).setOnClickListener {
             startActivity(Intent(this, AttendeeNotificationsActivity::class.java))
-        }
-        findViewById<View>(R.id.btnQuickScan).setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
-        }
-
-        findViewById<View>(R.id.btnQuickRegistrations).setOnClickListener {
-            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
-        }
-
-        findViewById<View>(R.id.btnQuickTransactions).setOnClickListener {
-            startActivity(Intent(this, StaffTransactionsActivity::class.java))
         }
 
         findViewById<View>(R.id.txtScansToday).setOnClickListener {
@@ -97,19 +65,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
         }
 
-        findViewById<View>(R.id.navScanner).setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
-        }
-
-        findViewById<View>(R.id.navEvents).setOnClickListener {
-            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
-        }
-
-        findViewById<View>(R.id.navLogs).setOnClickListener {
-            startActivity(Intent(this, StaffTransactionsActivity::class.java))
-        }
-
-        configureStaffDashboardBottomNav()
+        configureStaffBottomNav(StaffBottomNavItem.DASHBOARD)
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
         swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
@@ -126,23 +82,15 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private fun setupPortalSwitcher(sessionManager: SessionManager) {
         val role = sessionManager.getUserRole() ?: return
         val normalizedRole = RoleMapper.normalizeRole(role)
-        val allowedPortals = mutableListOf<String>()
-        allowedPortals.add("Attendee Portal")
+        val allowedPortals = PortalSwitcher.portalsForRole(normalizedRole)
 
-        if (normalizedRole == AccountRole.STAFF.name || normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Staff Portal")
-        }
-        if (normalizedRole == AccountRole.ORGANIZER.name || normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Organizer Portal")
-        }
-        if (normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Admin Portal")
-        }
+        val chip = findViewById<View>(R.id.portalSwitcherChip)
+        val dot = findViewById<View>(R.id.txtStaffNameDot)
+        chip.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
+        dot.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
+        chip.setOnClickListener(null)
 
         if (allowedPortals.size > 1) {
-            val chip = findViewById<View>(R.id.portalSwitcherChip)
-            chip.visibility = View.VISIBLE
-            findViewById<View>(R.id.txtStaffNameDot).visibility = View.VISIBLE
             chip.setOnClickListener {
                 showPortalSwitcher(allowedPortals)
             }
@@ -158,26 +106,10 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             portalView.findViewById<TextView>(R.id.txtPortalName).text = portal
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
-            when(portal) {
-                "Attendee Portal" -> {
-                    icon.setImageResource(R.drawable.ic_nav_profile)
-                    subtitle.text = "Events, rewards, and your profile"
-                }
-                "Staff Portal" -> {
-                    icon.setImageResource(R.drawable.ic_qr_scan)
-                    subtitle.text = "Scan QR codes and manage entries"
-                }
-                "Organizer Portal" -> {
-                    icon.setImageResource(R.drawable.ic_nav_calendar)
-                    subtitle.text = "Manage your events and attendees"
-                }
-                "Admin Portal" -> {
-                    icon.setImageResource(R.drawable.ic_group)
-                    subtitle.text = "Platform administration and oversight"
-                }
-            }
+            icon.setImageResource(PortalSwitcher.iconRes(portal))
+            subtitle.text = PortalSwitcher.subtitle(portal)
 
-            if (portal == "Staff Portal") {
+            if (portal == PortalSwitcher.PORTAL_STAFF) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
             }
 
@@ -193,16 +125,20 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
     private fun switchToPortal(portal: String) {
         when(portal) {
-            "Attendee Portal" -> {
+            PortalSwitcher.PORTAL_ATTENDEE -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java))
                 finish()
             }
-            "Staff Portal" -> Unit
-            "Organizer Portal" -> {
+            PortalSwitcher.PORTAL_STAFF -> Unit
+            PortalSwitcher.PORTAL_ORGANIZER -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java))
                 finish()
             }
-            "Admin Portal" -> {
+            PortalSwitcher.PORTAL_ADMIN -> {
+                startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
+                finish()
+            }
+            PortalSwitcher.PORTAL_SUPER_ADMIN -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
                 finish()
             }
@@ -210,30 +146,15 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun onDestroy() {
-        activePurposeJob?.cancel()
         presenter.detach()
         super.onDestroy()
     }
 
-    override fun renderEvents(items: List<com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse>) {
-        skeletonLoading.visibility = View.GONE
-        findViewById<TextView?>(R.id.txtAssignedCount)?.text = items.size.toString()
-        eventAdapter.submitItems(items)
-        findViewById<TextView?>(R.id.txtAssignedEmptyState)?.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
-        findViewById<RecyclerView?>(R.id.recyclerAssignedEvents)?.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.btnQuickScan).isEnabled = items.any { it.canScan }
-        loadActiveScanPurposes(items)
-
-        if (items.isEmpty()) {
-            Toast.makeText(this, "No events assigned to you yet", Toast.LENGTH_LONG).show()
-        } else if (items.none { it.canScan }) {
-            Toast.makeText(this, "No active Scan QR permission for assigned events", Toast.LENGTH_LONG).show()
-        }
-    }
-
     override fun renderRecentScans(items: List<TransactionResponse>) {
+        skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
-        updateTodayActivity(items)
+        findViewById<RecyclerView>(R.id.recyclerRecentScans).visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.txtRecentScansEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
 
     override fun updateStats(scans: Int, checkins: Int) {
@@ -255,7 +176,6 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         } else {
             skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
-        findViewById<View>(R.id.btnQuickScan)?.isEnabled = !isLoading
     }
 
     private fun stopSwipeRefresh() {
@@ -265,103 +185,4 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
     }
 
-    private fun updateTodayActivity(items: List<TransactionResponse>) {
-        val claims = items.count {
-            it.transactionType.name == "BENEFIT_CLAIM" ||
-                it.transactionType.name == "REWARD_REDEMPTION" ||
-                it.transactionType.name == "REWARD_REDEMPTION_SCAN"
-        }
-        val printed = items.count { it.transactionType.name == "ID_PRINT" }
-        findViewById<TextView>(R.id.txtClaimsToday).text = claims.toString()
-        findViewById<TextView>(R.id.txtPrintedToday).text = printed.toString()
     }
-
-    private fun loadActiveScanPurposes(items: List<com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse>) {
-        activePurposeJob?.cancel()
-        if (items.isEmpty()) {
-            renderActiveScanPurposes(emptyList())
-            return
-        }
-        activePurposeJob = lifecycleScope.launch {
-            val collected = linkedMapOf<String, ScanPurposeResponse>()
-            items.forEach { event ->
-                when (val result = repository.getScanPurposesByEvent(event.eventId.toString())) {
-                    is com.thedavelopers.eventqr.core.api.NetworkResult.Success -> {
-                        result.data.filter { it.active }.forEach { purpose ->
-                            collected.putIfAbsent(purpose.scanPurposeId.toString(), purpose)
-                        }
-                    }
-                    is com.thedavelopers.eventqr.core.api.NetworkResult.Error -> Unit
-                    com.thedavelopers.eventqr.core.api.NetworkResult.Loading -> Unit
-                }
-            }
-            renderActiveScanPurposes(collected.values.toList())
-        }
-    }
-
-    private fun renderActiveScanPurposes(purposes: List<ScanPurposeResponse>) {
-        activePurposesHost.removeAllViews()
-        if (purposes.isEmpty()) {
-            val empty = TextView(this).apply {
-                text = "No active scan purposes available."
-                setTextColor(Color.parseColor("#6B7280"))
-                textSize = 13f
-                setPadding(dp(8), dp(8), dp(8), dp(8))
-            }
-            activePurposesHost.addView(empty)
-            return
-        }
-
-        val inflater = layoutInflater
-        purposes.forEach { purpose ->
-            val row = inflater.inflate(R.layout.item_staff_active_scan_purpose, activePurposesHost, false)
-            row.findViewById<TextView>(R.id.txtPurposeName).text = purposeName(purpose)
-            row.findViewById<TextView>(R.id.txtPurposePoints).text = if (purpose.trackingOnly) "Tracking only" else "Enabled"
-            activePurposesHost.addView(row)
-        }
-    }
-
-    private fun purposeName(purpose: ScanPurposeResponse): String {
-        if (purpose.name.isNotBlank()) return purpose.name
-        return when (purpose.code) {
-            ScanPurposeCode.ENTRY -> "Event Entry"
-            ScanPurposeCode.ATTENDANCE -> "Session Attendance"
-            ScanPurposeCode.BOOTH_VISIT -> "Booth Visit"
-            ScanPurposeCode.SESSION_VISIT -> "Session Visit"
-            ScanPurposeCode.BENEFIT_CLAIM -> "Benefit Claim"
-            ScanPurposeCode.REWARD_REDEMPTION,
-            ScanPurposeCode.REWARD_REDEMPTION_SCAN -> "Reward Redemption"
-            ScanPurposeCode.EXIT -> "Event Exit"
-            ScanPurposeCode.ID_PRINT -> "ID Print"
-            ScanPurposeCode.REGISTRATION_LOOKUP -> "Registration Lookup"
-        }
-    }
-
-    private fun configureStaffDashboardBottomNav() {
-        styleBottomNavItem(R.id.navDashboard, active = true)
-        styleBottomNavItem(R.id.navScanner, active = false)
-        styleBottomNavItem(R.id.navEvents, active = false)
-        styleBottomNavItem(R.id.navLogs, active = false)
-    }
-
-    private fun styleBottomNavItem(containerId: Int, active: Boolean) {
-        val container = findViewById<LinearLayout?>(containerId) ?: return
-        val icon = container.getChildAt(0) as? ImageView ?: return
-        val label = container.getChildAt(1) as? TextView ?: return
-
-        icon.layoutParams = LinearLayout.LayoutParams(dp(38), dp(38))
-        icon.setPadding(dp(8), dp(8), dp(8), dp(8))
-        icon.setBackgroundResource(if (active) R.drawable.bg_nav_icon_active else R.drawable.bg_nav_icon_inactive)
-        icon.imageTintList = ColorStateList.valueOf(if (active) Color.WHITE else Color.BLACK)
-
-        label.textSize = 12f
-        label.setTypeface(Typeface.DEFAULT, Typeface.BOLD)
-        label.setTextColor(if (active) Color.parseColor("#312E81") else Color.parseColor("#6B7280"))
-        val labelParams = (label.layoutParams as? LinearLayout.LayoutParams)
-            ?: LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-        labelParams.topMargin = dp(6)
-        label.layoutParams = labelParams
-    }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
-}
