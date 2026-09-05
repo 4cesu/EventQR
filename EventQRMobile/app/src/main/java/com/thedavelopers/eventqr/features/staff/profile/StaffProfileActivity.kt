@@ -2,9 +2,7 @@ package com.thedavelopers.eventqr.features.staff
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +12,6 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
-import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import kotlinx.coroutines.launch
 
 open class StaffProfileActivity : AppCompatActivity() {
@@ -99,56 +96,6 @@ open class StaffProfileActivity : AppCompatActivity() {
     }
 
     private fun setupStaffBottomNav() {
-        findViewById<ImageView>(R.id.imgNavDashboard)?.apply {
-            setImageResource(R.drawable.ic_nav_home)
-            background = getDrawable(R.drawable.bg_nav_icon_inactive)
-            imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.BLACK)
-        }
-        findViewById<TextView>(R.id.txtNavDashboard)?.apply {
-            text = "Dashboard"
-            setTypeface(null, android.graphics.Typeface.NORMAL)
-        }
-        findViewById<View>(R.id.navDashboard)?.setOnClickListener {
-            startActivity(Intent(this, StaffDashboardActivity::class.java))
-            finish()
-        }
-
-        findViewById<ImageView>(R.id.imgNavEvents)?.apply {
-            setImageResource(R.drawable.ic_qr_scan)
-            background = getDrawable(R.drawable.bg_nav_icon_inactive)
-            imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.BLACK)
-        }
-        findViewById<TextView>(R.id.txtNavEvents)?.apply {
-            text = "Scan QR"
-            setTypeface(null, android.graphics.Typeface.NORMAL)
-        }
-        findViewById<View>(R.id.navEvents)?.setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
-            finish()
-        }
-
-        findViewById<ImageView>(R.id.imgNavRewards)?.apply {
-            setImageResource(R.drawable.ic_file)
-            background = getDrawable(R.drawable.bg_nav_icon_inactive)
-            imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.BLACK)
-        }
-        findViewById<TextView>(R.id.txtNavRewards)?.apply {
-            text = "Logs"
-            setTypeface(null, android.graphics.Typeface.NORMAL)
-        }
-        findViewById<View>(R.id.navRewards)?.setOnClickListener {
-            startActivity(Intent(this, StaffTransactionsActivity::class.java))
-            finish()
-        }
-
-        findViewById<ImageView>(R.id.imgNavProfile)?.apply {
-            setImageResource(R.drawable.ic_nav_profile)
-            background = getDrawable(R.drawable.bg_nav_icon_active)
-            imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
-        }
-        findViewById<TextView>(R.id.txtNavProfile)?.apply {
-            text = "Profile"
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
+        configureStaffProfileBottomNav()
     }
 }

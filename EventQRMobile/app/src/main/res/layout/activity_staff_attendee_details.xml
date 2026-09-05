@@ -240,7 +240,7 @@
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
-                        android:src="@drawable/ic_qr_scan"
+                        android:src="@drawable/ic_scan"
                         app:tint="@color/eventqr_purple" />
 
                     <TextView

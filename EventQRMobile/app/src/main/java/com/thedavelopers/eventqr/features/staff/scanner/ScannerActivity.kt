@@ -46,10 +46,12 @@ import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResp
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
 import com.thedavelopers.eventqr.features.staff.StaffAssignedEventsActivity
+import com.thedavelopers.eventqr.features.staff.StaffBottomNavItem
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity
+import com.thedavelopers.eventqr.features.staff.configureStaffBottomNav
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.staff.reward.RewardRedemptionScanResultActivity
 import com.thedavelopers.eventqr.features.rewards.AppRewardExtras
@@ -168,16 +170,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         selectedEventCard.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
         selectedPurposeCard.setOnClickListener { setPurposeDropdownOpen(!isPurposeDropdownOpen) }
 
-        findViewById<View>(R.id.navDashboard)?.setOnClickListener {
-            startActivity(Intent(this, StaffDashboardActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navEvents)?.setOnClickListener { startActivity(Intent(this, StaffAssignedEventsActivity::class.java)) }
-        findViewById<View>(R.id.navLogs)?.setOnClickListener {
-            startActivity(Intent(this, StaffTransactionsActivity::class.java).apply {
-                selectedEvent()?.id?.let { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it) }
-            })
-        }
+        configureStaffBottomNav(StaffBottomNavItem.SCANNER, selectedEvent()?.id)
 
         findViewById<RecyclerView>(R.id.recyclerScannerResults).apply {
             layoutManager = LinearLayoutManager(this@ScannerActivity)

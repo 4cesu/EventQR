@@ -17,9 +17,12 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
+import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.admin.notifications.AdminNotificationManagementActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
@@ -100,37 +103,34 @@ class AdminDashboardActivity : AppCompatActivity() {
         }
         cardPendingAlert.setOnClickListener { openRequests() }
 
-        findViewById<View>(R.id.navDashboard).setOnClickListener {
-            // current tab
-        }
-        findViewById<View>(R.id.navRequests).setOnClickListener {
-            openRequests()
-        }
-        findViewById<View>(R.id.navAccounts).setOnClickListener {
-            startActivity(Intent(this, AdminAccountManagementActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navLogs).setOnClickListener {
-            startActivity(Intent(this, AdminAuditLogsActivity::class.java))
-            finish()
-        }
+        configureAdminBottomNav(AdminBottomNavItem.DASHBOARD)
     }
 
     private fun setupPortalSwitcher() {
-        val role = RoleMapper.normalizeRole(sessionManager.getUserRole())
-        if (role != AccountRole.ADMIN.name && role != AccountRole.SUPER_ADMIN.name) {
-            findViewById<View>(R.id.portalSwitcherChip).visibility = View.GONE
-            findViewById<View>(R.id.textAdminPortalDot).visibility = View.GONE
-            return
-        }
+        val normalizedRole = RoleMapper.normalizeRole(sessionManager.getUserRole())
+        val allowedPortals = PortalSwitcher.portalsForRole(normalizedRole)
+        val currentPortal =
+            if (normalizedRole == AccountRole.SUPER_ADMIN.name) PortalSwitcher.PORTAL_SUPER_ADMIN
+            else PortalSwitcher.PORTAL_ADMIN
 
-        findViewById<View>(R.id.portalSwitcherChip).setOnClickListener {
-            val portals = listOf("Admin Portal", "Attendee Portal")
-            showPortalSwitcher(portals)
+        findViewById<TextView>(R.id.textAdminPortalTitle).text = currentPortal
+        findViewById<TextView>(R.id.portalSwitcherChip).text =
+            if (normalizedRole == AccountRole.SUPER_ADMIN.name) "Super Admin ▾" else "Admin ▾"
+
+        val chip = findViewById<View>(R.id.portalSwitcherChip)
+        val dot = findViewById<View>(R.id.textAdminPortalDot)
+        chip.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
+        dot.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
+        chip.setOnClickListener(null)
+
+        if (allowedPortals.size > 1) {
+            chip.setOnClickListener {
+                showPortalSwitcher(allowedPortals, currentPortal)
+            }
         }
     }
 
-    private fun showPortalSwitcher(portals: List<String>) {
+    private fun showPortalSwitcher(portals: List<String>, currentPortal: String) {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_portal_switcher, null)
         val container = view.findViewById<LinearLayout>(R.id.portalOptionsContainer)
@@ -141,22 +141,16 @@ class AdminDashboardActivity : AppCompatActivity() {
 
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
+            icon.setImageResource(PortalSwitcher.iconRes(portal))
+            subtitle.text = PortalSwitcher.subtitle(portal)
 
-            when (portal) {
-                "Admin Portal" -> {
-                    icon.setImageResource(R.drawable.ic_group)
-                    subtitle.text = "Platform administration and oversight"
-                    portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
-                }
-                else -> {
-                    icon.setImageResource(R.drawable.ic_nav_profile)
-                    subtitle.text = "Events, rewards, and your profile"
-                }
+            if (portal == currentPortal) {
+                portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
             }
 
             portalView.setOnClickListener {
                 dialog.dismiss()
-                if (portal == "Attendee Portal") {
+                if (portal == PortalSwitcher.PORTAL_ATTENDEE) {
                     startActivity(Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java))
                     finish()
                 }

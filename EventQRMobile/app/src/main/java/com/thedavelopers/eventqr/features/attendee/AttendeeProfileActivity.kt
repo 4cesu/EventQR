@@ -60,9 +60,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         findViewById<View>(R.id.cardEditProfile).setOnClickListener {
             startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
         }
-        findViewById<View>(R.id.cardMyEvents).setOnClickListener {
-            startActivity(Intent(this, RegisteredEventsActivity::class.java))
-        }
         findViewById<View>(R.id.cardTransactionHistory).setOnClickListener {
             startActivity(Intent(this, AttendeeTransactionsActivity::class.java))
         }

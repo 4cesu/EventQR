@@ -9,8 +9,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
-import com.thedavelopers.eventqr.features.attendee.AttendeeQrCredentialActivity
 import com.thedavelopers.eventqr.features.attendee.EXTRA_REGISTRATION_ID
+import com.thedavelopers.eventqr.features.attendee.QrDisplayActivity
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 
 class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewHolder>() {
@@ -37,9 +37,8 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleView: TextView = itemView.findViewById(R.id.txtRegisteredEventTitle)
         private val statusView: TextView = itemView.findViewById(R.id.txtRegisteredEventStatus)
-        private val dateTimeView: TextView = itemView.findViewById(R.id.txtEventDateTime)
-        private val locationView: TextView = itemView.findViewById(R.id.txtEventLocation)
-        private val regDateView: TextView = itemView.findViewById(R.id.txtRegistrationDate)
+        private val dateView: TextView = itemView.findViewById(R.id.txtRegisteredEventDate)
+        private val locationView: TextView = itemView.findViewById(R.id.txtRegisteredEventLocation)
         private val pointsView: TextView = itemView.findViewById(R.id.txtPoints)
         private val btnTransactions: Button = itemView.findViewById(R.id.btnTransactionHistory)
         private val btnDetails: Button = itemView.findViewById(R.id.btnEventDetails)
@@ -48,16 +47,18 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
             titleView.text = registration.eventTitle ?: "Registered event"
             RegistrationStatusBadgeStyler.bind(statusView, registration.status)
 
-            dateTimeView.text = registration.eventStartAt?.let(DateFormatters::formatInstant) ?: "Date not specified"
-            locationView.text = registration.eventLocation ?: "Location not specified"
-            regDateView.text = "Registered: ${registration.registeredAt?.let { DateFormatters.formatInstant(it) } ?: "N/A"}"
-            
+            val dateText = registration.eventStartAt?.let(DateFormatters::formatInstant) ?: "Date not specified"
+            dateView.text = dateText
+
+            val locationText = registration.eventLocation?.takeIf { it.isNotBlank() } ?: "Location not set"
+            locationView.text = locationText
+
             // Points would ideally come from the registration or a separate balance call
             pointsView.text = "0 pts"
 
             btnTransactions.setOnClickListener {
                 val context = itemView.context
-                val intent = Intent(context, AttendeeQrCredentialActivity::class.java).apply {
+                val intent = Intent(context, QrDisplayActivity::class.java).apply {
                     putExtra(EXTRA_REGISTRATION_ID, registration.registrationId.toString())
                     putExtra(com.thedavelopers.eventqr.features.attendee.EXTRA_QR_CREDENTIAL_ID, registration.qrCredentialId?.toString().orEmpty())
                 }

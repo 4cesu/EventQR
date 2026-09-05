@@ -24,7 +24,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContract.View {
+/**
+ * Dedicated QR display screen for attendees opening their credential
+ * from the registered events list.
+ *
+ * Mirrors [AttendeeQrCredentialActivity] (the post-registration success screen)
+ * but presents the credential with a top-left back button and a "QR Display"
+ * header matching the Edit Profile screen's toolbar sizing.
+ */
+class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
     private lateinit var presenter: QrCredentialPresenter
     private lateinit var qrImage: ImageView
     private lateinit var qrText: TextView
@@ -42,7 +50,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_qr_credential)
+        setContentView(R.layout.activity_qr_display)
 
         presenter = QrCredentialPresenter(this, AttendeeRepository(this))
         qrImage = findViewById(R.id.imgQrCode)
@@ -59,7 +67,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         credentialIdText = findViewById(R.id.txtQrCredentialValue)
         eventNameText = findViewById(R.id.txtQrEventName)
 
-        findViewById<View>(R.id.btnCloseQr)?.setOnClickListener { finish() }
+        findViewById<View>(R.id.toolbarQrDisplay).setOnClickListener { finish() }
 
         findViewById<Button>(R.id.btnLoadQr).setOnClickListener {
             presenter.load(
@@ -94,16 +102,16 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
             downloadController.showSaving()
             lifecycleScope.launch {
                 val uri = withContext(Dispatchers.IO) {
-                    BitmapSaver.saveBitmapToGallery(this@AttendeeQrCredentialActivity, bitmap, fileName)
+                    BitmapSaver.saveBitmapToGallery(this@QrDisplayActivity, bitmap, fileName)
                 }
                 if (uri != null) {
                     currentQrCredentialId?.let { presenter.markDownloaded(it) }
                     downloadController.showSaved {
-                        Toast.makeText(this@AttendeeQrCredentialActivity, "QR saved to gallery", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@QrDisplayActivity, "QR saved to gallery", Toast.LENGTH_LONG).show()
                     }
                 } else {
                     downloadController.resetToIdle()
-                    Toast.makeText(this@AttendeeQrCredentialActivity, "Failed to save QR image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@QrDisplayActivity, "Failed to save QR image", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {

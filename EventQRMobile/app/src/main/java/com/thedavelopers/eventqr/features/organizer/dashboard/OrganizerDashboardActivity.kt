@@ -15,8 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
@@ -37,6 +37,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var sessionManager: SessionManager
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var skeletonLoading: View
     private var isSwipeRefreshing = false
     private val organizerZone: ZoneId = ZoneId.of("Asia/Manila")
     private val dayFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d", Locale.ENGLISH)
@@ -49,6 +50,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
         sessionManager = SessionManager(this)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
@@ -161,23 +163,15 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     private fun setupPortalSwitcher() {
         val role = sessionManager.getUserRole() ?: return
         val normalizedRole = RoleMapper.normalizeRole(role)
-        val allowedPortals = mutableListOf<String>()
-        allowedPortals.add("Attendee Portal")
+        val allowedPortals = PortalSwitcher.portalsForRole(normalizedRole)
 
-        if (normalizedRole == AccountRole.STAFF.name || normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Staff Portal")
-        }
-        if (normalizedRole == AccountRole.ORGANIZER.name || normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Organizer Portal")
-        }
-        if (normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Admin Portal")
-        }
+        val chip = findViewById<View>(R.id.portalSwitcherChip)
+        val dot = findViewById<View>(R.id.txtHeaderSubtitleDot)
+        chip.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
+        dot.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
+        chip.setOnClickListener(null)
 
         if (allowedPortals.size > 1) {
-            val chip = findViewById<View>(R.id.portalSwitcherChip)
-            chip.visibility = View.VISIBLE
-            findViewById<View>(R.id.txtHeaderSubtitleDot).visibility = View.VISIBLE
             chip.setOnClickListener {
                 showPortalSwitcher(allowedPortals)
             }
@@ -195,27 +189,10 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             
             val icon = portalView.findViewById<android.widget.ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
-            
-            when(portal) {
-                "Attendee Portal" -> {
-                    icon.setImageResource(R.drawable.ic_nav_profile)
-                    subtitle.text = "Events, rewards, and your profile"
-                }
-                "Staff Portal" -> {
-                    icon.setImageResource(R.drawable.ic_qr_scan)
-                    subtitle.text = "Scan QR codes and manage entries"
-                }
-                "Organizer Portal" -> {
-                    icon.setImageResource(R.drawable.ic_nav_calendar)
-                    subtitle.text = "Manage your events and attendees"
-                }
-                "Admin Portal" -> {
-                    icon.setImageResource(R.drawable.ic_group)
-                    subtitle.text = "Platform administration and oversight"
-                }
-            }
+            icon.setImageResource(PortalSwitcher.iconRes(portal))
+            subtitle.text = PortalSwitcher.subtitle(portal)
 
-            if (portal == "Organizer Portal") {
+            if (portal == PortalSwitcher.PORTAL_ORGANIZER) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
             }
 
@@ -232,18 +209,22 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
     private fun switchToPortal(portal: String) {
         when(portal) {
-            "Attendee Portal" -> {
+            PortalSwitcher.PORTAL_ATTENDEE -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java))
                 finish()
             }
-            "Staff Portal" -> {
+            PortalSwitcher.PORTAL_STAFF -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.StaffDashboardActivity::class.java))
                 finish()
             }
-            "Organizer Portal" -> {
+            PortalSwitcher.PORTAL_ORGANIZER -> {
                 // Already here
             }
-            "Admin Portal" -> {
+            PortalSwitcher.PORTAL_ADMIN -> {
+                startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
+                finish()
+            }
+            PortalSwitcher.PORTAL_SUPER_ADMIN -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
                 finish()
             }
@@ -252,9 +233,9 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
     private fun loadDashboard() {
         if (!isSwipeRefreshing) {
-            findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.VISIBLE
+            skeletonLoading.visibility = View.VISIBLE
         } else {
-            findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.GONE
+            skeletonLoading.visibility = View.GONE
         }
         findViewById<View>(R.id.layoutDashboardError).visibility = View.GONE
         MainScope().launch {
@@ -273,10 +254,11 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         dashboard: OrganizerMvpLoad<OrganizerDashboardDto?>? = null,
     ) {
         findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.GONE
+        skeletonLoading.visibility = View.GONE
         val dashboardData = dashboard?.data
         val name = dashboardData?.organizerName.orEmpty().ifBlank { sessionManager.getFullName().orEmpty().ifBlank { "Organizer" } }
 
-        findViewById<TextView>(R.id.txtHeaderTitle).text = "Organizer Portal"
+        findViewById<TextView>(R.id.txtHeaderTitle).text = PortalSwitcher.PORTAL_ORGANIZER
         findViewById<TextView>(R.id.txtHeaderSubtitle).text = name
 
         val events = load.data.approvedOnly()

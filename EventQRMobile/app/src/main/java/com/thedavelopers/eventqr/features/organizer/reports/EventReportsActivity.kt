@@ -37,6 +37,7 @@ open class EventReportsActivity : AppCompatActivity() {
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
     private var summary: EventReportSummaryDto = EventReportSummaryDto()
+    private var skeletonLoading: View? = null
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +60,8 @@ open class EventReportsActivity : AppCompatActivity() {
 
         val summaryContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.addView(summaryContainer)
-        summaryContainer.addView(loadingState("Loading report summary..."))
+        skeletonLoading = reportsSkeleton()
+        summaryContainer.addView(skeletonLoading)
 
         MainScope().launch {
             when (val result = reportsRepository.fetchSummary(selectedEvent.id)) {
@@ -83,6 +85,7 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun renderList(container: LinearLayout) {
+        skeletonLoading?.visibility = View.GONE
         container.removeAllViews()
         container.addView(card().apply {
             addView(text("Select Event", 13, false, MUTED))
@@ -105,6 +108,92 @@ open class EventReportsActivity : AppCompatActivity() {
                 openFilterSheet(item)
             })
         }
+    }
+
+    private fun reportsSkeleton(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+
+        // Event selector card: real "Select Event" label + skeleton event-name dropdown
+        addView(card(16).apply {
+            addView(text("Select Event", 13, false, MUTED))
+            addView(LinearLayout(this@EventReportsActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), 0, dp(16), 0)
+                minimumHeight = dp(52)
+                background = rounded(CARD, 14, BORDER, density = resources.displayMetrics.density)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ).apply { setMargins(0, dp(8), 0, dp(10)) }
+                addView(View(this@EventReportsActivity).apply {
+                    background = resources.getDrawable(R.drawable.bg_staff_skeleton_bar, theme)
+                    layoutParams = LinearLayout.LayoutParams(0, dp(14), 1f)
+                })
+                addView(View(this@EventReportsActivity).apply {
+                    background = resources.getDrawable(R.drawable.bg_staff_skeleton_date_block, theme)
+                    layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
+                })
+            })
+        })
+
+        // Purple selected-event summary card skeleton: event name only (no year/overview)
+        addView(buildSummarySkeletonCard())
+
+        // Real "Generate Reports" section header + real "Generate All" (matches renderList)
+        addView(sectionHeader("Generate Reports"))
+
+        // Generate reports options skeletons
+        repeat(3) { addView(reportMenuSkeleton()) }
+    }
+
+    private fun buildSummarySkeletonCard(): LinearLayout {
+        val gradient = GradientDrawable(
+            GradientDrawable.Orientation.LEFT_RIGHT,
+            intArrayOf(Color.parseColor("#25215F"), Color.parseColor("#4F46E5")),
+        ).apply {
+            cornerRadius = dp(16).toFloat()
+        }
+
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = gradient
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { setMargins(0, dp(8), 0, dp(14)) }
+
+            addView(View(this@EventReportsActivity).apply {
+                background = resources.getDrawable(R.drawable.bg_staff_skeleton_bar, theme)
+                layoutParams = LinearLayout.LayoutParams(0, dp(28), 1f)
+            })
+            addView(row().apply {
+                setPadding(0, dp(14), 0, 0)
+                addView(summaryStat("Registered", 0))
+                addView(summaryStat("Checked In", 0))
+                addView(summaryStat("Exited", 0))
+            })
+        }
+    }
+
+    private fun reportMenuSkeleton(): LinearLayout = card(12).apply {
+        val content = row()
+        content.addView(View(this@EventReportsActivity).apply {
+            background = resources.getDrawable(R.drawable.bg_staff_skeleton_date_block, theme)
+            layoutParams = LinearLayout.LayoutParams(dp(42), dp(42))
+        })
+        content.addView(View(this@EventReportsActivity).apply {
+            background = resources.getDrawable(R.drawable.bg_staff_skeleton_bar, theme)
+            layoutParams = LinearLayout.LayoutParams(0, dp(14), 1f).apply {
+                setMargins(dp(16), 0, dp(8), 0)
+            }
+        })
+        content.addView(View(this@EventReportsActivity).apply {
+            background = resources.getDrawable(R.drawable.bg_staff_skeleton_bar, theme)
+            layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
+        })
+        addView(content)
     }
 
     private fun buildSummaryHeaderCard(): LinearLayout {
@@ -317,7 +406,7 @@ open class EventReportsActivity : AppCompatActivity() {
         EventReportCatalogItem(EventReportType.ENTRY_LOGS, "Entry Logs Report", R.drawable.ic_qr_scan, Color.parseColor("#8B5CF6"), Color.parseColor("#F3E8FF")),
         EventReportCatalogItem(EventReportType.ATTENDANCE, "Attendance Report", R.drawable.ic_organizer_bar_chart, Color.parseColor("#4F46E5"), Color.parseColor("#EEF2FF")),
         EventReportCatalogItem(EventReportType.CLAIMS, "Benefit Claims Report", R.drawable.ic_gift, Color.parseColor("#F59E0B"), Color.parseColor("#FEF3C7")),
-        EventReportCatalogItem(EventReportType.BOOTH_VISITS, "Booth/Session Visits Report", R.drawable.ic_nav_calendar, Color.parseColor("#10B981"), Color.parseColor("#DCFCE7")),
+        EventReportCatalogItem(EventReportType.BOOTH_VISITS, "Booth/Session Visits Report", R.drawable.ic_calendar, Color.parseColor("#10B981"), Color.parseColor("#DCFCE7")),
         EventReportCatalogItem(EventReportType.EXIT_LOGS, "Exit Logs Report", R.drawable.ic_chevron_right, Color.parseColor("#0EA5E9"), Color.parseColor("#E0F2FE")),
         EventReportCatalogItem(EventReportType.POINTS, "Points Report", R.drawable.ic_organizer_reports, Color.parseColor("#06B6D4"), Color.parseColor("#CFFAFE")),
     )
@@ -334,7 +423,7 @@ open class EventReportsActivity : AppCompatActivity() {
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                 })
                 addView(ImageView(this@EventReportsActivity).apply {
-                    setImageResource(R.drawable.ic_nav_calendar)
+                    setImageResource(R.drawable.ic_calendar)
                     setColorFilter(MUTED)
                     layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
                 })

@@ -68,18 +68,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNav() {
-        findViewById<View>(R.id.navDashboard)?.setOnClickListener {
-            startActivity(Intent(this, StaffDashboardActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navScanner)?.setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navLogs)?.setOnClickListener {
-            startActivity(Intent(this, StaffTransactionsActivity::class.java))
-            finish()
-        }
+        configureStaffBottomNav(StaffBottomNavItem.EVENTS)
     }
 
     private fun loadEvents(showLoading: Boolean = true) {

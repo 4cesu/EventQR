@@ -39,6 +39,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     private lateinit var adapter: AttendeeManagementAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
+    private lateinit var skeletonLoading: View
     private lateinit var emptyState: TextView
     private lateinit var txtTotal: TextView
     private lateinit var txtCheckedIn: TextView
@@ -74,6 +75,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
         swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
         progressBar = findViewById(R.id.progressAttendees)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
         emptyState = findViewById(R.id.txtAttendeesEmpty)
         eventSelectorHost = findViewById(R.id.layoutEventSelectorHost)
         bottomNavHost = findViewById(R.id.layoutBottomNavHost)
@@ -117,7 +119,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
     private fun loadAttendees() {
         if (!swipeRefresh.isRefreshing) {
-            progressBar.visibility = View.VISIBLE
+            progressBar.visibility = View.GONE
+            skeletonLoading.visibility = View.VISIBLE
         }
         MainScope().launch {
             val eventIdAtRequestTime = selectedEvent.id
@@ -125,6 +128,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             if (eventIdAtRequestTime != selectedEvent.id) {
                 swipeRefresh.isRefreshing = false
                 progressBar.visibility = View.GONE
+                skeletonLoading.visibility = View.GONE
                 return@launch
             }
             attendees = load.data
@@ -140,6 +144,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     }
 
     private fun render(load: OrganizerMvpLoad<List<OrganizerMvpAttendee>>) {
+        skeletonLoading.visibility = View.GONE
         val checkedIn = attendees.count { it.statusBucket().equals("Checked In", ignoreCase = true) }
         val noShow = attendees.count { it.statusBucket().equals("No Show", ignoreCase = true) }
 

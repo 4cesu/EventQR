@@ -18,10 +18,10 @@ import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.attendee.AttendeeBottomNavItem
 import com.thedavelopers.eventqr.features.attendee.AttendeeRepository
@@ -54,7 +54,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var summaryCompleted: TextView
     private lateinit var skeletonLoading: View
     private lateinit var attendeeCard: View
-    private lateinit var staffCard: View
     private lateinit var organizerCard: View
     private lateinit var notificationsCard: View
     private lateinit var notificationBell: ImageView
@@ -87,7 +86,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         summaryCompleted = findViewById(R.id.txtTotalCompleted)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         attendeeCard = findViewById(R.id.btnAttendeeHub)
-        staffCard = findViewById(R.id.btnStaffHub)
         organizerCard = findViewById(R.id.btnTransactionHistory)
         notificationsCard = findViewById(R.id.btnNotificationsHub)
         notificationBell = findViewById(R.id.btnDashboardNotifications)
@@ -297,7 +295,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             setBackgroundResource(R.drawable.bg_dashboard_empty_icon)
             addView(ImageView(context).apply {
                 layoutParams = FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER)
-                setImageResource(R.drawable.ic_nav_calendar)
+                setImageResource(R.drawable.ic_calendar)
                 setColorFilter(textDisabled)
             })
         })
@@ -355,17 +353,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private fun setupPortalSwitcher() {
         val role = sessionManager.getUserRole()
         val normalizedRole = RoleMapper.normalizeRole(role)
-        val allowedPortals = mutableListOf("Attendee Portal")
-
-        if (normalizedRole == AccountRole.STAFF.name || normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Staff Portal")
-        }
-        if (normalizedRole == AccountRole.ORGANIZER.name || normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Organizer Portal")
-        }
-        if (normalizedRole == AccountRole.ADMIN.name || normalizedRole == AccountRole.SUPER_ADMIN.name) {
-            allowedPortals.add("Admin Portal")
-        }
+        val allowedPortals = PortalSwitcher.portalsForRole(normalizedRole)
 
         val chip = findViewById<View>(R.id.portalSwitcherChip)
         val dot = findViewById<View>(R.id.txtDashboardNameDot)
@@ -391,27 +379,10 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
+            icon.setImageResource(PortalSwitcher.iconRes(portal))
+            subtitle.text = PortalSwitcher.subtitle(portal)
 
-            when (portal) {
-                "Attendee Portal" -> {
-                    icon.setImageResource(R.drawable.ic_nav_profile)
-                    subtitle.text = "Events, rewards, and your profile"
-                }
-                "Staff Portal" -> {
-                    icon.setImageResource(R.drawable.ic_qr_scan)
-                    subtitle.text = "Scan QR codes and manage entries"
-                }
-                "Organizer Portal" -> {
-                    icon.setImageResource(R.drawable.ic_nav_calendar)
-                    subtitle.text = "Manage your events and attendees"
-                }
-                "Admin Portal" -> {
-                    icon.setImageResource(R.drawable.ic_group)
-                    subtitle.text = "Platform administration and oversight"
-                }
-            }
-
-            if (portal == "Attendee Portal") {
+            if (portal == PortalSwitcher.PORTAL_ATTENDEE) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
             }
 
@@ -428,14 +399,18 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     private fun switchToPortal(portal: String) {
         when (portal) {
-            "Attendee Portal" -> Unit
-            "Staff Portal" -> {
+            PortalSwitcher.PORTAL_ATTENDEE -> Unit
+            PortalSwitcher.PORTAL_STAFF -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.StaffDashboardActivity::class.java))
             }
-            "Organizer Portal" -> {
+            PortalSwitcher.PORTAL_ORGANIZER -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java))
             }
-            "Admin Portal" -> {
+            PortalSwitcher.PORTAL_ADMIN -> {
+                startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
+                finish()
+            }
+            PortalSwitcher.PORTAL_SUPER_ADMIN -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
                 finish()
             }
@@ -449,9 +424,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private fun configureActions() {
         attendeeCard.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEventsActivity::class.java))
-        }
-        staffCard.setOnClickListener {
-            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity::class.java))
         }
         organizerCard.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeTransactionsActivity::class.java))

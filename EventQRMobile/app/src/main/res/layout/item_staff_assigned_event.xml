@@ -117,7 +117,7 @@
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:contentDescription="Location"
-                        android:src="@drawable/ic_location_pin"
+                        android:src="@drawable/ic_location"
                         android:tint="@color/text_secondary" />
 
                     <TextView
@@ -154,7 +154,7 @@
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:contentDescription="Scan"
-                            android:src="@drawable/ic_staff_scan"
+                            android:src="@drawable/ic_scan"
                             android:tint="@color/brand_on_primary" />
 
                         <TextView

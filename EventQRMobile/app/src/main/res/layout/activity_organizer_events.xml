@@ -171,7 +171,7 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:contentDescription="No events"
-                    android:src="@drawable/ic_nav_calendar"
+                    android:src="@drawable/ic_calendar"
                     android:tint="@color/text_disabled"
                     android:visibility="gone" />
 
@@ -213,6 +213,11 @@
                     android:visibility="gone" />
 
             </LinearLayout>
+
+            <include
+                layout="@layout/include_skeleton_cards"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -221,8 +226,6 @@
         android:layout_width="match_parent"
         android:layout_height="76dp"
         android:background="@drawable/bg_bottom_nav"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="20dp" />
+        android:orientation="horizontal" />
 
 </LinearLayout>

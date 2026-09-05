@@ -1,14 +1,10 @@
 package com.thedavelopers.eventqr.features.admin.notifications
 
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
-import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
-import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
-import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
+import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
+import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 
 class AdminNotificationManagementActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,21 +14,6 @@ class AdminNotificationManagementActivity : AppCompatActivity() {
     }
 
     private fun bindNavigation() {
-        findViewById<View>(R.id.navDashboard).setOnClickListener {
-            startActivity(Intent(this, AdminDashboardActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navRequests).setOnClickListener {
-            startActivity(Intent(this, AdminEventApprovalBackendActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navAccounts).setOnClickListener {
-            startActivity(Intent(this, AdminAccountManagementActivity::class.java))
-            finish()
-        }
-        findViewById<View>(R.id.navLogs).setOnClickListener {
-            startActivity(Intent(this, AdminAuditLogsActivity::class.java))
-            finish()
-        }
+        configureAdminBottomNav(null)
     }
 }

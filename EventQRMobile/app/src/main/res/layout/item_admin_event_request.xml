@@ -65,7 +65,7 @@
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:contentDescription="Event date"
-            android:src="@drawable/ic_nav_calendar"
+            android:src="@drawable/ic_calendar"
             app:tint="#94A3B8" />
 
         <TextView

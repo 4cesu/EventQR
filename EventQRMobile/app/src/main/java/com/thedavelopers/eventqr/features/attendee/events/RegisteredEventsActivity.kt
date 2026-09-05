@@ -2,13 +2,13 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.chip.Chip
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -19,9 +19,9 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private lateinit var adapter: RegisteredEventAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
-    private lateinit var chipAll: TextView
-    private lateinit var chipRegistered: TextView
-    private lateinit var chipCompleted: TextView
+    private lateinit var chipAll: Chip
+    private lateinit var chipRegistered: Chip
+    private lateinit var chipCompleted: Chip
 
     private var allItems: List<RegistrationResponse> = emptyList()
     private var selectedFilter: RegisteredEventFilter = RegisteredEventFilter.ALL
@@ -29,14 +29,11 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_registered_events)
+        configureAttendeeBottomNav(AttendeeBottomNavItem.REGISTERED)
 
         presenter = RegisteredEventsPresenter(this, AttendeeRepository(this))
         swipeRefresh = findViewById(R.id.swipeRefreshRegisteredEvents)
         skeletonLoading = findViewById(R.id.skeletonLoading)
-
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
 
         chipAll = findViewById(R.id.chipAll)
         chipRegistered = findViewById(R.id.chipRegistered)
@@ -64,19 +61,22 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     }
 
     private fun updateFilterUI() {
-        val activeBg = R.drawable.bg_nav_active
-        val inactiveBg = R.drawable.bg_soft_input_no_stroke
-        val activeColor = androidx.core.content.ContextCompat.getColor(this, android.R.color.white)
-        val inactiveColor = android.graphics.Color.parseColor("#6B7280")
+        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
 
-        chipAll.setBackgroundResource(if (selectedFilter == RegisteredEventFilter.ALL) activeBg else inactiveBg)
-        chipAll.setTextColor(if (selectedFilter == RegisteredEventFilter.ALL) activeColor else inactiveColor)
+        val chips = mapOf(
+            RegisteredEventFilter.ALL to chipAll,
+            RegisteredEventFilter.REGISTERED to chipRegistered,
+            RegisteredEventFilter.COMPLETED to chipCompleted,
+        )
 
-        chipRegistered.setBackgroundResource(if (selectedFilter == RegisteredEventFilter.REGISTERED) activeBg else inactiveBg)
-        chipRegistered.setTextColor(if (selectedFilter == RegisteredEventFilter.REGISTERED) activeColor else inactiveColor)
-
-        chipCompleted.setBackgroundResource(if (selectedFilter == RegisteredEventFilter.COMPLETED) activeBg else inactiveBg)
-        chipCompleted.setTextColor(if (selectedFilter == RegisteredEventFilter.COMPLETED) activeColor else inactiveColor)
+        for ((filter, chip) in chips) {
+            val isSelected = filter == selectedFilter
+            chip.isChecked = isSelected
+            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.brand_on_primary) else textSecondary)
+            chip.setChipBackgroundColorResource(if (isSelected) R.color.eventqr_indigo else R.color.surface)
+            chip.chipStrokeWidth = if (isSelected) 0f else resources.displayMetrics.density
+            chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
+        }
     }
 
     private fun renderFilteredEvents() {
