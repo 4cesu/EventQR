@@ -107,7 +107,11 @@ object OrganizerMvpPlaceholders {
             lastTransactionTime = "9:15 AM",
             registeredDate = "May 10, 2024",
             qrCredentialStatus = "Active",
-            recentTransactions = listOf("Check-in logged", "Attendance scan approved", "Booth visit recorded"),
+            recentTransactions = listOf(
+                OrganizerMvpTransactionEntry("Check-in logged"),
+                OrganizerMvpTransactionEntry("Attendance scan approved"),
+                OrganizerMvpTransactionEntry("Booth visit recorded"),
+            ),
             recentRejectedScans = emptyList(),
         ),
         OrganizerMvpAttendee(
@@ -122,7 +126,11 @@ object OrganizerMvpPlaceholders {
             lastTransactionTime = "9:30 AM",
             registeredDate = "May 12, 2024",
             qrCredentialStatus = "Active",
-            recentTransactions = listOf("Check-in logged", "Benefit claim approved", "Reward redemption approved"),
+            recentTransactions = listOf(
+                OrganizerMvpTransactionEntry("Check-in logged"),
+                OrganizerMvpTransactionEntry("Benefit claim approved"),
+                OrganizerMvpTransactionEntry("Reward redemption approved"),
+            ),
             recentRejectedScans = emptyList(),
         ),
         OrganizerMvpAttendee(
@@ -152,7 +160,10 @@ object OrganizerMvpPlaceholders {
             lastTransactionTime = "10:05 AM",
             registeredDate = "May 16, 2024",
             qrCredentialStatus = "Active",
-            recentTransactions = listOf("Session entry recorded", "Attendance recorded"),
+            recentTransactions = listOf(
+                OrganizerMvpTransactionEntry("Session entry recorded"),
+                OrganizerMvpTransactionEntry("Attendance recorded"),
+            ),
             recentRejectedScans = emptyList(),
         ),
     )

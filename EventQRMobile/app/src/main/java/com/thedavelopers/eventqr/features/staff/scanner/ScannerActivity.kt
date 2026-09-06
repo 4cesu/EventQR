@@ -250,7 +250,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     override fun showRewardRedemptionScanResult(result: RewardRedemptionScanResponse) { submitInFlight = false; openRewardRedemptionScanResult(result) }
     override fun showScanError(message: String) { submitInFlight = false; resultText.text = message; showMessage(message); openRejectedResult(message) }
     override fun showMessage(message: String) { Toast.makeText(this, message, Toast.LENGTH_SHORT).show() }
-    override fun showLoading(isLoading: Boolean) { findViewById<View>(R.id.progressScanner).visibility = if (isLoading) View.VISIBLE else View.GONE; findViewById<Button>(R.id.btnSubmitScan).isEnabled = !isLoading }
+    override fun showLoading(isLoading: Boolean) { findViewById<Button>(R.id.btnSubmitScan).isEnabled = !isLoading }
 
     private fun requestInlineCameraStart() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) startInlineCameraIfReady()

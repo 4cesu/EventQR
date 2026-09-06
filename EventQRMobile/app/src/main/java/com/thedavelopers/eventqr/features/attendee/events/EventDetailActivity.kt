@@ -16,7 +16,6 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
@@ -46,7 +45,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
-        findViewById<TextView>(R.id.txtTagCategory).text = intent.getStringExtra(EXTRA_EVENT_CATEGORY).orEmpty().ifBlank { "Event" }
         
         intent.getStringExtra(EXTRA_EVENT_COUNT)?.let { countStr ->
             intent.getStringExtra(EXTRA_EVENT_CAPACITY)?.let { capacityStr ->
@@ -119,13 +117,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         updateRegistrationStatusUI(event.currentAttendeeCount, event.capacity)
 
-        if (!event.category.isNullOrBlank()) {
-            findViewById<TextView>(R.id.txtTagCategory).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.txtTagCategory).text = event.category
-        } else {
-            findViewById<TextView>(R.id.txtTagCategory).text = "Event"
-        }
-
         val rewardsRow = findViewById<View>(R.id.layoutRewardsRow)
         val rewardsDivider = findViewById<View>(R.id.viewRewardsDivider)
         if (event.rewardsEnabled) {
@@ -137,9 +128,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
 
         findViewById<View>(R.id.layoutDetailRewards)?.visibility = View.GONE
-
-        val status = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt)
-        findViewById<TextView>(R.id.txtDetailStatus).text = EventStatusBadgeStyler.displayLabel(status)
 
         checkOwnedEventThenAvailability(event)
     }
@@ -260,21 +248,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
 
         val btn = findViewById<Button>(R.id.btnRegisterForEvent)
-        val statusView = findViewById<TextView>(R.id.txtDetailStatus)
-
-        val now = Instant.now()
-        val isPast = event.eventEndAt?.isBefore(now) == true
-        val isOngoing = !isPast && event.eventStartAt != null && event.eventEndAt != null &&
-                !event.eventStartAt.isAfter(now) && !event.eventEndAt.isBefore(now)
-
-        val lifecycleStatus = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt, now)
-        statusView.text = when {
-            // NOTE: "Registration Closed" is an availability-window state, not a
-            // lifecycle status; it is intentionally kept separate from the styler.
-            !isPast && !isOngoing && (!availability.registrationOpen || availability.full) ->
-                "Registration Closed"
-            else -> EventStatusBadgeStyler.displayLabel(lifecycleStatus)
-        }
 
         if (isAlreadyRegistered) {
             setAlreadyRegisteredState(btn)
@@ -353,7 +326,22 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         setUnverifiableState(findViewById(R.id.btnRegisterForEvent))
     }
 
-    override fun showLoading(isLoading: Boolean) = Unit
+    override fun showLoading(isLoading: Boolean) {
+        findViewById<View>(R.id.skeletonDetailTitle).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.skeletonDetailDescription).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.skeletonDetailDate).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.skeletonDetailTime).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.skeletonDetailVenue).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.skeletonDetailCapacity).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.skeletonDetailRewards).visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.txtDetailTitle).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtDetailDescription).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtDetailDate).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtDetailTime).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtDetailVenue).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtDetailCapacity).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtRewardsAvailable).visibility = if (isLoading) View.GONE else View.VISIBLE
+    }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -403,7 +391,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     private fun setOwnedEventState() {
-        findViewById<TextView>(R.id.txtDetailStatus).text = "You organize this event"
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = true
             text = "Manage Event"

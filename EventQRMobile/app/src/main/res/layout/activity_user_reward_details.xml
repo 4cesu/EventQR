@@ -20,7 +20,7 @@
             android:layout_height="40dp"
             android:background="@drawable/bg_soft_gray_pill"
             android:contentDescription="Back"
-            android:padding="11dp"
+            android:padding="8dp"
             android:src="@drawable/ic_back_chevron" />
 
         <TextView
@@ -29,12 +29,10 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:ellipsize="end"
-            android:fontFamily="sans-serif-black"
             android:maxLines="1"
             android:text="Reward Details"
-            android:textColor="@color/eventqr_text"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary" />
     </LinearLayout>
 
     <ScrollView
@@ -79,7 +77,7 @@
                     android:contentDescription="Reward"
                     android:padding="22dp"
                     android:src="@drawable/ic_nav_gift"
-                    app:tint="#FFFFFF" />
+                    app:tint="@color/eventqr_indigo" />
             </FrameLayout>
 
             <TextView
@@ -95,17 +93,6 @@
                 android:textColor="#FFFFFF"
                 android:textSize="24sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/txtRewardDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:lineSpacingExtra="3dp"
-                android:text="Redeem this reward using your event points."
-                android:textColor="#EDE9FE"
-                android:textSize="15sp" />
 
             <View
                 android:layout_width="60dp"

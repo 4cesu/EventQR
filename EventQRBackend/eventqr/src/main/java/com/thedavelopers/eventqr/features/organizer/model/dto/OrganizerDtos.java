@@ -41,7 +41,10 @@ public final class OrganizerDtos {
                                             String name, String email, String phone, String registrationStatus,
                                             String currentEventStatus, int points, String lastTransactionTime,
                                             String registeredDate, String qrCredentialStatus,
-                                            List<String> recentTransactions, List<String> recentRejectedScans) {
+                                            List<TransactionEntry> recentTransactions, List<String> recentRejectedScans) {
+    }
+
+    public record TransactionEntry(String type, String timestamp) {
     }
 
     public record OrganizerTransactionResponse(UUID transactionId, UUID eventId, String eventTitle, UUID attendeeId,

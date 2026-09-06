@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.model.dto
 
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.api.dto.TransactionResult
@@ -76,7 +77,7 @@ data class OrganizerAttendeeDto(
     val lastTransactionTime: String? = null,
     val registeredDate: String? = null,
     val qrCredentialStatus: String? = null,
-    val recentTransactions: List<String> = emptyList(),
+    val recentTransactions: List<JsonElement> = emptyList(),
     val recentRejectedScans: List<String> = emptyList(),
 )
 

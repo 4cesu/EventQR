@@ -10,8 +10,10 @@
         android:id="@+id/toolbarMyEvents"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/surface"
+        android:background="@drawable/bg_header_surface_outline"
         android:elevation="0dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp"
         app:title="My Events"
         app:titleTextColor="@color/text_primary"
         app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />

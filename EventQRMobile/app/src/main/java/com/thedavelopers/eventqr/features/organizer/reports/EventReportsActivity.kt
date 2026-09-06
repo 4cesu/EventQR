@@ -403,9 +403,9 @@ open class EventReportsActivity : AppCompatActivity() {
     private fun reportCatalog(): List<EventReportCatalogItem> = listOf(
         EventReportCatalogItem(EventReportType.ROSTER, "Attendee Roster Report", R.drawable.ic_group, Color.parseColor("#6366F1"), Color.parseColor("#EEF2FF")),
         EventReportCatalogItem(EventReportType.NO_SHOWS, "No-Shows Report", R.drawable.ic_nav_profile, Color.parseColor("#EF4444"), Color.parseColor("#FEE2E2")),
-        EventReportCatalogItem(EventReportType.ENTRY_LOGS, "Entry Logs Report", R.drawable.ic_qr_scan, Color.parseColor("#8B5CF6"), Color.parseColor("#F3E8FF")),
+        EventReportCatalogItem(EventReportType.ENTRY_LOGS, "Entry Logs Report", R.drawable.ic_scan, Color.parseColor("#8B5CF6"), Color.parseColor("#F3E8FF")),
         EventReportCatalogItem(EventReportType.ATTENDANCE, "Attendance Report", R.drawable.ic_organizer_bar_chart, Color.parseColor("#4F46E5"), Color.parseColor("#EEF2FF")),
-        EventReportCatalogItem(EventReportType.CLAIMS, "Benefit Claims Report", R.drawable.ic_gift, Color.parseColor("#F59E0B"), Color.parseColor("#FEF3C7")),
+        EventReportCatalogItem(EventReportType.CLAIMS, "Benefit Claims Report", R.drawable.ic_nav_gift, Color.parseColor("#F59E0B"), Color.parseColor("#FEF3C7")),
         EventReportCatalogItem(EventReportType.BOOTH_VISITS, "Booth/Session Visits Report", R.drawable.ic_calendar, Color.parseColor("#10B981"), Color.parseColor("#DCFCE7")),
         EventReportCatalogItem(EventReportType.EXIT_LOGS, "Exit Logs Report", R.drawable.ic_chevron_right, Color.parseColor("#0EA5E9"), Color.parseColor("#E0F2FE")),
         EventReportCatalogItem(EventReportType.POINTS, "Points Report", R.drawable.ic_organizer_reports, Color.parseColor("#06B6D4"), Color.parseColor("#CFFAFE")),

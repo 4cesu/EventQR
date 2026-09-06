@@ -93,9 +93,9 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         chipRegistered.visibility = View.VISIBLE
         chipCompleted.visibility = View.VISIBLE
 
-        chipAll.text = "All (${allItems.size})"
-        chipRegistered.text = "Registered (${allItems.count { it.eventStartAt?.isAfter(now) ?: true }})"
-        chipCompleted.text = "Completed (${allItems.count { it.eventStartAt?.isBefore(now) ?: false }})"
+        chipAll.text = "All"
+        chipRegistered.text = "Registered"
+        chipCompleted.text = "Completed"
     }
 
     override fun onDestroy() {

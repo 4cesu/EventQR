@@ -9,31 +9,23 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="@color/white"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_header_surface_outline"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
+        android:paddingStart="8dp"
         android:paddingEnd="16dp">
-
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone"
-            android:contentDescription="Back"
-            android:src="@drawable/ic_back_chevron" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="Organizer / Attendees"
-            android:textColor="@color/eventqr_text"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:text="Attendees"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary" />
 
         <ImageButton
             android:id="@+id/btnFilter"

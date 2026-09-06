@@ -30,7 +30,6 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
 
         val rewardName = intent.getStringExtra(EXTRA_REWARD_NAME).orEmpty().ifBlank { "Reward" }
         findViewById<TextView>(R.id.txtRewardTitle)?.text = rewardName
-        findViewById<TextView>(R.id.txtRewardDescription)?.text = "Redeem this reward at the event redemption booth using your points."
         findViewById<TextView>(R.id.txtPointsValue)?.text = pointsRequired.toString()
         findViewById<TextView>(R.id.txtRewardRemaining)?.text = formatRemainingStock()
         findViewById<TextView>(R.id.txtUserPoints)?.text = "0 pts"

@@ -1,5 +1,10 @@
 package com.thedavelopers.eventqr.features.organizer
 
+data class OrganizerMvpTransactionEntry(
+    val type: String,
+    val timestamp: String? = null,
+)
+
 data class OrganizerMvpAttendee(
     val id: String,
     val eventId: String,
@@ -12,6 +17,6 @@ data class OrganizerMvpAttendee(
     val lastTransactionTime: String,
     val registeredDate: String,
     val qrCredentialStatus: String,
-    val recentTransactions: List<String>,
+    val recentTransactions: List<OrganizerMvpTransactionEntry>,
     val recentRejectedScans: List<String>,
 )

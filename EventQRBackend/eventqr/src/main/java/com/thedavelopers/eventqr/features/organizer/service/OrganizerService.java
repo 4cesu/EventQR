@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.Orga
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.ReportRow;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentUpdateRequest;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.TransactionEntry;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.UserSearchResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.RewardSettingsRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest;
@@ -734,6 +736,7 @@ public class OrganizerService {
     private OrganizerAttendeeResponse toAttendee(EventRegistration registration, List<TransactionLog> logs) {
         List<TransactionLog> attendeeLogs = logs.stream()
                 .filter(log -> log.getRegistrationId().equals(registration.getId()))
+                .sorted(Comparator.comparing(TransactionLog::getScannedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
         return new OrganizerAttendeeResponse(registration.getAttendeeUserId(), registration.getId(), registration.getEventId(),
                 registration.getQrCredentialId(), registration.getAttendeeName(), registration.getAttendeeEmail(),
@@ -743,7 +746,8 @@ public class OrganizerService {
                 format(registration.getRegisteredAt()),
                 registration.getQrCredentialId() == null ? "Pending" : "Issued",
                 attendeeLogs.stream().filter(log -> log.getTransactionResult() == TransactionResult.APPROVED)
-                        .map(log -> log.getTransactionType().name()).limit(5).toList(),
+                        .map(log -> new TransactionEntry(log.getTransactionType().name(), format(log.getScannedAt())))
+                        .limit(5).toList(),
                 attendeeLogs.stream().filter(log -> log.getTransactionResult() == TransactionResult.REJECTED)
                         .map(TransactionLog::getReason).limit(5).toList());
     }
