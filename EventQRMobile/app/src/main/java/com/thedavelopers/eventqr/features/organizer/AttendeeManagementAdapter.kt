@@ -50,7 +50,7 @@ class AttendeeManagementAdapter(
                 pointsText.visibility = View.GONE
             }
 
-            val (backgroundColor, textColor) = item.statusPalette()
+            val (backgroundColor, textColor) = item.statusPalette(itemView.context)
             statusText.text = item.statusBucket()
             statusText.background = GradientDrawable().apply {
                 setColor(backgroundColor)

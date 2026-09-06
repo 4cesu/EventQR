@@ -121,13 +121,11 @@ open class EventManagementHubActivity : AppCompatActivity() {
             val canEdit = event.lifecycleStatus() == "Upcoming"
             val editLabel = if (canEdit) "Edit Event Details" else "View Event Details"
             val menuItems = buildList {
-                add(Triple(editLabel, com.thedavelopers.eventqr.R.drawable.ic_fileedit, EditEventDetailsActivity::class.java))
+                add(Triple(editLabel, if (canEdit) com.thedavelopers.eventqr.R.drawable.ic_edit_pencil else com.thedavelopers.eventqr.R.drawable.ic_event_request, EditEventDetailsActivity::class.java))
                 add(Triple("Staff Assignment", com.thedavelopers.eventqr.R.drawable.ic_admin_users, ManageUsersActivity::class.java))
-                add(Triple("Attendees", com.thedavelopers.eventqr.R.drawable.ic_group, com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java))
-                add(Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_qr_scan, ManageScanPurposesActivity::class.java))
+                add(Triple("Scan Purposes", com.thedavelopers.eventqr.R.drawable.ic_scan, ManageScanPurposesActivity::class.java))
                 add(Triple("Transaction Rules", com.thedavelopers.eventqr.R.drawable.ic_admin_shield, TransactionRulesActivity::class.java))
-                add(Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_file, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java))
-                add(Triple("Rewards", com.thedavelopers.eventqr.R.drawable.ic_gift, ManageRewardsActivity::class.java))
+                add(Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_id, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java))
             }
 
             // Colors keyed by label, not position: inserting/reordering rows must never
@@ -136,11 +134,10 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 val (iconTint, iconBg) = when (label) {
                     "Edit Event Details", "View Event Details" -> Color.parseColor("#2563EB") to Color.parseColor("#DBEAFE")
                     "Staff Assignment" -> Color.parseColor("#4F46E5") to Color.parseColor("#E0E7FF")
-                    "Attendees" -> Color.parseColor("#7C3AED") to Color.parseColor("#EDE9FE")
                     "Scan Purposes" -> Color.parseColor("#06B6D4") to Color.parseColor("#CFFAFE")
                     "Transaction Rules" -> Color.parseColor("#F59E0B") to Color.parseColor("#FEF3C7")
                     "ID Display Settings" -> Color.parseColor("#10B981") to Color.parseColor("#D1FAE5")
-                    else -> Color.parseColor("#EF4444") to Color.parseColor("#FEE2E2")
+                    else -> error("Unexpected Event Management hub row: $label")
                 }
                 body.addView(
                     menuCard(

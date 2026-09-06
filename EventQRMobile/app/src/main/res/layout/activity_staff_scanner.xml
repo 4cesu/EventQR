@@ -16,12 +16,15 @@
         android:paddingHorizontal="16dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Scan QR"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -115,7 +118,7 @@
                 android:background="@drawable/bg_gray_card"
                 android:padding="16dp"
                 android:text="No assigned events are available for this staff account."
-                android:textColor="#374151"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:visibility="gone" />
 
@@ -313,14 +316,6 @@
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
-
-            <ProgressBar
-                android:id="@+id/progressScanner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:visibility="gone" />
 
             <EditText
                 android:id="@+id/edtScannerNotes"

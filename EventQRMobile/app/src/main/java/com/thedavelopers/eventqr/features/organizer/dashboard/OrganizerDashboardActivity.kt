@@ -1,14 +1,13 @@
 package com.thedavelopers.eventqr.features.organizer.dashboard
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +18,8 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.features.organizer.NAV_DASHBOARD
+import com.thedavelopers.eventqr.features.organizer.bottomNav
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.notifications.NotificationManagementActivity
 import kotlinx.coroutines.MainScope
@@ -34,6 +35,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 open class OrganizerDashboardActivity : AppCompatActivity() {
+    private val TAG = "OrganizerDashboardActivity"
     private lateinit var repository: OrganizerRepository
     private lateinit var sessionManager: SessionManager
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
@@ -57,52 +59,13 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             loadDashboard()
         }
         setupNavigation()
+        findViewById<LinearLayout>(R.id.layoutBottomNavHost).addView(bottomNav(NAV_DASHBOARD))
         loadDashboard()
     }
 
     private fun setupNavigation() {
         setupOrganizerNotificationBell()
 
-        findViewById<View>(R.id.navDashboard).setOnClickListener {
-            // Stay here
-        }
-        findViewById<View>(R.id.navEvents).setOnClickListener {
-            openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
-        }
-        findViewById<View>(R.id.navAttendees).setOnClickListener {
-            openOrganizerPage(
-                com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java,
-                selectedEventId().takeIf { it.isNotBlank() },
-            )
-        }
-        findViewById<View>(R.id.navReports).setOnClickListener {
-            openOrganizerPage(
-                com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity::class.java,
-                selectedEventId().takeIf { it.isNotBlank() },
-            )
-        }
-
-        findViewById<View>(R.id.btnManageMyEvents).setOnClickListener {
-            openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
-        }
-        findViewById<View>(R.id.btnManageAttendees).setOnClickListener {
-            openOrganizerPage(
-                com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java,
-                selectedEventId().takeIf { it.isNotBlank() },
-            )
-        }
-        findViewById<View>(R.id.btnManageReports).setOnClickListener {
-            openOrganizerPage(
-                com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity::class.java,
-                selectedEventId().takeIf { it.isNotBlank() },
-            )
-        }
-        findViewById<View>(R.id.btnManageRewards).setOnClickListener {
-            openOrganizerPage(
-                com.thedavelopers.eventqr.features.organizer.rewards.ManageRewardsActivity::class.java,
-                selectedEventId().takeIf { it.isNotBlank() },
-            )
-        }
         findViewById<View>(R.id.btnSeeAllEvents).setOnClickListener {
             openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
         }
@@ -135,7 +98,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             setOnClickListener {
                 startActivity(Intent(this@OrganizerDashboardActivity, NotificationManagementActivity::class.java))
             }
-            layoutParams = RelativeLayout.LayoutParams(dp(40), dp(40)).apply {
+            layoutParams = RelativeLayout.LayoutParams(dp(48), dp(48)).apply {
                 addRule(RelativeLayout.ALIGN_PARENT_END)
                 addRule(RelativeLayout.CENTER_VERTICAL)
             }
@@ -143,8 +106,8 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
         bellContainer.addView(ImageView(this).apply {
             setImageResource(R.drawable.notification_bell)
-            setColorFilter(Color.WHITE)
-            contentDescription = "Notifications"
+            setColorFilter(getColor(R.color.brand_on_primary))
+            importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
             layoutParams = FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER)
         })
 
@@ -234,6 +197,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     private fun loadDashboard() {
         if (!isSwipeRefreshing) {
             skeletonLoading.visibility = View.VISIBLE
+            findViewById<View>(R.id.statsGrid).visibility = View.GONE
         } else {
             skeletonLoading.visibility = View.GONE
         }
@@ -243,6 +207,12 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
                 val dashboard = repository.loadDashboardForMvp()
                 val load = repository.loadEventsForMvp()
                 renderDashboard(load, dashboard)
+            } catch (error: Exception) {
+                skeletonLoading.visibility = View.GONE
+                if (!isSwipeRefreshing) findViewById<View>(R.id.statsGrid).visibility = View.GONE
+                findViewById<View>(R.id.layoutDashboardError).visibility = View.VISIBLE
+                Log.w(TAG, "Dashboard load failed: ${error.message ?: "unknown"}", error)
+                findViewById<TextView>(R.id.txtDashboardError).text = "Couldn't load your dashboard. Check your connection and try again."
             } finally {
                 stopSwipeRefresh()
             }
@@ -253,8 +223,8 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         load: OrganizerMvpLoad<List<OrganizerMvpEvent>>,
         dashboard: OrganizerMvpLoad<OrganizerDashboardDto?>? = null,
     ) {
-        findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.GONE
         skeletonLoading.visibility = View.GONE
+        findViewById<View>(R.id.statsGrid).visibility = View.VISIBLE
         val dashboardData = dashboard?.data
         val name = dashboardData?.organizerName.orEmpty().ifBlank { sessionManager.getFullName().orEmpty().ifBlank { "Organizer" } }
 
@@ -271,11 +241,11 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.txtStatTotalEvents).text = formatCount(totalEvents)
         findViewById<TextView>(R.id.txtStatTotalAttendees).text = formatCount(totalAttendees)
-        findViewById<TextView>(R.id.txtStatScansToday).text = formatCount(totalTransactions)
+        findViewById<TextView>(R.id.txtStatTransactions).text = formatCount(totalTransactions)
         findViewById<TextView>(R.id.txtStatRewardsGiven).text = formatCount(totalRewards)
 
         val activeEventsContainer = findViewById<LinearLayout>(R.id.activeEventsContainer)
-        val emptyEvents = findViewById<TextView>(R.id.txtActiveEventsEmpty)
+        val emptyEvents = findViewById<View>(R.id.layoutEventsEmpty)
         activeEventsContainer.removeAllViews()
 
         val hasError = load.source == OrganizerMvpDataSource.ERROR

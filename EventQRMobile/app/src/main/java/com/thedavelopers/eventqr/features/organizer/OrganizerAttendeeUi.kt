@@ -1,6 +1,8 @@
 package com.thedavelopers.eventqr.features.organizer
 
-import android.graphics.Color
+import android.content.Context
+import com.thedavelopers.eventqr.R
+import java.util.Locale
 
 internal fun OrganizerMvpAttendee.statusBucket(): String {
     val current = currentEventStatus.trim()
@@ -19,12 +21,27 @@ internal fun OrganizerMvpAttendee.statusBucket(): String {
     }
 }
 
-internal fun OrganizerMvpAttendee.statusPalette(): Pair<Int, Int> = when (statusBucket()) {
-    "Checked In" -> Color.parseColor("#D1FAE5") to Color.parseColor("#059669")
-    "Exited" -> Color.parseColor("#E5E7EB") to Color.parseColor("#6B7280")
-    "No Show" -> Color.parseColor("#FEF3C7") to Color.parseColor("#B45309")
-    "Registered" -> Color.parseColor("#E0E7FF") to Color.parseColor("#4F46E5")
-    else -> Color.parseColor("#E0E7FF") to Color.parseColor("#4F46E5")
+internal fun OrganizerMvpAttendee.statusPalette(context: Context): Pair<Int, Int> {
+    val (bgRes, textRes) = when (statusBucket()) {
+        "Checked In" -> R.color.eventqr_badge_entered_bg to R.color.eventqr_badge_entered_text
+        "Exited" -> R.color.eventqr_badge_default_bg to R.color.eventqr_badge_default_text
+        "No Show" -> R.color.eventqr_badge_pending_bg to R.color.eventqr_badge_pending_text
+        "Cancelled" -> R.color.eventqr_badge_cancelled_bg to R.color.eventqr_badge_cancelled_text
+        else -> R.color.eventqr_badge_registered_bg to R.color.eventqr_badge_registered_text
+    }
+    return context.getColor(bgRes) to context.getColor(textRes)
+}
+
+internal fun transactionTypeLabel(value: String): String = when (value.trim().uppercase(Locale.ENGLISH)) {
+    "ENTRY" -> "Entry"
+    "ATTENDANCE" -> "Attendance"
+    "BENEFIT_CLAIM" -> "Benefit Claim"
+    "BOOTH_VISIT", "SESSION_VISIT" -> "Booth/Session Visit"
+    "REWARD_REDEMPTION_SCAN", "REWARD_REDEMPTION" -> "Reward Redemption"
+    "EXIT" -> "Exit"
+    "ID_PRINT" -> "ID Printing"
+    "REGISTRATION", "REGISTRATION_LOOKUP" -> "Registration"
+    else -> value
 }
 
 internal fun OrganizerMvpAttendee.matchesOrganizerAttendeeQuery(query: String, filter: String): Boolean {

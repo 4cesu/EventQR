@@ -22,6 +22,7 @@ import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.TextViewCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import android.util.TypedValue
@@ -40,6 +41,7 @@ internal const val NAV_EVENTS = "Events"
 internal const val NAV_ATTENDEES = "Attendees"
 internal const val NAV_LOGS = "Logs"
 internal const val NAV_REPORTS = "Reports"
+internal const val NAV_REWARDS = "Rewards"
 
 internal val PRIMARY = Color.parseColor("#25215F")
 internal val PURPLE = Color.parseColor("#5B25C9")
@@ -246,8 +248,8 @@ internal fun AppCompatActivity.openOrganizerPlaceholder(
     })
 }
 
-internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String) {
-    organizerShell(screenTitle, "Event ID is missing.", showBack = true)
+internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = "Event ID is missing.") {
+    organizerShell(screenTitle, message, showBack = true)
         .addView(emptyState("Open this screen from My Events or the event hub.", "Open My Events") {
             openOrganizerPage(ManageEventsActivity::class.java)
         })
@@ -404,9 +406,8 @@ internal fun AppCompatActivity.organizerRefreshShell(
 
     header.addView(TextView(this).apply {
         text = title
-        textSize = 18f
+        TextViewCompat.setTextAppearance(this, com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
         setTextColor(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
         ellipsize = android.text.TextUtils.TruncateAt.END
         maxLines = 1
         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -506,9 +507,8 @@ internal fun AppCompatActivity.organizerShell(
 
     header.addView(TextView(this).apply {
         text = title
-        textSize = 18f
+        TextViewCompat.setTextAppearance(this, com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
         setTextColor(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
         ellipsize = android.text.TextUtils.TruncateAt.END
         maxLines = 1
         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -579,7 +579,7 @@ internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
             if (this@bottomNav !is ManageEventsActivity) openOrganizerPage(ManageEventsActivity::class.java, currentEventId)
         }),
         Triple(NAV_ATTENDEES, com.thedavelopers.eventqr.R.drawable.ic_group, {
-            if (selected != NAV_ATTENDEES) {
+            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity) {
                 openOrganizerPage(com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java, currentEventId)
             }
         }),
@@ -588,13 +588,20 @@ internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
                 openOrganizerPage(com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity::class.java, currentEventId)
             }
         }),
+        Triple(NAV_REWARDS, com.thedavelopers.eventqr.R.drawable.ic_nav_gift, {
+            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.rewards.ManageRewardsActivity) {
+                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.rewards.ManageRewardsActivity::class.java, currentEventId)
+            }
+        }),
     )
     items.forEach { (label, iconRes, onClick) ->
         val isSelected = selected == label
+        val rippleAttr = TypedValue().also { theme.resolveAttribute(android.R.attr.selectableItemBackground, it, true) }
         nav.addView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(0, dp(8), 0, dp(8))
+            foreground = getDrawable(rippleAttr.resourceId)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply {
                 setMargins(0, 0, 0, 0)
             }

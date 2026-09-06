@@ -60,7 +60,6 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
             ?: return showMissingEventScreen("Attendee Management")
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
             startActivity(
                 Intent(this, SearchAttendeesActivity::class.java)

@@ -6,13 +6,9 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +27,7 @@ import com.thedavelopers.eventqr.features.organizer.BG
 import com.thedavelopers.eventqr.features.organizer.BORDER
 import com.thedavelopers.eventqr.features.organizer.ERROR
 import com.thedavelopers.eventqr.features.organizer.MUTED
-import com.thedavelopers.eventqr.features.organizer.NAV_EVENTS
+import com.thedavelopers.eventqr.features.organizer.NAV_REWARDS
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.PURPLE
@@ -41,6 +37,7 @@ import com.thedavelopers.eventqr.features.organizer.card
 import com.thedavelopers.eventqr.features.organizer.dp
 import com.thedavelopers.eventqr.features.organizer.emptyState
 import com.thedavelopers.eventqr.features.organizer.errorState
+import com.thedavelopers.eventqr.features.organizer.eventSelector
 import com.thedavelopers.eventqr.features.organizer.formatCount
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.organizerRefreshShell
@@ -71,7 +68,6 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
-    private lateinit var eventSpinner: Spinner
     private lateinit var eventSummaryTitle: TextView
     private lateinit var eventSummaryCount: TextView
     private lateinit var rewardsEnabledSwitch: SwitchCompat
@@ -91,13 +87,16 @@ open class ManageRewardsActivity : AppCompatActivity() {
         eventOptions = repository.getApprovedOrganizerEvents()
         val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
         selectedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
-            ?: return showMissingEventScreen("Organizer / Rewards")
+            ?: return showMissingEventScreen(
+                "Rewards",
+                if (requestedEventId.isNullOrBlank()) "Event ID is missing." else "This screen is only available for approved events.",
+            )
         rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
 
         val shell = organizerRefreshShell(
-            title = "Organizer / Rewards",
-            selectedNav = NAV_EVENTS,
-            showBack = true,
+            title = "Rewards",
+            selectedNav = NAV_REWARDS,
+            showBack = false,
             topRightLabel = "+ Add",
             onTopRight = { showRewardDialog(null) },
             onRefresh = { loadRewards(showInitialLoading = false) },
@@ -113,41 +112,18 @@ open class ManageRewardsActivity : AppCompatActivity() {
         content.removeAllViews()
         content.setBackgroundColor(BG)
 
-        content.addView(text("Event", 13, true, MUTED).apply {
-            setPadding(0, 0, 0, dp(8))
+        content.addView(card().apply {
+            addView(text("Select Event", 13, false, MUTED))
+            addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) { event ->
+                if (event.id == selectedEvent.id) return@eventSelector
+                selectedEvent = event
+                rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)
+                saveSelectedEventId(event.id)
+                bindEventSummary()
+                loadRewards()
+                refreshRewardsEnabledFromServer()
+            })
         })
-
-        eventSpinner = Spinner(this).apply {
-            background = rounded(Color.WHITE, 10, BORDER, density = resources.displayMetrics.density)
-            setPadding(dp(12), 0, dp(12), 0)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(48),
-            )
-            adapter = ArrayAdapter(
-                this@ManageRewardsActivity,
-                android.R.layout.simple_spinner_item,
-                eventOptions.map { it.title.ifBlank { "Untitled Event" } },
-            ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-            val selectedIndex = eventOptions.indexOfFirst { it.id == selectedEvent.id }.coerceAtLeast(0)
-            setSelection(selectedIndex, false)
-            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    val event = eventOptions.getOrNull(position) ?: return
-                    if (event.id == selectedEvent.id) return
-                    selectedEvent = event
-                    rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)
-                    repository.saveSelectedEventId(event.id)
-                    saveSelectedEventId(event.id)
-                    bindEventSummary()
-                    loadRewards()
-                    refreshRewardsEnabledFromServer()
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-            }
-        }
-        content.addView(eventSpinner)
 
         content.addView(LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -305,8 +281,9 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 setPadding(0, dp(12), 0, 0)
             }
             meta.addView(metaText("☆ ${formatCount(reward.pointsRequired)} pts"))
-            meta.addView(metaText(if (stock == null) "${formatCount(claimed)} claimed" else "${formatCount(claimed)}/${formatCount(stock)} claimed"))
-            meta.addView(metaText(if (active) "Redemption open" else badgeText))
+            meta.addView(text(if (stock == null) "${formatCount(claimed)} claimed" else "${formatCount(claimed)}/${formatCount(stock)} claimed", 12, false, MUTED).apply {
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            })
             addView(meta)
 
             if (reward.allowDuplicateClaims) {

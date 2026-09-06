@@ -70,16 +70,11 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
 
             content.addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                 text = "Reward Redemption"
-                textSize = 24f
-                setTextColor(0xFF151A2D.toInt())
-                setTypeface(typeface, Typeface.BOLD)
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
+                setTextColor(getColor(R.color.text_primary))
             })
-            content.addView(TextView(this@RewardRedemptionScanResultActivity).apply {
-                text = "Select a reward to redeem"
-                textSize = 14f
-                setTextColor(0xFF6B7280.toInt())
-                setPadding(0, dp(4), 0, dp(20))
-            })
+
+            content.addView(spacer(dp(20)))
 
             content.addView(LinearLayout(this@RewardRedemptionScanResultActivity).apply {
                 orientation = LinearLayout.HORIZONTAL

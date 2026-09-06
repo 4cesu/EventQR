@@ -63,7 +63,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var layoutDropdownContent: View
     private lateinit var skeletonDropdown: View
     private lateinit var skeletonEventName: View
-    private lateinit var skeletonPointsValue: View
     private lateinit var layoutRewardsSkeleton: View
 
     private val eventOptions = mutableListOf<RegisteredEventOption>()
@@ -119,7 +118,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         layoutDropdownContent = findViewById(R.id.layoutDropdownContent)
         skeletonDropdown = findViewById(R.id.skeletonDropdown)
         skeletonEventName = findViewById(R.id.skeletonEventName)
-        skeletonPointsValue = findViewById(R.id.skeletonPointsValue)
         layoutRewardsSkeleton = findViewById(R.id.layoutRewardsSkeleton)
 
         rewardsRecycler.apply {
@@ -162,8 +160,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
             skeletonEventName.visibility = if (showSkeleton) View.VISIBLE else View.GONE
 
-            balanceText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
-            skeletonPointsValue.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+            balanceText.visibility = View.VISIBLE
 
             rewardsRecycler.visibility = View.GONE
             layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
@@ -175,7 +172,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             skeletonEventName.visibility = View.GONE
 
             balanceText.visibility = View.VISIBLE
-            skeletonPointsValue.visibility = View.GONE
 
             layoutRewardsSkeleton.visibility = View.GONE
 
@@ -203,7 +199,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         skeletonEventName.visibility = View.GONE
 
         balanceText.visibility = View.VISIBLE
-        skeletonPointsValue.visibility = View.GONE
 
         layoutRewardsSkeleton.visibility = View.GONE
         rewardsRecycler.visibility = View.GONE
@@ -230,7 +225,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         skeletonEventName.visibility = View.GONE
 
         balanceText.visibility = View.VISIBLE
-        skeletonPointsValue.visibility = View.GONE
 
         layoutRewardsSkeleton.visibility = View.GONE
         emptyRewardsText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
@@ -269,8 +263,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         skeletonDropdown.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
         skeletonEventName.visibility = if (showSkeleton) View.VISIBLE else View.GONE
-        balanceText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
-        skeletonPointsValue.visibility = if (showSkeleton) View.VISIBLE else View.GONE
+        balanceText.visibility = View.VISIBLE
         layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         layoutRewardsContent.visibility = if (cacheSaysNoRegistrations) View.GONE else View.VISIBLE
 

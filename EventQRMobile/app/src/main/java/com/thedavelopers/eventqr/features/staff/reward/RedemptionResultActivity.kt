@@ -34,7 +34,7 @@ class RedemptionResultActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(20), dp(28), dp(20), dp(20))
 
-                addView(sectionTitle("Reward Redemption", "Staff scan result"))
+                addView(sectionTitle("Reward Redemption"))
                 addView(spacer(dp(20)))
 
                 // Status hero card
@@ -146,7 +146,7 @@ class RedemptionResultActivity : AppCompatActivity() {
         })
     }
 
-    private fun sectionTitle(title: String, subtitle: String): LinearLayout =
+    private fun sectionTitle(title: String, subtitle: String? = null): LinearLayout =
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(TextView(this@RedemptionResultActivity).apply {
@@ -155,12 +155,14 @@ class RedemptionResultActivity : AppCompatActivity() {
                 setTextColor(0xFF151A2D.toInt())
                 setTypeface(typeface, Typeface.BOLD)
             })
-            addView(TextView(this@RedemptionResultActivity).apply {
-                text = subtitle
-                textSize = 14f
-                setTextColor(0xFF6B7280.toInt())
-                setPadding(0, dp(4), 0, 0)
-            })
+            subtitle?.let {
+                addView(TextView(this@RedemptionResultActivity).apply {
+                    text = it
+                    textSize = 14f
+                    setTextColor(0xFF6B7280.toInt())
+                    setPadding(0, dp(4), 0, 0)
+                })
+            }
         }
 
     private fun detailRow(label: String, value: String, iconColor: Int, valueAccent: Int? = null): LinearLayout =

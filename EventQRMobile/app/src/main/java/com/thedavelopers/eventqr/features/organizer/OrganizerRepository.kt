@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer
 
 import android.content.Context
+import com.google.gson.JsonElement
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
@@ -481,9 +482,20 @@ private fun OrganizerAttendeeDto.toMvpAttendee(): OrganizerMvpAttendee = Organiz
     lastTransactionTime = lastTransactionTime ?: "-",
     registeredDate = registeredDate ?: "-",
     qrCredentialStatus = qrCredentialStatus ?: if (qrCredentialId != null) "Issued" else "Pending",
-    recentTransactions = recentTransactions,
+    recentTransactions = (recentTransactions ?: emptyList()).mapNotNull { it.toMvpTransactionEntry() },
     recentRejectedScans = recentRejectedScans,
 )
+
+private fun JsonElement.toMvpTransactionEntry(): OrganizerMvpTransactionEntry? = when {
+    isJsonPrimitive && asJsonPrimitive.isString ->
+        OrganizerMvpTransactionEntry(type = asString, timestamp = null)
+    isJsonObject -> {
+        val type = asJsonObject.get("type")?.takeIf { it.isJsonPrimitive }?.asString.orEmpty()
+        val timestamp = asJsonObject.get("timestamp")?.takeIf { it.isJsonPrimitive }?.asString
+        if (type.isBlank()) null else OrganizerMvpTransactionEntry(type = type, timestamp = timestamp?.takeIf { it.isNotBlank() })
+    }
+    else -> null
+}
 
 private fun OrganizerTransactionDto.toMvpTransaction(fallbackEventTitle: String): OrganizerMvpTransaction {
     val rejected = resultStatus == TransactionResult.REJECTED
