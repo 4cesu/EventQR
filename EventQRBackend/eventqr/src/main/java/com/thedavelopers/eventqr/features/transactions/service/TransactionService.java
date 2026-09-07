@@ -3,7 +3,7 @@ package com.thedavelopers.eventqr.features.transactions.service;
 import java.time.Instant;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,7 +217,8 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> findByEventToday(UUID eventId) {
-        Instant startOfToday = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
+        ZoneId manila = ZoneId.of("Asia/Manila");
+        Instant startOfToday = LocalDate.now(manila).atStartOfDay(manila).toInstant();
         return transactionLogRepository.findByEventIdAndScannedAtGreaterThanEqual(eventId, startOfToday)
                 .stream()
                 .map(this::toResponse)
@@ -250,6 +251,16 @@ public class TransactionService {
             logs = transactionLogRepository.findByStaffUserIdOrderByScannedAtDesc(staffUserId);
         }
         return logs.stream().map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> findForStaffToday(UUID staffUserId) {
+        ZoneId manila = ZoneId.of("Asia/Manila");
+        Instant startOfToday = LocalDate.now(manila).atStartOfDay(manila).toInstant();
+        return transactionLogRepository.findByStaffUserIdAndScannedAtGreaterThanEqual(staffUserId, startOfToday)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)

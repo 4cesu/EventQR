@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
@@ -317,9 +318,7 @@ class OrganizerRepository(private val context: Context) {
             rejectedScans = transactions.count { it.transactionResult == TransactionResult.REJECTED },
             benefitClaims = transactions.count { it.transactionType == TransactionType.BENEFIT_CLAIM },
             boothSessionVisits = transactions.count { it.transactionType == TransactionType.BOOTH_VISIT || it.transactionType == TransactionType.SESSION_VISIT },
-            rewardRedemptions = redemptions.size + transactions.count {
-                it.transactionType == TransactionType.REWARD_REDEMPTION || it.transactionType == TransactionType.REWARD_REDEMPTION_SCAN
-            },
+            rewardRedemptions = redemptions.count { it.status == RedemptionStatus.REDEEMED },
             totalPointsAwarded = transactions.filter { it.transactionResult == TransactionResult.APPROVED }.sumOf { it.pointsDelta }.coerceAtLeast(0),
             idTemplateStatus = "Backend status unavailable",
             rewardsStatus = if (event.rewardsEnabled) "Enabled" else "Disabled",

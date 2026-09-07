@@ -100,8 +100,7 @@ class DashboardPresenter(
 
                 val completedCount = if (registrationsResult is NetworkResult.Success) {
                     registrations.count {
-                        it.status != RegistrationStatus.CANCELLED &&
-                            it.status != RegistrationStatus.NO_SHOW &&
+                        (it.status == RegistrationStatus.ENTERED || it.status == RegistrationStatus.EXITED) &&
                             it.eventEndAt?.isBefore(now) == true
                     }
                 } else {
@@ -111,7 +110,7 @@ class DashboardPresenter(
                 val summary = summaryResult.data.copy(
                     totalRegistrations = registeredCount.toLong(),
                     totalEvents = upcomingCount.toLong(),
-                    totalRewards = completedCount.toLong(),
+                    completedEventsCount = completedCount.toLong(),
                     upcomingEvents = upcomingEvents.take(1),
                     discoverEvents = mappedEvents.take(5),
                 )

@@ -23,6 +23,7 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -160,15 +161,32 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         }
     }
 
-    private fun buildPurposeOptions(items: List<TransactionResponse>): List<PurposeOption> {
+    private suspend fun buildPurposeOptions(items: List<TransactionResponse>): List<PurposeOption> {
+        selectedEventId?.let { eventId ->
+            when (val result = repository.getScanPurposesByEvent(eventId)) {
+                is NetworkResult.Success -> {
+                    val authoritative = result.data.map {
+                        PurposeOption(
+                            id = it.scanPurposeId.toString(),
+                            label = it.name.takeIf { name -> name.isNotBlank() } ?: it.code.name,
+                        )
+                    }
+                    if (authoritative.isNotEmpty()) {
+                        return authoritative.sortedBy { it.label.lowercase(Locale.US) }
+                    }
+                }
+                else -> Unit
+            }
+        }
         return items
-            .mapNotNull { tx ->
+            .map { tx ->
+                val purposeId = tx.scanPurposeId.toString()
                 val fallbackName = tx.transactionType.name
                     .lowercase(Locale.US)
                     .split('_')
                     .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase(Locale.US) } }
                 PurposeOption(
-                    id = tx.scanPurposeId.toString(),
+                    id = purposeId,
                     label = tx.scanPurposeName?.takeIf { it.isNotBlank() } ?: fallbackName,
                 )
             }
@@ -228,7 +246,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             return
         }
         if (purposeOptions.isEmpty()) {
-            showMessage("No scan purposes in your transaction logs yet.")
+            showMessage("No scan purposes found for this filter.")
             return
         }
         closeEventPopup()
@@ -341,8 +359,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         skeletonLoading.visibility = View.GONE
         adapter.submitItems(items.sortedByDescending { it.scannedAt ?: Instant.EPOCH })
         txtTotalScans.text = items.size.toString()
-        txtSuccessfulScans.text = items.count { it.transactionResult.name == "APPROVED" || it.transactionResult.name == "SUCCESS" }.toString()
-        txtRejectedScans.text = items.count { it.transactionResult.name != "APPROVED" && it.transactionResult.name != "SUCCESS" }.toString()
+        txtSuccessfulScans.text = items.count { it.transactionResult == TransactionResult.APPROVED }.toString()
+        txtRejectedScans.text = items.count { it.transactionResult != TransactionResult.APPROVED }.toString()
         txtEmptyState.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
     }

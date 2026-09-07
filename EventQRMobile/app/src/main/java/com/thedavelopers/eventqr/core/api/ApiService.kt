@@ -525,6 +525,9 @@ interface ApiService {
     @GET("staff/events/{eventId}/transactions/today")
     suspend fun getStaffTodayTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
 
+    @GET("staff/transactions/today")
+    suspend fun getStaffMyTodayTransactions(): ApiResponse<List<TransactionResponse>>
+
     @GET("staff/events/{eventId}/attendees/{attendeeId}/transactions")
     suspend fun getStaffAttendeeTransactions(@Path("eventId") eventId: String, @Path("attendeeId") attendeeId: String): ApiResponse<List<TransactionResponse>>
 

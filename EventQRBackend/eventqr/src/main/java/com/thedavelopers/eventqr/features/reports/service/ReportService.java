@@ -37,7 +37,10 @@ public class ReportService {
     public EventReportSnapshot generate(UUID eventId) {
         List<com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration> registrations = eventRegistrationRepository.findByEventId(eventId);
         List<com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog> transactions = transactionLogRepository.findByEventId(eventId);
-        long registered = registrations.size();
+        long registered = registrations.stream()
+                .filter(registration -> registration.getStatus() != RegistrationStatus.CANCELLED
+                        && registration.getStatus() != RegistrationStatus.NO_SHOW)
+                .count();
         long entered = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.ENTERED).count();
         long exited = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.EXITED).count();
         long noShow = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.NO_SHOW).count();
