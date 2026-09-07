@@ -190,6 +190,7 @@
         <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerStaffTransactions" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingTop="8dp" android:paddingBottom="12dp" />
             <TextView android:id="@+id/txtStaffTransactionsEmptyState" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:text="No transaction logs for this event yet." android:textColor="#6B7280" android:textSize="14sp" android:visibility="gone" />
+            <ProgressBar android:id="@+id/pbStaffTransactionsLoadMore" android:layout_width="36dp" android:layout_height="36dp" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="8dp" android:visibility="gone" />
             <include
                 layout="@layout/include_skeleton_cards"
                 android:layout_width="match_parent"

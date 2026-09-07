@@ -29,6 +29,8 @@ class OrganizerReportsRepository(context: Context) {
         eventId: String,
         reportType: EventReportType,
         filters: EventReportFiltersDto,
+        page: Int = 0,
+        size: Int = 20,
     ): NetworkResult<EventReportDto> = safeApiCall {
         apiService.getEventReportByType(
             eventId = eventId,
@@ -37,6 +39,8 @@ class OrganizerReportsRepository(context: Context) {
             endDate = filters.endDate?.toString(),
             attendeeQuery = filters.attendeeQuery?.trim()?.takeIf { it.isNotBlank() },
             status = filters.status,
+            page = page,
+            size = size,
         )
     }
 

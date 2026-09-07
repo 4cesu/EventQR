@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
@@ -56,9 +59,11 @@ public class RegistrationController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<List<RegistrationResponse>>> myRegistrations(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Page<RegistrationResponse>>> myRegistrations(HttpServletRequest request,
+                                                                                    @RequestParam(defaultValue = "0") int page,
+                                                                                    @RequestParam(defaultValue = "20") int size) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        return ResponseEntity.ok(ApiResponse.success(registrationService.findByAttendeeUserId(userId)));
+        return ResponseEntity.ok(ApiResponse.success(registrationService.findByAttendeeUserId(userId, PageRequest.of(page, size))));
     }
 
     @GetMapping("/{registrationId}")
@@ -76,10 +81,12 @@ public class RegistrationController {
     }
 
     @GetMapping("/event/{eventId}")
-    public ResponseEntity<ApiResponse<List<RegistrationResponse>>> findByEvent(HttpServletRequest request,
-                                                                               @PathVariable UUID eventId) {
+    public ResponseEntity<ApiResponse<Page<RegistrationResponse>>> findByEvent(HttpServletRequest request,
+                                                                               @PathVariable UUID eventId,
+                                                                               @RequestParam(defaultValue = "0") int page,
+                                                                               @RequestParam(defaultValue = "20") int size) {
         requireEventAccess(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId)));
+        return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId, PageRequest.of(page, size))));
     }
 
     @PostMapping("/{registrationId}/qr")

@@ -20,6 +20,8 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +73,7 @@ public class EventReportGenerationService {
         this.objectMapper = objectMapper;
     }
 
+    @Cacheable(cacheNames = "report-summaries", key = "#eventId")
     public EventReportSummaryResponse summary(UUID organizerUserId, UUID eventId) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
@@ -80,11 +83,13 @@ public class EventReportGenerationService {
                 .count();
         long checkedIn = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.ENTERED).count();
         long exited = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.EXITED).count();
-        boolean hasAnyRecords = registered > 0 || !transactionLogRepository.findByEventId(eventId).isEmpty()
-                || !pointTransactionRepository.findByEventId(eventId).isEmpty();
+        boolean hasAnyRecords = registered > 0 || transactionLogRepository.countByEventId(eventId) > 0
+                || pointTransactionRepository.countByEventId(eventId) > 0;
         return new EventReportSummaryResponse(eventId, event.getTitle(), registered, checkedIn, exited, hasAnyRecords);
     }
 
+    @Cacheable(cacheNames = "report-snapshots",
+               key = "#eventId + ':' + #reportType + ':' + #filters.startDate() + ':' + #filters.endDate() + ':' + #filters.status() + ':' + #filters.attendeeQuery()")
     public EventReportResponse generate(UUID organizerUserId, UUID eventId, ReportType reportType, EventReportFilters filters) {
         validateDateRange(filters);
         Event event = requireOrganizerEvent(organizerUserId, eventId);

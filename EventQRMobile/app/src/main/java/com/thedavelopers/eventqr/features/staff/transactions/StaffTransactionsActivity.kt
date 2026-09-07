@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.staff
 
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -9,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,12 +18,11 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
-import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
-import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -50,6 +49,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private lateinit var txtRejectedScans: TextView
     private lateinit var txtEmptyState: TextView
     private lateinit var recyclerView: RecyclerView
+    private lateinit var pbLoadMore: ProgressBar
 
     private var assignedEvents: List<StaffAssignedEventResponse> = emptyList()
     private var selectedEventId: String? = null
@@ -59,6 +59,13 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private var purposePopup: PopupWindow? = null
     private var isEventPopupOpen = false
     private var isPurposePopupOpen = false
+
+    // Pagination state
+    private val PAGE_SIZE = 20
+    private var currentPage = 0
+    private var isLastPage = false
+    private var isLoadingMore = false
+    private var allItems = mutableListOf<TransactionResponse>()
 
     private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
 
@@ -89,16 +96,33 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         txtRejectedScans = findViewById(R.id.txtRejectedScans)
         txtEmptyState = findViewById(R.id.txtStaffTransactionsEmptyState)
         recyclerView = findViewById(R.id.recyclerStaffTransactions)
+        pbLoadMore = findViewById(R.id.pbStaffTransactionsLoadMore)
 
         swipeRefresh = findViewById(R.id.swipeRefreshStaffTransactions)
         swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
-        swipeRefresh.setOnRefreshListener { loadTransactions() }
+        swipeRefresh.setOnRefreshListener { refreshTransactions() }
 
         skeletonLoading = findViewById(R.id.skeletonLoading)
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(this@StaffTransactionsActivity)
             adapter = this@StaffTransactionsActivity.adapter
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    if (!isLastPage && !isLoadingMore && dy > 0) {
+                        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                        val visibleItemCount = layoutManager.childCount
+                        val totalItemCount = layoutManager.itemCount
+                        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                        if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                            && firstVisibleItemPosition >= 0
+                        ) {
+                            loadNextPage()
+                        }
+                    }
+                }
+            })
         }
 
         eventCard.visibility = View.VISIBLE
@@ -126,7 +150,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                         return@launch
                     }
                     bindEventHeader()
-                    loadTransactions()
+                    refreshTransactions()
                 }
                 is NetworkResult.Error -> {
                     renderTransactions(emptyList())
@@ -138,44 +162,70 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         }
     }
 
-    private fun loadTransactions() {
+    private fun refreshTransactions() {
+        currentPage = 0
+        isLastPage = false
+        allItems.clear()
+        loadPage()
+    }
+
+    private fun loadPage() {
         MainScope().launch {
-            showLoading(true)
-            when (val result = repository.getMyTransactions(selectedEventId, selectedPurposeId)) {
+            isLoadingMore = currentPage > 0
+            if (!isLoadingMore) {
+                showLoading(true)
+            } else {
+                pbLoadMore.visibility = View.VISIBLE
+            }
+
+            when (val result = repository.getMyTransactions(selectedEventId, selectedPurposeId, currentPage, PAGE_SIZE)) {
                 is NetworkResult.Success -> {
-                    val items = result.data
-                    purposeOptions = buildPurposeOptions(items)
-                    if (selectedPurposeId != null && purposeOptions.none { it.id == selectedPurposeId }) {
-                        selectedPurposeId = null
+                    val newItems = result.data
+                    allItems.addAll(newItems)
+                    isLastPage = newItems.size < PAGE_SIZE
+                    currentPage++
+
+                    if (currentPage == 1) {
+                        purposeOptions = buildPurposeOptionsSync(allItems)
+                        if (selectedPurposeId != null && purposeOptions.none { it.id == selectedPurposeId }) {
+                            selectedPurposeId = null
+                        }
+                        bindPurposeHeader()
                     }
-                    bindPurposeHeader()
-                    renderTransactions(items)
+
+                    renderTransactions(allItems.sortedByDescending { it.scannedAt ?: Instant.EPOCH })
                 }
                 is NetworkResult.Error -> {
-                    renderTransactions(emptyList())
+                    if (currentPage == 1) {
+                        renderTransactions(emptyList())
+                    }
                     showMessage(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }
+
+            isLoadingMore = false
+            pbLoadMore.visibility = View.GONE
             showLoading(false)
         }
     }
 
-    private suspend fun buildPurposeOptions(items: List<TransactionResponse>): List<PurposeOption> {
+    private fun loadNextPage() {
+        if (!isLastPage && !isLoadingMore) {
+            loadPage()
+        }
+    }
+
+    private suspend fun buildPurposeOptionsSync(items: List<TransactionResponse>): List<PurposeOption> {
         selectedEventId?.let { eventId ->
-            when (val result = repository.getScanPurposesByEvent(eventId)) {
-                is NetworkResult.Success -> {
-                    val authoritative = result.data.map {
-                        PurposeOption(
-                            id = it.scanPurposeId.toString(),
-                            label = it.name.takeIf { name -> name.isNotBlank() } ?: it.code.name,
-                        )
-                    }
-                    if (authoritative.isNotEmpty()) {
-                        return authoritative.sortedBy { it.label.lowercase(Locale.US) }
-                    }
-                }
-                else -> Unit
+            val purposeResult = repository.getScanPurposesByEvent(eventId)
+            if (purposeResult is NetworkResult.Success && purposeResult.data.isNotEmpty()) {
+                return purposeResult.data.map {
+                    PurposeOption(
+                        id = it.scanPurposeId.toString(),
+                        label = it.name.takeIf { name -> name.isNotBlank() } ?: it.code.name,
+                    )
+                }.sortedBy { it.label.lowercase(Locale.US) }
             }
         }
         return items
@@ -283,7 +333,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             selectedEventId = null
             bindEventHeader()
             closeEventPopup()
-            loadTransactions()
+            refreshTransactions()
         }.apply { if (allSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
 
         assignedEvents.forEach { event ->
@@ -294,7 +344,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                 bindEventHeader()
                 bindPurposeHeader()
                 closeEventPopup()
-                loadTransactions()
+                refreshTransactions()
             }.apply { if (isSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
         }
     }
@@ -307,7 +357,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             selectedPurposeId = null
             bindPurposeHeader()
             closePurposePopup()
-            loadTransactions()
+            refreshTransactions()
         }.apply { if (allSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
 
         purposeOptions.forEach { purpose ->
@@ -316,7 +366,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                 selectedPurposeId = purpose.id
                 bindPurposeHeader()
                 closePurposePopup()
-                loadTransactions()
+                refreshTransactions()
             }.apply { if (isSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
         }
     }
@@ -357,7 +407,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     override fun renderTransactions(items: List<TransactionResponse>) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
-        adapter.submitItems(items.sortedByDescending { it.scannedAt ?: Instant.EPOCH })
+        adapter.submitItems(items)
         txtTotalScans.text = items.size.toString()
         txtSuccessfulScans.text = items.count { it.transactionResult == TransactionResult.APPROVED }.toString()
         txtRejectedScans.text = items.count { it.transactionResult != TransactionResult.APPROVED }.toString()
