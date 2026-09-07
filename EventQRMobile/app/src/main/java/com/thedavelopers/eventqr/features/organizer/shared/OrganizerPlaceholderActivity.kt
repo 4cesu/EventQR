@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.organizer.shared
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity
 
 open class OrganizerPlaceholderActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -18,18 +18,15 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
+import com.thedavelopers.eventqr.features.idprinting.repository.IdTemplateRepository;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerAttendeeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerDashboardResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerEventResponse;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerOverallEventReportRow;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerOverallReportResponse;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerReportResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerScanPurposeRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerScanPurposeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerStaffResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerTransactionResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerTransactionRuleResponse;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.ReportRow;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentUpdateRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.TransactionEntry;
@@ -81,6 +78,7 @@ public class OrganizerService {
     private final PointTransactionRepository pointTransactionRepository;
     private final EventStaffAssignmentRepository staffAssignmentRepository;
     private final UserProfileRepository userProfileRepository;
+    private final IdTemplateRepository idTemplateRepository;
 
     public OrganizerService(EventRepository eventRepository,
                             EventRegistrationRepository registrationRepository,
@@ -90,7 +88,8 @@ public class OrganizerService {
                             RewardRedemptionRepository rewardRedemptionRepository,
                             PointTransactionRepository pointTransactionRepository,
                             EventStaffAssignmentRepository staffAssignmentRepository,
-                            UserProfileRepository userProfileRepository) {
+                            UserProfileRepository userProfileRepository,
+                            IdTemplateRepository idTemplateRepository) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.transactionLogRepository = transactionLogRepository;
@@ -100,6 +99,7 @@ public class OrganizerService {
         this.pointTransactionRepository = pointTransactionRepository;
         this.staffAssignmentRepository = staffAssignmentRepository;
         this.userProfileRepository = userProfileRepository;
+        this.idTemplateRepository = idTemplateRepository;
     }
 
     @Transactional(readOnly = true)
@@ -304,80 +304,6 @@ public class OrganizerService {
                 log.getQrCredentialId(), log.getScanPurposeId(), log.getTransactionType(), log.getTransactionResult(),
                 log.getPointsDelta(), log.getReason(), log.getScannedAt(), event.getTitle());
     }
-
-    @Transactional(readOnly = true)
-    public OrganizerReportResponse report(UUID organizerUserId, UUID eventId) {
-        requireOrganizerEvent(organizerUserId, eventId);
-        List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
-        List<TransactionLog> transactions = transactionLogRepository.findByEventIdOrderByScannedAtDesc(eventId);
-        long registered = registrations.size();
-        long entered = registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.ENTERED).count();
-        long exited = registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.EXITED).count();
-        long attendance = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
-                && tx.getTransactionType() == TransactionType.ATTENDANCE).count();
-        long noShows = registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.NO_SHOW).count();
-        long points = pointTransactionRepository.findByEventId(eventId).stream()
-                .mapToLong(com.thedavelopers.eventqr.features.rewards.model.entity.PointTransaction::getPointsChanged)
-                .sum();
-        if (points == 0) {
-            points = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED)
-                    .mapToLong(TransactionLog::getPointsDelta).sum();
-        }
-        long benefitClaims = countApproved(transactions, TransactionType.BENEFIT_CLAIM);
-        long boothVisits = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
-                && (tx.getTransactionType() == TransactionType.BOOTH_VISIT || tx.getTransactionType() == TransactionType.SESSION_VISIT)).count();
-        long redemptions = rewardRedemptionRepository.findByEventId(eventId).stream()
-                .filter(redemption -> redemption.getStatus() == RedemptionStatus.REDEEMED).count();
-        long rejected = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.REJECTED).count();
-        long approved = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED).count();
-        return new OrganizerReportResponse(eventId, registered, entered, exited, attendance, noShows, approved, rejected,
-                points, benefitClaims, boothVisits, redemptions, rejected,
-                List.of(new ReportRow("Entry Scans", String.valueOf(countApproved(transactions, TransactionType.ENTRY))),
-                        new ReportRow("Exit Scans", String.valueOf(countApproved(transactions, TransactionType.EXIT))),
-                        new ReportRow("Attendance Scans", String.valueOf(attendance)),
-                        new ReportRow("Approved Scans", String.valueOf(approved)),
-                        new ReportRow("Rejected Scans", String.valueOf(rejected))),
-                List.of(new ReportRow("Registered", String.valueOf(registered)),
-                        new ReportRow("Checked In / Entered", String.valueOf(entered)),
-                        new ReportRow("Exited", String.valueOf(exited)),
-                        new ReportRow("Attendance Count", String.valueOf(attendance)),
-                        new ReportRow("No Shows", String.valueOf(noShows))),
-                List.of(new ReportRow("Wrong event QR", String.valueOf(countRejectedReason(transactions, "Wrong event QR"))),
-                        new ReportRow("Duplicate scans", String.valueOf(countRejectedReason(transactions, "Duplicate"))),
-                        new ReportRow("Other rejected scans", String.valueOf(countOtherRejected(transactions)))),
-                List.of(new ReportRow("Points distributed", String.valueOf(points)),
-                        new ReportRow("Benefit claims", String.valueOf(benefitClaims)),
-                        new ReportRow("Reward redemptions", String.valueOf(redemptions))),
-                transactions.stream().limit(8)
-                        .map(tx -> new ReportRow(tx.getTransactionType().name(), format(tx.getScannedAt())))
-                        .toList());
-    }
-
-            @Transactional(readOnly = true)
-            public OrganizerOverallReportResponse overallReport(UUID organizerUserId) {
-            UserProfile organizer = userProfileRepository.findById(organizerUserId)
-                .orElseThrow(() -> new ForbiddenException("Organizer account not found"));
-            List<Event> ownedEvents = eventRepository.findByOrganizerUserId(organizerUserId);
-            List<OrganizerEventResponse> snapshots = ownedEvents.stream().map(this::toOrganizerEvent).toList();
-            long totalRegistered = snapshots.stream().mapToLong(OrganizerEventResponse::registeredCount).sum();
-            long enteredCount = snapshots.stream().mapToLong(OrganizerEventResponse::enteredCount).sum();
-            long exitedCount = snapshots.stream().mapToLong(OrganizerEventResponse::exitedCount).sum();
-            long attendanceCount = snapshots.stream().mapToLong(OrganizerEventResponse::attendedCount).sum();
-            long approvedScans = snapshots.stream().mapToLong(OrganizerEventResponse::successfulScans).sum();
-            long rejectedScans = snapshots.stream().mapToLong(OrganizerEventResponse::rejectedScans).sum();
-            long pointsDistributed = snapshots.stream().mapToLong(OrganizerEventResponse::totalPointsAwarded).sum();
-            long benefitClaims = snapshots.stream().mapToLong(OrganizerEventResponse::benefitClaims).sum();
-            long boothSessionVisits = snapshots.stream().mapToLong(OrganizerEventResponse::boothSessionVisits).sum();
-            long rewardRedemptions = snapshots.stream().mapToLong(OrganizerEventResponse::rewardRedemptions).sum();
-            List<OrganizerOverallEventReportRow> breakdown = snapshots.stream()
-                .map(event -> new OrganizerOverallEventReportRow(event.eventId(), event.title(), event.registeredCount(),
-                    event.enteredCount(), event.exitedCount(), event.successfulScans(), event.rejectedScans(),
-                    event.totalPointsAwarded()))
-                .toList();
-            return new OrganizerOverallReportResponse(organizer.getId(), organizer.getFullName(), snapshots.size(),
-                totalRegistered, enteredCount, exitedCount, attendanceCount, approvedScans, rejectedScans,
-                pointsDistributed, benefitClaims, boothSessionVisits, rewardRedemptions, breakdown);
-            }
 
     @Transactional(readOnly = true)
     public List<OrganizerStaffResponse> staff(UUID organizerUserId, UUID eventId) {
@@ -727,7 +653,8 @@ public class OrganizerService {
                 redemptions,
                 transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED)
                         .mapToLong(TransactionLog::getPointsDelta).sum(),
-                "Backend status unavailable", event.isRewardsEnabled() ? "Enabled" : "Disabled",
+                idTemplateRepository.findFirstByEventIdAndActiveTrue(eventId).isPresent() ? "Configured" : "Not configured",
+                event.isRewardsEnabled() ? "Enabled" : "Disabled",
                 staffAssignmentRepository.findByEventId(eventId).size(),
                 scanPurposeRepository.findByEventId(eventId).stream().filter(ScanPurpose::isActive).count(),
                 event.isRewardsEnabled(), event.getOrganizerUserId(), event.getEventLogoUrl());
@@ -850,17 +777,6 @@ public class OrganizerService {
     private long countApproved(List<TransactionLog> transactions, TransactionType type) {
         return transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
                 && tx.getTransactionType() == type).count();
-    }
-
-    private long countRejectedReason(List<TransactionLog> transactions, String reason) {
-        return transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.REJECTED
-                && tx.getReason() != null && tx.getReason().toLowerCase().contains(reason.toLowerCase())).count();
-    }
-
-    private long countOtherRejected(List<TransactionLog> transactions) {
-        long known = countRejectedReason(transactions, "Wrong event QR") + countRejectedReason(transactions, "Duplicate");
-        long rejected = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.REJECTED).count();
-        return Math.max(0, rejected - known);
     }
 
     private List<String> splitPermissions(String permissions) {

@@ -18,6 +18,8 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
+import com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity
 import com.thedavelopers.eventqr.features.organizer.NAV_DASHBOARD
 import com.thedavelopers.eventqr.features.organizer.bottomNav
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto

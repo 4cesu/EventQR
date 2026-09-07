@@ -63,7 +63,7 @@ public class DashboardService {
         List<DashboardUpcomingEvent> upcomingEvents = loadUpcomingEvents(now);
         long unreadNotifications = notificationRepository.countByRecipientUserIdAndStatusNot(userId, NotificationStatus.READ);
 
-        return new DashboardSummary(availableEventsCount, registeredCount, transactionLogRepository.count(),
+        return new DashboardSummary(availableEventsCount, registeredCount, transactionLogRepository.countByAttendeeUserId(userId),
                 pointsCount, unreadNotifications, profile.getFullName(), upcomingEvents);
     }
 

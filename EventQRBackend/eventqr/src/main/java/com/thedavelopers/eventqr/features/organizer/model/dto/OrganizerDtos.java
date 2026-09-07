@@ -57,30 +57,6 @@ public final class OrganizerDtos {
                                                Instant createdTimestamp) {
     }
 
-    public record OrganizerReportResponse(UUID eventId, long totalRegistered, long enteredCount, long exitedCount,
-                                          long attendanceCount, long noShowCount, long approvedTransactionCount,
-                                          long rejectedTransactionCount, long pointsDistributed, long benefitClaims,
-                                          long boothSessionVisits, long rewardRedemptions, long rejectedScans,
-                                          List<ReportRow> transactionSummary,
-                                          List<ReportRow> attendanceSummary, List<ReportRow> rejectedSummary,
-                                          List<ReportRow> pointsRewardsSummary, List<ReportRow> recentActivity) {
-    }
-
-    public record OrganizerOverallReportResponse(UUID organizerUserId, String organizerName, long totalEvents,
-                                                 long totalRegistered, long enteredCount, long exitedCount,
-                                                 long attendanceCount, long approvedTransactionCount,
-                                                 long rejectedTransactionCount, long pointsDistributed,
-                                                 long benefitClaims, long boothSessionVisits,
-                                                 long rewardRedemptions, List<OrganizerOverallEventReportRow> eventBreakdown) {
-    }
-
-    public record OrganizerOverallEventReportRow(UUID eventId, String eventTitle, long registered, long entered,
-                                                 long exited, long approvedScans, long rejectedScans, long points) {
-    }
-
-    public record ReportRow(String label, String value) {
-    }
-
     public record OrganizerStaffResponse(UUID assignmentId, UUID eventId, UUID staffUserId, String name, String email,
                                          String roleLabel, boolean active, boolean canScan, boolean canPrintId,
                                          boolean canViewLogs, boolean canManageRewards,

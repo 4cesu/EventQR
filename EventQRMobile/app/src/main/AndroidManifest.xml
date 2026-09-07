@@ -49,7 +49,6 @@
         <activity android:name=".features.staff.reward.RedemptionResultActivity" android:exported="false" />
         <activity android:name=".features.organizer.notifications.NotificationManagementActivity" android:exported="false" />
         <activity android:name=".features.organizer.reports.ReportsActivity" android:exported="false" />
-        <activity android:name=".features.organizer.OrganizerOverallReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.rewards.ManageRewardsActivity" android:exported="false" />
         <activity android:name=".features.organizer.idtemplate.IdTemplateSettingsActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.EventManagementHubActivity" android:exported="false" />
@@ -64,22 +63,9 @@
         <activity android:name=".features.organizer.attendees.AttendeeManagementActivity" android:exported="false" />
         <activity android:name=".features.organizer.attendees.AttendeeDetailsActivity" android:exported="false" />
         <activity android:name=".features.organizer.attendees.SearchAttendeesActivity" android:exported="false" />
-        <activity android:name=".features.organizer.SearchAttendeesActivity" android:exported="false" />
         <activity android:name=".features.organizer.transactions.TransactionLogsActivity" android:exported="false" />
         <activity android:name=".features.organizer.reports.EventReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.reports.ReportPreviewActivity" android:exported="false" />
-        <activity android:name=".features.organizer.NotificationManagementActivity" android:exported="false" />
-        <activity android:name=".features.organizer.ReportsActivity" android:exported="false" />
-        <activity android:name=".features.organizer.ManageRewardsActivity" android:exported="false" />
-        <activity android:name=".features.organizer.EventManagementHubActivity" android:exported="false" />
-        <activity android:name=".features.organizer.TransactionRulesActivity" android:exported="false" />
-        <activity android:name=".features.organizer.ManageScanPurposesActivity" android:exported="false" />
-        <activity android:name=".features.organizer.ManageUsersActivity" android:exported="false" />
-        <activity android:name=".features.organizer.ManageEventsActivity" android:exported="false" />
-        <activity android:name=".features.organizer.OrganizerPlaceholderActivity" android:exported="false" />
-        <activity android:name=".features.organizer.OrganizerDashboardActivity" android:exported="false" />
-        <activity android:name=".features.organizer.AttendeeManagementActivity" android:exported="false" />
-        <activity android:name=".features.organizer.AttendeeDetailsActivity" android:exported="false" />
         <activity android:name=".features.admin.AdminEventApprovalBackendActivity" android:exported="false" />
         <activity android:name=".features.admin.AdminEventRequestDetailActivity" android:exported="false" />
         <activity android:name=".features.admin.dashboard.AdminDashboardActivity" android:exported="false" />
@@ -87,8 +73,6 @@
         <activity android:name=".features.admin.users.AdminAccountManagementActivity" android:exported="false" />
         <activity android:name=".features.admin.logs.AdminAuditLogsActivity" android:exported="false" />
         <activity android:name=".features.admin.notifications.AdminNotificationManagementActivity" android:exported="false" />
-        <activity android:name=".features.organizer.TransactionLogsActivity" android:exported="false" />
-        <activity android:name=".features.organizer.EventReportsActivity" android:exported="false" />
         <activity android:name=".features.auth.forgotpassword.ForgotPasswordActivity" android:exported="false" />
         <activity
             android:name=".features.auth.resetpassword.ResetPasswordActivity"

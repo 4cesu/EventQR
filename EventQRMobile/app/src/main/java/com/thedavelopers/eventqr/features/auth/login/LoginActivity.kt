@@ -80,7 +80,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
         val destination = when (normalizedRole) {
             AccountRole.STAFF.name -> com.thedavelopers.eventqr.features.staff.StaffDashboardActivity::class.java
             AccountRole.ORGANIZER.name ->
-                com.thedavelopers.eventqr.features.organizer.OrganizerDashboardActivity::class.java
+                com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java
             AccountRole.ADMIN.name, AccountRole.SUPER_ADMIN.name ->
                 com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java
             AccountRole.ATTENDEE.name, AccountRole.USER.name -> DashboardActivity::class.java

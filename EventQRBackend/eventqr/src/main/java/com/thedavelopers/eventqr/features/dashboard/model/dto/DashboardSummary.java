@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record DashboardSummary(long totalEvents, long totalRegistrations, long totalTransactions, long totalRewards,
+public record DashboardSummary(long totalEvents, long totalRegistrations, long totalTransactions, long totalPoints,
                                long totalNotifications, String fullName,
                                List<DashboardUpcomingEvent> upcomingEvents) {
 

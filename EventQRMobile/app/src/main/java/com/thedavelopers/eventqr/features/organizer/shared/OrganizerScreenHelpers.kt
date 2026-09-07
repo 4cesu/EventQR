@@ -241,7 +241,7 @@ internal fun AppCompatActivity.openOrganizerPlaceholder(
     message: String,
     selectedNav: String? = null,
 ) {
-    startActivity(Intent(this, OrganizerPlaceholderActivity::class.java).apply {
+    startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.shared.OrganizerPlaceholderActivity::class.java).apply {
         putExtra(EXTRA_PLACEHOLDER_TITLE, title)
         putExtra(EXTRA_PLACEHOLDER_MESSAGE, message)
         selectedNav?.let { putExtra(EXTRA_PLACEHOLDER_NAV, it) }
@@ -251,7 +251,7 @@ internal fun AppCompatActivity.openOrganizerPlaceholder(
 internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = "Event ID is missing.") {
     organizerShell(screenTitle, message, showBack = true)
         .addView(emptyState("Open this screen from My Events or the event hub.", "Open My Events") {
-            openOrganizerPage(ManageEventsActivity::class.java)
+            openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java)
         })
 }
 
@@ -573,10 +573,14 @@ internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
     val currentEventId = selectedEventId().takeIf { it.isNotBlank() }
     val items = listOf(
         Triple(NAV_DASHBOARD, com.thedavelopers.eventqr.R.drawable.ic_nav_home, {
-            if (this@bottomNav !is OrganizerDashboardActivity) openOrganizerPage(OrganizerDashboardActivity::class.java)
+            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity) {
+                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java)
+            }
         }),
         Triple(NAV_EVENTS, com.thedavelopers.eventqr.R.drawable.ic_calendar, {
-            if (this@bottomNav !is ManageEventsActivity) openOrganizerPage(ManageEventsActivity::class.java, currentEventId)
+            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity) {
+                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java, currentEventId)
+            }
         }),
         Triple(NAV_ATTENDEES, com.thedavelopers.eventqr.R.drawable.ic_group, {
             if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity) {

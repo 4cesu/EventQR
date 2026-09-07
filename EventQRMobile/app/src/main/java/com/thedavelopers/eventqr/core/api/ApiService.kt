@@ -28,8 +28,6 @@ import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRe
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerOverallReportDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerReportDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerStaffDto
@@ -43,7 +41,6 @@ import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSna
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse
-import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSnapshot
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportExportRequestDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterStatus
@@ -236,9 +233,6 @@ interface ApiService {
     @GET("organizer/events/{eventId}/transactions")
     suspend fun getOrganizerTransactions(@Path("eventId") eventId: String): ApiResponse<List<OrganizerTransactionDto>>
 
-    @GET("organizer/events/{eventId}/reports/summary")
-    suspend fun getOrganizerReport(@Path("eventId") eventId: String): ApiResponse<OrganizerReportDto>
-
     @GET("events/{eventId}/reports/summary")
     suspend fun getEventReportSummary(@Path("eventId") eventId: String): ApiResponse<EventReportSummaryDto>
 
@@ -268,9 +262,6 @@ interface ApiService {
         @Path("reportType") reportType: EventReportType,
         @Body request: EventReportExportRequestDto,
     ): Response<ResponseBody>
-
-    @GET("organizer/reports/summary")
-    suspend fun getOrganizerOverallReport(): ApiResponse<OrganizerOverallReportDto>
 
     @GET("organizer/events/{eventId}/staff")
     suspend fun getOrganizerStaff(@Path("eventId") eventId: String): ApiResponse<List<OrganizerStaffDto>>
@@ -470,9 +461,6 @@ interface ApiService {
 
     @GET("attendees/me/events/{eventId}/claimed-rewards")
     suspend fun getMyClaimedRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardRedemptionResponse>>
-
-    @GET("reports/event/{eventId}")
-    suspend fun getEventReport(@Path("eventId") eventId: String): ApiResponse<EventReportSnapshot>
 
     @GET("staff/events")
     suspend fun getStaffEvents(): ApiResponse<List<StaffAssignedEventResponse>>
