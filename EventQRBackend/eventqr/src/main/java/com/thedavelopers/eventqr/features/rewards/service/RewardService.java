@@ -4,8 +4,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
@@ -59,6 +62,7 @@ public class RewardService {
         this.scanPurposeRepository = scanPurposeRepository;
     }
 
+    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, allEntries = true)
     public RewardResponse saveReward(RewardRequest request) {
         Reward reward = new Reward();
         reward.setEventId(request.eventId());
@@ -90,6 +94,7 @@ public class RewardService {
         scanPurposeRepository.save(scanPurpose);
     }
 
+    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, allEntries = true)
     public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
         Reward reward = rewardRepository.findById(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
@@ -103,6 +108,7 @@ public class RewardService {
         return toResponse(rewardRepository.save(reward));
     }
 
+    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, allEntries = true)
     public void deleteReward(UUID eventId, UUID rewardId) {
         Reward reward = rewardRepository.findById(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
@@ -237,7 +243,9 @@ public class RewardService {
         return pointTransactionRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId);
     }
 
+    @Async("eventTaskExecutor")
     @EventListener
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onTransactionRecorded(TransactionRecordedEvent event) {
         if (event.transactionResult() != TransactionResult.APPROVED) {
             return;

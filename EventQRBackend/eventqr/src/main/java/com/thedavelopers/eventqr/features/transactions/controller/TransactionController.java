@@ -2,6 +2,9 @@ package com.thedavelopers.eventqr.features.transactions.controller;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -48,10 +51,12 @@ public class TransactionController {
     }
 
     @GetMapping("/event/{eventId}")
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> findByEvent(HttpServletRequest request,
-                                                                              @PathVariable UUID eventId) {
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> findByEvent(HttpServletRequest request,
+                                                                              @PathVariable UUID eventId,
+                                                                              @RequestParam(defaultValue = "0") int page,
+                                                                              @RequestParam(defaultValue = "20") int size) {
         requireAdminOrEventOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(transactionService.findByEvent(eventId)));
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findByEvent(eventId, PageRequest.of(page, size))));
     }
 
     private void requireStaffOrOrganizerForEvent(HttpServletRequest request, UUID eventId) {

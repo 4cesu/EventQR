@@ -3,6 +3,8 @@ package com.thedavelopers.eventqr.features.scanning.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class ScanPurposeService implements ScanPurposePort {
         this.scanPurposeRepository = scanPurposeRepository;
     }
 
+    @CacheEvict(cacheNames = "scan-purposes", key = "#request.eventId()")
     public ScanPurposeResponse create(ScanPurposeRequest request) {
         ScanPurpose scanPurpose = new ScanPurpose();
         scanPurpose.setEventId(request.eventId());
@@ -35,6 +38,7 @@ public class ScanPurposeService implements ScanPurposePort {
         return toResponse(scanPurposeRepository.save(scanPurpose));
     }
 
+    @Cacheable(cacheNames = "scan-purposes", key = "#eventId")
     public List<ScanPurposeResponse> findByEventId(UUID eventId) {
         return scanPurposeRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
     }
@@ -55,6 +59,7 @@ public class ScanPurposeService implements ScanPurposePort {
     }
 
     @Override
+    @Cacheable(cacheNames = "scan-purposes", key = "'snap:' + #eventId")
     public List<ScanPurposeSnapshot> listByEventId(UUID eventId) {
         return scanPurposeRepository.findByEventId(eventId).stream().map(ScanPurpose::toSnapshot).toList();
     }

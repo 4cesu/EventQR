@@ -4,9 +4,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
+import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 
 public interface EventRegistrationRepository extends JpaRepository<EventRegistration, UUID> {
 
@@ -22,9 +28,41 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     List<EventRegistration> findByEventId(UUID eventId);
 
+    Page<EventRegistration> findByEventId(UUID eventId, Pageable pageable);
+
     List<EventRegistration> findByAttendeeUserId(UUID attendeeUserId);
+
+    Page<EventRegistration> findByAttendeeUserId(UUID attendeeUserId, Pageable pageable);
+
+    Page<EventRegistration> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId, Pageable pageable);
 
     // Counts every registration row for the event (matches currentAttendeeCount semantics
     // used across organizer reporting; no status filtering).
     long countByEventId(UUID eventId);
+
+    /**
+     * Atomic registration status transition with optimistic guard.
+     * Only transitions if the current status matches :expectedStatus.
+     * Returns 1 if transitioned, 0 if precondition failed (lost-update or invalid transition).
+     * (Design §5.6)
+     */
+    @Modifying
+    @Query(value = "UPDATE event_registrations SET status = :newStatus, updated_at = now() " +
+                   "WHERE id = :id AND status = :expectedStatus", nativeQuery = true)
+    int updateStatusIfCurrent(@Param("id") UUID id,
+                              @Param("expectedStatus") String expectedStatus,
+                              @Param("newStatus") String newStatus);
+
+    /**
+     * Increment points earned on a registration atomically.
+     */
+    @Modifying
+    @Query(value = "UPDATE event_registrations SET points_earned = points_earned + :delta, updated_at = now() " +
+                   "WHERE id = :id", nativeQuery = true)
+    int addPointsEarned(@Param("id") UUID id, @Param("delta") int delta);
+
+    /**
+     * Count registrations for an event with a specific status (cheaper than loading).
+     */
+    long countByEventIdAndStatus(UUID eventId, RegistrationStatus status);
 }

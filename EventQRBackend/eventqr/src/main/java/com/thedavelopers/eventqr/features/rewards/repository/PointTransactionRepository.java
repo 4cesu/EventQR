@@ -12,4 +12,6 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
     List<PointTransaction> findByEventId(UUID eventId);
 
     List<PointTransaction> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
+
+    long countByEventId(UUID eventId);
 }

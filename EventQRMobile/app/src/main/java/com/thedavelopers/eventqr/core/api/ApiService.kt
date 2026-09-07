@@ -253,6 +253,8 @@ interface ApiService {
         @Query("endDate") endDate: String? = null,
         @Query("attendeeQuery") attendeeQuery: String? = null,
         @Query("status") status: EventReportFilterStatus = EventReportFilterStatus.ALL,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
     ): ApiResponse<EventReportDto>
 
     @Streaming
@@ -502,12 +504,18 @@ interface ApiService {
     suspend fun getStaffAttendee(@Path("eventId") eventId: String, @Path("attendeeId") attendeeId: String): ApiResponse<RegistrationResponse>
 
     @GET("staff/events/{eventId}/transactions")
-    suspend fun getStaffTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
+    suspend fun getStaffTransactions(
+        @Path("eventId") eventId: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): ApiResponse<List<TransactionResponse>>
 
     @GET("staff/transactions")
     suspend fun getStaffMyTransactions(
         @Query("eventId") eventId: String? = null,
         @Query("purposeId") purposeId: String? = null,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
     ): ApiResponse<List<TransactionResponse>>
 
     @GET("staff/events/{eventId}/transactions/today")

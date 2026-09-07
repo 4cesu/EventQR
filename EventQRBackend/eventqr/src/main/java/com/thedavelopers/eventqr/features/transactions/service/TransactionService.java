@@ -13,7 +13,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -136,6 +140,7 @@ public class TransactionService {
                 "QR credential verified", Instant.now());
     }
 
+    @CacheEvict(cacheNames = "transaction-rules", allEntries = true)
     public TransactionResponse record(TransactionRequest request) {
         var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
         if (eventSnapshot.status() == EventStatus.ENDED) {
@@ -215,6 +220,10 @@ public class TransactionService {
         return transactionLogRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
     }
 
+    public Page<TransactionResponse> findByEvent(UUID eventId, Pageable pageable) {
+        return transactionLogRepository.findByEventId(eventId, pageable).map(this::toResponse);
+    }
+
     @Transactional(readOnly = true)
     public List<TransactionResponse> findByEventToday(UUID eventId) {
         ZoneId manila = ZoneId.of("Asia/Manila");
@@ -289,7 +298,8 @@ public class TransactionService {
         return toResponse(log);
     }
 
-    private TransactionRule loadRule(UUID eventId, UUID scanPurposeId) {
+    @Cacheable(cacheNames = "transaction-rules", key = "#eventId + ':' + #scanPurposeId")
+    public TransactionRule loadRule(UUID eventId, UUID scanPurposeId) {
         return transactionRuleRepository.findByEventIdAndScanPurposeId(eventId, scanPurposeId)
                 .orElseGet(() -> defaultRule(eventId, scanPurposeId));
     }

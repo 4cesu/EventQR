@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.thedavelopers.eventqr.features.reports.model.ReportExportFormat;
 import com.thedavelopers.eventqr.features.reports.model.ReportFilterStatus;
@@ -76,10 +78,10 @@ public class EventReportController {
     }
 
     @PostMapping("/{reportType}/export")
-    public ResponseEntity<byte[]> export(HttpServletRequest request,
-                                         @PathVariable UUID eventId,
-                                         @PathVariable ReportType reportType,
-                                         @Valid @RequestBody(required = false) ReportExportRequest exportRequest) {
+    public ResponseEntity<StreamingResponseBody> export(HttpServletRequest request,
+                                                       @PathVariable UUID eventId,
+                                                       @PathVariable ReportType reportType,
+                                                       @Valid @RequestBody(required = false) ReportExportRequest exportRequest) {
         ReportFilterStatus status = exportRequest == null || exportRequest.status() == null
                 ? ReportFilterStatus.ALL
                 : exportRequest.status();
@@ -96,11 +98,26 @@ public class EventReportController {
         );
 
         ReportExportFormat format = parseFormat(exportRequest == null ? null : exportRequest.format());
-        var payload = reportExportService.export(report, format);
+        String fileName = reportExportService.fileName(report, format);
+        String contentType = reportExportService.contentType(format);
+
+        StreamingResponseBody body = out -> {
+            try {
+                if (format == ReportExportFormat.PDF) {
+                    reportExportService.writePdf(report, out);
+                } else {
+                    reportExportService.writeCsv(report, out);
+                }
+                out.flush();
+            } catch (Exception ex) {
+                throw new RuntimeException("Unable to stream report", ex);
+            }
+        };
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, payload.contentType())
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + payload.fileName() + "\"")
-                .body(payload.bytes());
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(body);
     }
 
     private ReportExportFormat parseFormat(String format) {

@@ -42,10 +42,10 @@ class StaffRepository(context: Context) {
         }
     }
 
-    suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getStaffTransactions(eventId) }
+    suspend fun getTransactionsByEvent(eventId: String, page: Int = 0, size: Int = 20) = safeApiCall { apiService.getStaffTransactions(eventId, page, size) }
 
-    suspend fun getMyTransactions(eventId: String? = null, purposeId: String? = null) = safeApiCall {
-        apiService.getStaffMyTransactions(eventId, purposeId)
+    suspend fun getMyTransactions(eventId: String? = null, purposeId: String? = null, page: Int = 0, size: Int = 20) = safeApiCall {
+        apiService.getStaffMyTransactions(eventId, purposeId, page, size)
     }
 
     suspend fun getTodayTransactionsByEvent(eventId: String) = safeApiCall { apiService.getStaffTodayTransactions(eventId) }

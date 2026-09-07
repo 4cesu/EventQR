@@ -59,4 +59,10 @@ public class EventRegistration extends BaseEntity {
 
     @Column(nullable = false)
     private Integer pointsEarned = 0;
+
+    /**
+     * Staff user (UUID) who checked in this attendee. Populated by V10 trigger
+     * handle_transaction_log_effects when a CHECK_IN scan is APPROVED. Nullable.
+     */
+    private UUID checkedInByUserId;
 }

@@ -8,6 +8,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +66,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.qrEmailService = qrEmailService;
     }
 
+    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
     public RegistrationSubmissionResponse register(RegistrationRequest request) {
         EventLookupPort.EventSnapshot eventSnapshot = eventLookupPort.findById(request.eventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + request.eventId()));
@@ -142,8 +146,16 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         return registrationRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
     }
 
+    public Page<RegistrationResponse> findByEvent(UUID eventId, Pageable pageable) {
+        return registrationRepository.findByEventId(eventId, pageable).map(this::toResponse);
+    }
+
     public List<RegistrationResponse> findByAttendeeUserId(UUID attendeeUserId) {
         return registrationRepository.findByAttendeeUserId(attendeeUserId).stream().map(this::toResponse).toList();
+    }
+
+    public Page<RegistrationResponse> findByAttendeeUserId(UUID attendeeUserId, Pageable pageable) {
+        return registrationRepository.findByAttendeeUserId(attendeeUserId, pageable).map(this::toResponse);
     }
 
     public RegistrationResponse findOne(UUID registrationId) {
@@ -160,6 +172,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         return toResponse(registration);
     }
 
+    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
     public RegistrationResponse cancel(UUID registrationId, UUID attendeeUserId) {
         EventRegistration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));

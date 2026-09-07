@@ -4,6 +4,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,6 +79,11 @@ public class EventService implements EventLookupPort {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(PUBLIC_EVENT_STATUSES).stream().map(this::toResponse).toList();
     }
 
+    @Cacheable(cacheNames = "events", key = "'all-page:' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    public Page<EventResponse> findAllEvents(Pageable pageable) {
+        return eventRepository.findByStatusIn(PUBLIC_EVENT_STATUSES, pageable).map(this::toResponse);
+    }
+
     public EventResponse findOne(UUID eventId) {
         return toResponse(eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId)));
@@ -121,6 +130,7 @@ public class EventService implements EventLookupPort {
                 event.getRegistrationCloseAt());
     }
 
+    @CacheEvict(cacheNames = "events", allEntries = true)
     public EventResponse update(UUID eventId, EventRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
@@ -138,6 +148,7 @@ public class EventService implements EventLookupPort {
         return toResponse(eventRepository.save(event));
     }
 
+    @CacheEvict(cacheNames = "events", allEntries = true)
     public EventResponse updateStatus(UUID eventId, EventStatus status) {
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
@@ -151,10 +162,20 @@ public class EventService implements EventLookupPort {
             .toList();
     }
 
+    @Cacheable(cacheNames = "events", key = "'attendee-visible:' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    public Page<AttendeeEventResponse> findAttendeeVisibleEvents(Pageable pageable) {
+        return eventRepository.findByStatusIn(PUBLIC_EVENT_STATUSES, pageable).map(this::toAttendeeResponse);
+    }
+
     public List<AttendeeEventResponse> findAttendeeBrowseEvents() {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(ATTENDEE_BROWSE_STATUSES).stream()
             .map(this::toAttendeeResponse)
             .toList();
+    }
+
+    @Cacheable(cacheNames = "events", key = "'attendee-browse:' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    public Page<AttendeeEventResponse> findAttendeeBrowseEvents(Pageable pageable) {
+        return eventRepository.findByStatusIn(ATTENDEE_BROWSE_STATUSES, pageable).map(this::toAttendeeResponse);
     }
 
     @Override

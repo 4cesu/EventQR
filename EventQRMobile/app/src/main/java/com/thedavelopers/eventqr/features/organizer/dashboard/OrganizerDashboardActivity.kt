@@ -238,7 +238,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         val selected = repository.resolveSelectedEvent(events, selectedEventId())
         val totalAttendees = dashboardData?.totalAttendees ?: events.sumOf { it.registeredCount }
         val totalTransactions = dashboardData?.totalTransactions ?: events.sumOf { it.totalTransactions }
-        val totalRewards = if (events.isNotEmpty()) {
+        val totalPoints = if (events.isNotEmpty()) {
             events.sumOf { it.rewardRedemptions }
         } else {
             dashboardData?.recentEvents?.sumOf { it.rewardRedemptions } ?: 0
@@ -248,7 +248,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtStatTotalEvents).text = formatCount(totalEvents)
         findViewById<TextView>(R.id.txtStatTotalAttendees).text = formatCount(totalAttendees)
         findViewById<TextView>(R.id.txtStatTransactions).text = formatCount(totalTransactions)
-        findViewById<TextView>(R.id.txtStatRewardsGiven).text = formatCount(totalRewards)
+         findViewById<TextView>(R.id.txtStatRewardsGiven).text = formatCount(totalPoints)
 
         val activeEventsContainer = findViewById<LinearLayout>(R.id.activeEventsContainer)
         val emptyEvents = findViewById<View>(R.id.layoutEventsEmpty)

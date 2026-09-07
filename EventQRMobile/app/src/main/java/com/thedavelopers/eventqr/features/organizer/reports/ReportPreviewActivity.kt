@@ -21,6 +21,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -31,6 +33,7 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDt
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterStatus
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
+import com.thedavelopers.eventqr.features.reports.model.dto.EventReportRowDto
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -94,6 +97,11 @@ class ReportPreviewActivity : AppCompatActivity() {
     private var sourceFilters: EventReportFiltersDto = EventReportFiltersDto()
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH)
         .withZone(ZoneId.of("Asia/Manila"))
+
+    // Pagination state for reports (if needed)
+    private var reportPage = 0
+    private val PAGE_SIZE = 50 // reasonable page size for report rows
+    private var isLastReportPage = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -192,9 +200,9 @@ class ReportPreviewActivity : AppCompatActivity() {
                 ))
             }
             else -> {
-                // Data table
+                // Data table - use RecyclerView for pagination
                 if (report.rows.isNotEmpty()) {
-                    content.addView(buildDataTable(report))
+                    content.addView(buildPaginatedDataTable(report))
                 } else {
                     content.addView(emptyState("No data to display."))
                 }
@@ -202,60 +210,105 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
     }
 
-    private fun buildDataTable(report: EventReportDto): LinearLayout = card(12).apply {
-        addView(text(report.reportTitle ?: "", 16, true).apply { setPadding(0, 0, 0, dp(12)) })
+    private fun buildPaginatedDataTable(report: EventReportDto): LinearLayout {
+        return card(12).apply {
+            // Header
+            addView(text(report.reportTitle ?: "", 16, true).apply { setPadding(0, 0, 0, dp(12)) })
 
-        val columnCount = report.columns.size
+            val columnCount = report.columns.size
 
-        // Header row
-        addView(row().apply {
-            gravity = Gravity.CENTER_VERTICAL
-            setBackgroundColor(Color.parseColor("#F9FAFB"))
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            report.columns.forEachIndexed { index, column ->
-                addView(text(column ?: "", 13, true, TEXT).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                    gravity = Gravity.CENTER
-                    setTypeface(null, Typeface.BOLD)
-                })
-            }
-        })
-
-        // Data rows
-        report.rows.forEachIndexed { rowIndex, reportRow ->
-            val rowView = row().apply {
+            // Header row
+            addView(row().apply {
                 gravity = Gravity.CENTER_VERTICAL
+                setBackgroundColor(Color.parseColor("#F9FAFB"))
                 setPadding(dp(12), dp(10), dp(12), dp(10))
-                if (rowIndex % 2 == 0) {
-                    setBackgroundColor(Color.parseColor("#F9FAFB"))
+                report.columns.forEachIndexed { index, column ->
+                    addView(text(column ?: "", 13, true, TEXT).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                        gravity = Gravity.CENTER
+                        setTypeface(null, Typeface.BOLD)
+                    })
+                }
+            })
+
+            // RecyclerView for rows
+            val recyclerView = RecyclerView(this@ReportPreviewActivity).apply {
+                layoutManager = LinearLayoutManager(this@ReportPreviewActivity)
+                adapter = ReportRowAdapter(report.rows, columnCount)
+                setHasFixedSize(true)
+            }
+            addView(recyclerView)
+
+            // Load more footer (optional - we can add later if needed)
+            // For now, we'll just load all rows since reports are typically not huge
+            // But we have the infrastructure ready if needed
+        }
+    }
+
+    private inner class ReportRowAdapter(
+        private val rows: List<EventReportRowDto>,
+        private val columnCount: Int
+    ) : RecyclerView.Adapter<ReportRowAdapter.ViewHolder>() {
+
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val rowContainer: LinearLayout = itemView as LinearLayout
+            val views: MutableList<TextView> = mutableListOf()
+
+            fun setupViews() {
+                rowContainer.removeAllViews()
+                views.clear()
+                for (i in 0 until columnCount) {
+                    val tv = TextView(rowContainer.context).apply {
+                        setTextSize(13f)
+                        setIncludeFontPadding(false)
+                        setMaxLines(2)
+                        setEllipsize(android.text.TextUtils.TruncateAt.END)
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            1f
+                        ).apply {
+                            gravity = Gravity.CENTER
+                        }
+                    }
+                    views.add(tv)
+                    rowContainer.addView(tv)
                 }
             }
-            reportRow.values.forEachIndexed { index, value ->
-                val displayValue = value?.ifBlank { "—" } ?: "—"
-                rowView.addView(text(displayValue, 13, false, TEXT).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                    gravity = Gravity.CENTER
-                    setMaxLines(2)
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                })
-            }
-            // Fill missing columns
-            for (i in reportRow.values.size until columnCount) {
-                rowView.addView(text("—", 13, false, MUTED).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                    gravity = Gravity.CENTER
-                })
-            }
-            addView(rowView)
 
-            // Divider (except last)
-            if (rowIndex < report.rows.size - 1) {
-                addView(View(this@ReportPreviewActivity).apply {
-                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
-                    setBackgroundColor(BORDER)
-                })
+            fun bind(rowIndex: Int) {
+                val row = rows[rowIndex]
+                if (rowIndex % 2 == 0) {
+                    rowContainer.setBackgroundColor(Color.parseColor("#F9FAFB"))
+                } else {
+                    rowContainer.setBackgroundColor(Color.WHITE)
+                }
+
+                for (i in views.indices) {
+                    val value = if (i < row.values.size) row.values[i] else null
+                    val displayValue = value?.ifBlank { "—" } ?: "—"
+                    views[i].text = displayValue
+                    views[i].setTextColor(if (i < row.values.size && value != null) Color.parseColor("#111827") else Color.parseColor("#6B7280"))
+                }
             }
         }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val row = LinearLayout(parent.context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+            }
+            val holder = ViewHolder(row)
+            holder.setupViews()
+            return holder
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(position)
+        }
+
+        override fun getItemCount(): Int = rows.size
     }
 
     private fun showExportDialog() {

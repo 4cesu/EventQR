@@ -3,6 +3,10 @@ package com.thedavelopers.eventqr.features.events.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -63,8 +67,10 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<EventResponse>>> list() {
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAllEvents()));
+    public ResponseEntity<ApiResponse<Page<EventResponse>>> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAllEvents(PageRequest.of(page, size))));
     }
 
     @GetMapping("/{eventId}")
@@ -85,13 +91,17 @@ public class EventController {
     }
 
     @GetMapping("/attendee-visible")
-    public ResponseEntity<ApiResponse<List<AttendeeEventResponse>>> listAttendeeVisible() {
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents()));
+    public ResponseEntity<ApiResponse<Page<AttendeeEventResponse>>> listAttendeeVisible(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents(PageRequest.of(page, size))));
     }
 
     @GetMapping("/attendee-browse")
-    public ResponseEntity<ApiResponse<List<AttendeeEventResponse>>> listAttendeeBrowse() {
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents()));
+    public ResponseEntity<ApiResponse<Page<AttendeeEventResponse>>> listAttendeeBrowse(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents(PageRequest.of(page, size))));
     }
 
     private void requireAuthenticated(HttpServletRequest request) {
