@@ -14,7 +14,7 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpTransactionEntry
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
-import com.thedavelopers.eventqr.features.organizer.TransactionLogsActivity
+import com.thedavelopers.eventqr.features.organizer.transactions.TransactionLogsActivity
 import com.thedavelopers.eventqr.features.organizer.attendeeInitial
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.openOrganizerPage

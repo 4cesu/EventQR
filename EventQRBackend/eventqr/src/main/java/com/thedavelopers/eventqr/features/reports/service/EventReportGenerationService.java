@@ -74,7 +74,10 @@ public class EventReportGenerationService {
     public EventReportSummaryResponse summary(UUID organizerUserId, UUID eventId) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
-        long registered = registrations.size();
+        long registered = registrations.stream()
+                .filter(registration -> registration.getStatus() != RegistrationStatus.CANCELLED
+                        && registration.getStatus() != RegistrationStatus.NO_SHOW)
+                .count();
         long checkedIn = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.ENTERED).count();
         long exited = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.EXITED).count();
         boolean hasAnyRecords = registered > 0 || !transactionLogRepository.findByEventId(eventId).isEmpty()
@@ -166,8 +169,9 @@ public class EventReportGenerationService {
                 )).toList();
 
         List<RowData> filtered = applyDateFilter(all, filters);
-        Map<String, Long> chart = chartBy("No Shows", Map.of("No Shows", (long) filtered.size()));
-        return new ReportAssembly("No-Shows Report", columns, all, filtered, chart);
+        Map<String, Long> chart = chartBy("Reason", filtered.stream()
+                .collect(Collectors.groupingBy(row -> row.row().values().get(2), LinkedHashMap::new, Collectors.counting())));
+        return new ReportAssembly("Not Checked In Report", columns, all, filtered, chart);
     }
 
     private ReportAssembly buildEntryLogs(Event event,
@@ -177,7 +181,7 @@ public class EventReportGenerationService {
         List<String> columns = List.of("Name", "Entry Time", "Result");
         List<RowData> all = transactions.stream()
                 .filter(transaction -> transaction.getTransactionType() == TransactionType.ENTRY)
-                .map(transaction -> toTransactionRow(transaction, registrationByUser, columns,
+                .map(transaction -> toTransactionRow(transaction, registrationByUser,
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
                         formatDateTime(transaction.getScannedAt()),
                         prettyResult(transaction.getTransactionResult())))
@@ -225,7 +229,7 @@ public class EventReportGenerationService {
         List<String> columns = List.of("Name", "Benefit", "Claimed At", "Result");
         List<RowData> all = transactions.stream()
                 .filter(transaction -> transaction.getTransactionType() == TransactionType.BENEFIT_CLAIM)
-                .map(transaction -> toTransactionRow(transaction, registrationByUser, columns,
+                .map(transaction -> toTransactionRow(transaction, registrationByUser,
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
                         benefitLabel(transaction),
                         formatDateTime(transaction.getScannedAt()),
@@ -271,7 +275,7 @@ public class EventReportGenerationService {
         List<String> columns = List.of("Name", "Exit Time", "Result");
         List<RowData> all = transactions.stream()
                 .filter(transaction -> transaction.getTransactionType() == TransactionType.EXIT)
-                .map(transaction -> toTransactionRow(transaction, registrationByUser, columns,
+                .map(transaction -> toTransactionRow(transaction, registrationByUser,
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
                         formatDateTime(transaction.getScannedAt()),
                         prettyResult(transaction.getTransactionResult())))
@@ -351,14 +355,6 @@ public class EventReportGenerationService {
                 .contains(filters.attendeeQuery().trim().toLowerCase(Locale.ENGLISH));
     }
 
-    private ReportAssembly toAssembly(String title,
-                                      List<String> columns,
-                                      List<RowData> all,
-                                      List<RowData> filtered,
-                                      Map<String, Long> chartSeries) {
-        return new ReportAssembly(title, columns, all, filtered, chartSeries);
-    }
-
     private EventReportFilters normalizeFilters(EventReportFilters filters) {
         if (filters == null) {
             return new EventReportFilters(null, null, null, ReportFilterStatus.ALL);
@@ -391,7 +387,6 @@ public class EventReportGenerationService {
 
     private RowData toTransactionRow(TransactionLog transaction,
                                      Map<UUID, EventRegistration> registrationByUser,
-                                     List<String> columns,
                                      String value1,
                                      String value2,
                                      String value3) {
@@ -405,7 +400,6 @@ public class EventReportGenerationService {
 
     private RowData toTransactionRow(TransactionLog transaction,
                                      Map<UUID, EventRegistration> registrationByUser,
-                                     List<String> columns,
                                      String value1,
                                      String value2,
                                      String value3,
@@ -480,7 +474,13 @@ public class EventReportGenerationService {
     }
 
     private String prettyResult(TransactionResult result) {
-        return result == null ? "Unknown" : (result == TransactionResult.APPROVED ? "Approved" : "Rejected");
+        if (result == null) {
+            return "Unknown";
+        }
+        return switch (result) {
+            case APPROVED -> "Approved";
+            case REJECTED -> "Rejected";
+        };
     }
 
     private String prettyRegistrationStatus(RegistrationStatus status) {

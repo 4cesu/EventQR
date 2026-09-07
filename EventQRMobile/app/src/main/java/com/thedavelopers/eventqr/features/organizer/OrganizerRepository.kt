@@ -4,8 +4,6 @@ import android.content.Context
 import com.google.gson.JsonElement
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
-import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
@@ -14,13 +12,10 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventApprovalRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
-import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRequest
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerOverallReportDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerReportDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerStaffDto
@@ -30,7 +25,6 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleReq
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerUserSearchDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentUpdateRequestDto
-import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSnapshot
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
@@ -81,16 +75,6 @@ class OrganizerRepository(private val context: Context) {
                 }
             }
         }
-
-    fun getOrganizerAttendees(eventId: String): List<OrganizerMvpAttendee> = emptyList()
-
-    fun getOrganizerTransactions(eventId: String): List<OrganizerMvpTransaction> = emptyList()
-
-    fun getOrganizerStaff(eventId: String): List<OrganizerMvpStaff> = emptyList()
-
-    fun searchAvailableStaffUsers(query: String): List<OrganizerMvpStaff> = emptyList()
-
-    fun getOrganizerScanPurposes(): List<OrganizerMvpScanPurpose> = emptyList()
 
     fun getSelectedEventId(): String? = selectionPrefs.getString(KEY_SELECTED_EVENT_ID, null)
 
@@ -158,22 +142,6 @@ class OrganizerRepository(private val context: Context) {
             is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpScanPurpose() }, OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
-        }
-    }
-
-    suspend fun loadReportForMvp(event: OrganizerMvpEvent): OrganizerMvpLoad<OrganizerMvpEvent> {
-        return when (val report = fetchOrganizerReport(event.id)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(event.fromOrganizerReport(report.data), OrganizerMvpDataSource.BACKEND)
-            is NetworkResult.Error -> OrganizerMvpLoad(event, OrganizerMvpDataSource.ERROR, report.message)
-            NetworkResult.Loading -> OrganizerMvpLoad(event, OrganizerMvpDataSource.ERROR, null)
-        }
-    }
-
-    suspend fun loadOverallReportForMvp(): OrganizerMvpLoad<OrganizerOverallReportDto?> {
-        return when (val report = fetchOrganizerOverallReport()) {
-            is NetworkResult.Success -> OrganizerMvpLoad(report.data, OrganizerMvpDataSource.BACKEND)
-            is NetworkResult.Error -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, report.message)
-            NetworkResult.Loading -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, null)
         }
     }
 
@@ -289,44 +257,6 @@ class OrganizerRepository(private val context: Context) {
     suspend fun deleteScanPurposeForMvp(eventId: String, purposeId: String) =
         safeApiCall { apiService.deleteOrganizerScanPurpose(eventId, purposeId) }
 
-    private suspend fun buildEventSnapshot(event: EventResponse): OrganizerMvpEvent {
-        val registrations = (getRegistrationsByEvent(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
-        val transactions = (getTransactionsByEvent(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
-        val scanPurposes = (getScanPurposesByEvent(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
-        val redemptions = (getRewardRedemptions(event.eventId.toString()) as? NetworkResult.Success)?.data.orEmpty()
-        return OrganizerMvpEvent(
-            id = event.eventId.toString(),
-            title = event.title,
-            organizerName = "Organizer",
-            dateTime = listOf(DateFormatters.formatInstant(event.eventStartAt), DateFormatters.formatInstant(event.eventEndAt))
-                .filter { it != "-" }
-                .joinToString(" - ")
-                .ifBlank { "-" },
-            shortDate = DateFormatters.formatInstant(event.eventStartAt),
-            venue = event.location ?: "Venue not set",
-            status = event.status.toDisplayStatus(),
-            submittedDate = DateFormatters.formatInstant(event.registrationOpenAt),
-            adminRemarks = event.rejectionReason ?: if (event.status == EventStatus.APPROVED) "Approved." else "No admin remarks.",
-            additionalOrganizers = emptyList(),
-            registeredCount = registrations.size.takeIf { it > 0 } ?: event.currentAttendeeCount,
-            enteredCount = registrations.count { it.status == RegistrationStatus.ENTERED },
-            attendedCount = transactions.count { it.transactionResult == TransactionResult.APPROVED && it.transactionType == TransactionType.ATTENDANCE },
-            exitedCount = registrations.count { it.status == RegistrationStatus.EXITED },
-            noShowCount = registrations.count { it.status == RegistrationStatus.NO_SHOW },
-            totalTransactions = transactions.size,
-            successfulScans = transactions.count { it.transactionResult == TransactionResult.APPROVED },
-            rejectedScans = transactions.count { it.transactionResult == TransactionResult.REJECTED },
-            benefitClaims = transactions.count { it.transactionType == TransactionType.BENEFIT_CLAIM },
-            boothSessionVisits = transactions.count { it.transactionType == TransactionType.BOOTH_VISIT || it.transactionType == TransactionType.SESSION_VISIT },
-            rewardRedemptions = redemptions.count { it.status == RedemptionStatus.REDEEMED },
-            totalPointsAwarded = transactions.filter { it.transactionResult == TransactionResult.APPROVED }.sumOf { it.pointsDelta }.coerceAtLeast(0),
-            idTemplateStatus = "Backend status unavailable",
-            rewardsStatus = if (event.rewardsEnabled) "Enabled" else "Disabled",
-            staffCount = getOrganizerStaff(event.eventId.toString()).size,
-            scanPurposesCount = scanPurposes.count { it.active },
-        )
-    }
-
     suspend fun getEvents() = safeApiCall { apiService.getEvents() }
     suspend fun fetchOrganizerEvents() = safeApiCall { apiService.getOrganizerEvents() }
     suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
@@ -344,8 +274,6 @@ class OrganizerRepository(private val context: Context) {
     suspend fun fetchOrganizerDashboard(eventId: String) = safeApiCall { apiService.getOrganizerDashboard(eventId) }
     suspend fun fetchOrganizerAttendees(eventId: String) = safeApiCall { apiService.getOrganizerAttendees(eventId) }
     suspend fun fetchOrganizerTransactions(eventId: String) = safeApiCall { apiService.getOrganizerTransactions(eventId) }
-    suspend fun fetchOrganizerReport(eventId: String) = safeApiCall { apiService.getOrganizerReport(eventId) }
-    suspend fun fetchOrganizerOverallReport() = safeApiCall { apiService.getOrganizerOverallReport() }
     suspend fun fetchOrganizerStaff(eventId: String) = safeApiCall { apiService.getOrganizerStaff(eventId) }
     suspend fun addOrganizerStaff(eventId: String, request: StaffAssignmentRequestDto) =
         safeApiCall { apiService.addOrganizerStaff(eventId, request) }
@@ -376,8 +304,6 @@ class OrganizerRepository(private val context: Context) {
     suspend fun saveReward(request: RewardRequest) = safeApiCall { apiService.saveReward(request) }
     suspend fun getRewardsByEvent(eventId: String) = safeApiCall { apiService.getRewardsByEvent(eventId) }
     suspend fun getRewardRedemptions(eventId: String) = safeApiCall { apiService.getRewardRedemptions(eventId) }
-
-    suspend fun getEventReport(eventId: String) = safeApiCall { apiService.getEventReport(eventId) }
 
     suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getTransactionsByEvent(eventId) }
 
@@ -425,16 +351,7 @@ class OrganizerRepository(private val context: Context) {
 
 // Kept in sync with backend OrganizerService.displayStatus() (and lifecycleStatus()/approvedOnly()
 // on the client): ACTIVE is a distinct label from APPROVED so an ongoing event is never misclassified
-// as Upcoming. Currently only reachable via buildEventSnapshot(), which has no callers.
-private fun EventStatus.toDisplayStatus(): String = when (this) {
-    EventStatus.APPROVED -> "Approved"
-    EventStatus.ACTIVE -> "Active"
-    EventStatus.PENDING_REVIEW, EventStatus.DRAFT -> "Pending"
-    EventStatus.REJECTED -> "Rejected"
-    EventStatus.ENDED -> "Completed"
-    EventStatus.CANCELLED -> "Cancelled"
-}
-
+// as Upcoming.
 private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEvent(
     id = eventId.toString(),
     title = title ?: "",
@@ -458,7 +375,7 @@ private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEven
     boothSessionVisits = boothSessionVisits,
     rewardRedemptions = rewardRedemptions,
     totalPointsAwarded = totalPointsAwarded,
-    idTemplateStatus = idTemplateStatus ?: "Backend status unavailable",
+    idTemplateStatus = idTemplateStatus ?: "Not configured",
     rewardsStatus = rewardsStatus ?: "Not configured",
     staffCount = staffCount,
     scanPurposesCount = scanPurposesCount,
@@ -522,23 +439,6 @@ private fun OrganizerTransactionDto.toMvpTransaction(fallbackEventTitle: String)
     )
 }
 
-private fun OrganizerReportDto.toMvpEvent(base: OrganizerMvpEvent): OrganizerMvpEvent = base.copy(
-    registeredCount = totalRegistered,
-    enteredCount = enteredCount,
-    attendedCount = attendanceCount,
-    exitedCount = exitedCount,
-    noShowCount = noShowCount,
-    totalTransactions = approvedTransactionCount + rejectedTransactionCount,
-    successfulScans = approvedTransactionCount,
-    rejectedScans = rejectedTransactionCount.takeIf { it > 0 } ?: rejectedScans,
-    benefitClaims = benefitClaims,
-    boothSessionVisits = boothSessionVisits,
-    rewardRedemptions = rewardRedemptions,
-    totalPointsAwarded = pointsDistributed,
-)
-
-private fun OrganizerMvpEvent.fromOrganizerReport(report: OrganizerReportDto): OrganizerMvpEvent = report.toMvpEvent(this)
-
 private fun OrganizerStaffDto.toMvpStaff(eventTitle: String): OrganizerMvpStaff = OrganizerMvpStaff(
     id = assignmentId.toString(),
     name = name ?: "Unknown staff",
@@ -598,8 +498,6 @@ private fun OrganizerMvpScanPurpose.toOrganizerRequest(): OrganizerScanPurposeRe
 )
 
 private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
-
-private fun RegistrationStatus.toDisplayStatus(): String = name.lowercase().replaceFirstChar { it.uppercase() }
 
 private fun RegistrationStatus.toEventStatusLabel(): String = when (this) {
     RegistrationStatus.REGISTERED -> "Registered"
@@ -694,18 +592,3 @@ private fun TransactionResponse.toMvpTransaction(
         relatedItem = purpose?.description ?: "Not available",
     )
 }
-
-private fun OrganizerMvpEvent.fromReport(report: EventReportSnapshot): OrganizerMvpEvent = copy(
-    registeredCount = report.registeredCount.takeIf { it > 0 } ?: registeredCount,
-    enteredCount = report.enteredCount,
-    attendedCount = report.attendanceCount,
-    exitedCount = report.exitedCount,
-    noShowCount = report.noShowCount,
-    totalTransactions = report.approvedTransactions + report.rejectedTransactions,
-    successfulScans = report.approvedTransactions,
-    rejectedScans = report.rejectedTransactions,
-    benefitClaims = report.claimsCount,
-    boothSessionVisits = report.boothSessionVisits,
-    rewardRedemptions = report.rewardsRedeemed,
-    totalPointsAwarded = report.totalPointsEarned,
-)

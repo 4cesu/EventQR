@@ -93,7 +93,7 @@ class ReportPreviewActivity : AppCompatActivity() {
     private var summary: EventReportSummaryDto = EventReportSummaryDto()
     private var sourceFilters: EventReportFiltersDto = EventReportFiltersDto()
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH)
-        .withZone(ZoneId.systemDefault())
+        .withZone(ZoneId.of("Asia/Manila"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +103,7 @@ class ReportPreviewActivity : AppCompatActivity() {
         isCombined = intent.getBooleanExtra(EXTRA_IS_COMBINED, false)
         summary = intent.getSerializableExtra(EXTRA_SUMMARY) as? EventReportSummaryDto ?: EventReportSummaryDto()
 
-if (isCombined) {
+        if (isCombined) {
             val array = intent.getSerializableExtra(EXTRA_REPORTS) as? Array<EventReportDto>
             combinedReports = array?.toList() ?: emptyList()
         } else {
@@ -259,6 +259,11 @@ if (isCombined) {
     }
 
     private fun showExportDialog() {
+        val rootView = content.rootView ?: content
+        if (isCombined) {
+            Snackbar.make(rootView, "Export is unavailable for combined reports. Export each report individually.", Snackbar.LENGTH_LONG).show()
+            return
+        }
         val dialog = AlertDialog.Builder(this)
             .setTitle("Export Report")
             .setMessage("Choose export format:")

@@ -7,21 +7,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-data class EventReportSnapshot(
-    val totalAttendees: Int = 0,
-    val registeredCount: Int = 0,
-    val enteredCount: Int = 0,
-    val exitedCount: Int = 0,
-    val noShowCount: Int = 0,
-    val attendanceCount: Int = 0,
-    val claimsCount: Int = 0,
-    val boothSessionVisits: Int = 0,
-    val rewardsRedeemed: Int = 0,
-    val totalPointsEarned: Int = 0,
-    val approvedTransactions: Int = 0,
-    val rejectedTransactions: Int = 0,
-)
-
 enum class EventReportType : Serializable {
     ROSTER,
     NO_SHOWS,

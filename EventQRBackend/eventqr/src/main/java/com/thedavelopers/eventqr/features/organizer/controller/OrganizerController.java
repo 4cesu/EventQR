@@ -21,8 +21,6 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.*;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerAttendeeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerDashboardResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerEventResponse;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerOverallReportResponse;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerReportResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerScanPurposeRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerScanPurposeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerStaffResponse;
@@ -142,19 +140,6 @@ public class OrganizerController {
                                                                                                                               @PathVariable UUID transactionId) {
         requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success(organizerService.transaction(currentUserId(request), eventId, transactionId)));
-    }
-
-    @GetMapping("/reports/summary")
-    public ResponseEntity<ApiResponse<OrganizerOverallReportResponse>> overallReports(HttpServletRequest request) {
-        requireOrganizer(request);
-        return ResponseEntity.ok(ApiResponse.success(organizerService.overallReport(currentUserId(request))));
-    }
-
-    @GetMapping("/events/{eventId}/reports")
-    public ResponseEntity<ApiResponse<OrganizerReportResponse>> reports(HttpServletRequest request,
-                                                                        @PathVariable UUID eventId) {
-        requireOrganizer(request);
-        return ResponseEntity.ok(ApiResponse.success(organizerService.report(currentUserId(request), eventId)));
     }
 
     @GetMapping("/events/{eventId}/staff")

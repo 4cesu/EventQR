@@ -8,6 +8,9 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.features.organizer.scanpurposes.ManageScanPurposesActivity
+import com.thedavelopers.eventqr.features.organizer.staff.ManageUsersActivity
+import com.thedavelopers.eventqr.features.organizer.transactions.TransactionRulesActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
