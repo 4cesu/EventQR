@@ -5,7 +5,7 @@ import static com.thedavelopers.eventqr.features.reports.model.dto.EventReportDt
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +25,8 @@ import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 @Service
 public class ReportExportService {
 
-    private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'", Locale.ENGLISH)
-            .withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+            .withZone(ZoneId.of("Asia/Manila"));
 
     public ExportPayload export(EventReportResponse report, ReportExportFormat format) {
         if (format == ReportExportFormat.PDF) {

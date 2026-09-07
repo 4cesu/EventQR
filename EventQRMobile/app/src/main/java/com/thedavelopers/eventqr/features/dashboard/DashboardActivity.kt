@@ -148,7 +148,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
         summaryEvents.text = summary.totalEvents.toString()
         summaryRegistrations.text = summary.totalRegistrations.toString()
-        summaryCompleted.text = summary.totalRewards.toString() // REPUPORSED from presenter
+        summaryCompleted.text = summary.completedEventsCount.toString()
         notificationDot.visibility = if (summary.totalNotifications > 0) View.VISIBLE else View.GONE
 
         setupPortalSwitcher()

@@ -2,7 +2,7 @@ package com.thedavelopers.eventqr.features.staff
 
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
-import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -22,21 +22,27 @@ class StaffDashboardPresenter(
         job = kotlinx.coroutines.MainScope().launch {
             when (val result = repository.getEvents()) {
                 is NetworkResult.Success -> {
-                    if (result.data.isEmpty()) {
-                        view?.renderRecentScans(emptyList())
-                        view?.updateStats(0, 0)
-                    } else {
-                        val recentTransactions = mutableListOf<TransactionResponse>()
-                        for (event in result.data) {
-                            when (val trans = repository.getTodayTransactionsByEvent(event.eventId.toString())) {
-                                is NetworkResult.Success -> recentTransactions.addAll(trans.data)
-                                is NetworkResult.Error -> Unit
-                                NetworkResult.Loading -> Unit
-                            }
+                    when (val todayResult = repository.getMyTodayTransactions()) {
+                        is NetworkResult.Success -> {
+                            val sortedTransactions = todayResult.data
+                                .sortedByDescending { it.scannedAt ?: java.time.Instant.EPOCH }
+                            view?.renderRecentScans(sortedTransactions.take(5))
+                            view?.updateStats(
+                                sortedTransactions.size,
+                                sortedTransactions.count {
+                                    (it.transactionType.name == "ENTRY" || it.transactionType.name == "ATTENDANCE") &&
+                                        it.transactionResult == TransactionResult.APPROVED
+                                },
+                            )
                         }
-                        val sortedTransactions = recentTransactions.sortedByDescending { it.scannedAt ?: java.time.Instant.EPOCH }
-                        view?.renderRecentScans(sortedTransactions.take(5))
-                        view?.updateStats(sortedTransactions.size, sortedTransactions.count { it.transactionType.name == "ENTRY" || it.transactionType.name == "ATTENDANCE" })
+                        is NetworkResult.Error -> {
+                            view?.renderRecentScans(emptyList())
+                            view?.updateStats(
+                                0,
+                                0,
+                            )
+                        }
+                        NetworkResult.Loading -> Unit
                     }
                 }
                 is NetworkResult.Error -> view?.showMessage(result.message)

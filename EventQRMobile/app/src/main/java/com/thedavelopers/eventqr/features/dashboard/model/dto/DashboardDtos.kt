@@ -8,6 +8,7 @@ data class DashboardSummary(
     val totalRegistrations: Long,
     val totalTransactions: Long,
     val totalRewards: Long,
+    val completedEventsCount: Long = 0,
     val totalNotifications: Long,
     val fullName: String? = null,
     val upcomingEvents: List<DashboardUpcomingEvent>? = emptyList(),

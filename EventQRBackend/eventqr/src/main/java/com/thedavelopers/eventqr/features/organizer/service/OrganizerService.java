@@ -53,6 +53,7 @@ import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
@@ -325,9 +326,8 @@ public class OrganizerService {
         long benefitClaims = countApproved(transactions, TransactionType.BENEFIT_CLAIM);
         long boothVisits = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
                 && (tx.getTransactionType() == TransactionType.BOOTH_VISIT || tx.getTransactionType() == TransactionType.SESSION_VISIT)).count();
-        long redemptions = rewardRedemptionRepository.findByEventId(eventId).size()
-                + countApproved(transactions, TransactionType.REWARD_REDEMPTION)
-                + countApproved(transactions, TransactionType.REWARD_REDEMPTION_SCAN);
+        long redemptions = rewardRedemptionRepository.findByEventId(eventId).stream()
+                .filter(redemption -> redemption.getStatus() == RedemptionStatus.REDEEMED).count();
         long rejected = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.REJECTED).count();
         long approved = transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED).count();
         return new OrganizerReportResponse(eventId, registered, entered, exited, attendance, noShows, approved, rejected,
@@ -704,7 +704,8 @@ public class OrganizerService {
         UUID eventId = event.getId();
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
         List<TransactionLog> transactions = transactionLogRepository.findByEventId(eventId);
-        long redemptions = rewardRedemptionRepository.findByEventId(eventId).size();
+        long redemptions = rewardRedemptionRepository.findByEventId(eventId).stream()
+                .filter(redemption -> redemption.getStatus() == RedemptionStatus.REDEEMED).count();
         int capacity = event.getCapacity() == null ? 0 : event.getCapacity();
         int currentAttendeeCount = registrations.size();
         return new OrganizerEventResponse(eventId, event.getTitle(), "Organizer", formatRange(event.getEventStartAt(), event.getEventEndAt()),
@@ -723,8 +724,7 @@ public class OrganizerService {
                 countApproved(transactions, TransactionType.BENEFIT_CLAIM),
                 transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
                         && (tx.getTransactionType() == TransactionType.BOOTH_VISIT || tx.getTransactionType() == TransactionType.SESSION_VISIT)).count(),
-                redemptions + countApproved(transactions, TransactionType.REWARD_REDEMPTION)
-                        + countApproved(transactions, TransactionType.REWARD_REDEMPTION_SCAN),
+                redemptions,
                 transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED)
                         .mapToLong(TransactionLog::getPointsDelta).sum(),
                 "Backend status unavailable", event.isRewardsEnabled() ? "Enabled" : "Disabled",

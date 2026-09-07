@@ -108,6 +108,12 @@ public class StaffController {
         return ResponseEntity.ok(ApiResponse.success(transactionService.findForStaff(staffUserId, eventId, purposeId)));
     }
 
+    @GetMapping("/transactions/today")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> myTransactionsToday(HttpServletRequest request) {
+        UUID staffUserId = currentUserId(request);
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findForStaffToday(staffUserId)));
+    }
+
     @GetMapping("/events/{eventId}/scan-purposes")
     public ResponseEntity<ApiResponse<List<ScanPurposeSnapshot>>> scanPurposes(HttpServletRequest request,
                                                                               @PathVariable UUID eventId) {

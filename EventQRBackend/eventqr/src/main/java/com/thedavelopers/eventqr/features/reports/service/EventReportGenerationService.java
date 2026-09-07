@@ -1,14 +1,14 @@
 package com.thedavelopers.eventqr.features.reports.service;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
 import static com.thedavelopers.eventqr.features.reports.model.dto.EventReportDtos.EventReportFilters;
 import static com.thedavelopers.eventqr.features.reports.model.dto.EventReportDtos.EventReportResponse;
 import static com.thedavelopers.eventqr.features.reports.model.dto.EventReportDtos.EventReportRow;
 import static com.thedavelopers.eventqr.features.reports.model.dto.EventReportDtos.EventReportSummaryResponse;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -47,10 +47,11 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 @Transactional(readOnly = true)
 public class EventReportGenerationService {
 
+    private static final ZoneId DISPLAY_ZONE = ZoneId.of("Asia/Manila");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy h:mm a", Locale.ENGLISH)
-            .withZone(ZoneOffset.UTC);
+            .withZone(DISPLAY_ZONE);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy", Locale.ENGLISH)
-            .withZone(ZoneOffset.UTC);
+            .withZone(DISPLAY_ZONE);
 
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
@@ -322,7 +323,7 @@ public class EventReportGenerationService {
                     if (row.occurredAt() == null) {
                         return false;
                     }
-                    LocalDate day = row.occurredAt().atOffset(ZoneOffset.UTC).toLocalDate();
+                    LocalDate day = row.occurredAt().atZone(DISPLAY_ZONE).toLocalDate();
                     boolean afterStart = start == null || !day.isBefore(start);
                     boolean beforeEnd = end == null || !day.isAfter(end);
                     return afterStart && beforeEnd;

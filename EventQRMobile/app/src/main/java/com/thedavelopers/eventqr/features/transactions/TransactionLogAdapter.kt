@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import java.time.Instant
 import java.time.ZoneId
@@ -50,7 +51,7 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
         private val statusBadgeView: TextView = itemView.findViewById(R.id.txtStatusBadge)
 
         fun bind(item: TransactionResponse) {
-            val isSuccess = item.transactionResult.name == "APPROVED" || item.transactionResult.name == "SUCCESS"
+            val isSuccess = item.transactionResult == TransactionResult.APPROVED
             val points = item.pointsDelta
 
             userNameView.text = item.attendeeName?.takeIf { it.isNotBlank() } ?: "Attendee"
