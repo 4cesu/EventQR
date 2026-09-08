@@ -47,6 +47,7 @@ public class SecurityConfig {
                         "/api/v1/health",
                         "/actuator/health")
                 .permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated());
 
         http.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
