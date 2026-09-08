@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
@@ -70,13 +69,7 @@ class StaffAssignedEventAdapter(
         }
 
         private fun bindDateBlock(status: EventStatus) {
-            val ctx = itemView.context
-            dateBlock.background = ContextCompat.getDrawable(
-                ctx,
-                R.drawable.bg_event_date_upcoming,
-            )
-            dayView.setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary))
-            monthView.setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary))
+            dateBlock.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(status))
         }
 
         private fun bindDateTime(item: StaffAssignedEventResponse) {

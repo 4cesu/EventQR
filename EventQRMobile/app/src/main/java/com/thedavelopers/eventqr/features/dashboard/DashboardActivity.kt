@@ -225,20 +225,21 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         val locationView = view.findViewById<TextView>(R.id.txtAttendeeEventLocation)
         val dayView = view.findViewById<TextView>(R.id.txtEventDay)
         val monthView = view.findViewById<TextView>(R.id.txtEventMonth)
+        val dateBadgeView = view.findViewById<View>(R.id.layoutEventDate)
         val regCountView = view.findViewById<TextView>(R.id.txtRegistrationCount)
         val regPercentView = view.findViewById<TextView>(R.id.txtRegistrationPercent)
         val progressBar = view.findViewById<ProgressBar>(R.id.pbRegistration)
 
         titleView.text = event.title.ifBlank { "Untitled event" }
 
-        val statusLabel = if (event.isRegistered) "Registered" else (event.status ?: "Upcoming")
-        statusView.text = statusLabel
-        if (event.isRegistered) {
-            statusView.setBackgroundResource(R.drawable.bg_dashboard_badge_registered)
-            statusView.setTextColor(ContextCompat.getColor(this, R.color.brand_primary))
-        } else {
-            applyEventStatusUi(statusLabel, statusView, progressBar)
-        }
+        val eventStatus = EventStatusBadgeStyler.resolve(
+            event.status?.let { EventStatusBadgeStyler.fromLabel(it) },
+            event.eventStartAt,
+            event.eventEndAt,
+        )
+        EventStatusBadgeStyler.bind(statusView, eventStatus)
+        applyEventStatusUi(eventStatus, progressBar)
+        dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(eventStatus))
 
         val manila = ZoneId.of("Asia/Manila")
         val startAt = event.eventStartAt
@@ -317,14 +318,9 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     private fun applyEventStatusUi(
-        status: String,
-        statusView: TextView,
+        eventStatus: EventStatus,
         progressBar: ProgressBar,
     ) {
-        val eventStatus = EventStatusBadgeStyler.fromLabel(status)
-
-        EventStatusBadgeStyler.bind(statusView, eventStatus)
-
         progressBar.progressDrawable = getDrawable(
             when (eventStatus) {
                 EventStatus.ENDED -> R.drawable.pb_event_completed

@@ -469,8 +469,8 @@
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
                                     android:layout_gravity="center"
-                                    android:src="@drawable/ic_edit_note"
-                                    app:tint="@color/text_primary" />
+                                    android:src="@drawable/ic_event_request"
+                                    app:tint="@color/brand_primary" />
                             </FrameLayout>
 
                             <TextView

@@ -8,14 +8,17 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.text.InputType
-import android.view.MotionEvent
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.PopupWindow
 import android.widget.ScrollView
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,8 +46,15 @@ class RequestEventActivity : AppCompatActivity() {
 
     private lateinit var eventNameInput: EditText
     private lateinit var eventDescriptionInput: EditText
-    // EventQR - Event Category constrained to predetermined list via AutoCompleteTextView, not in SRS/SDD Event Request Form spec (scope addition)
-    private lateinit var eventCategoryInput: android.widget.AutoCompleteTextView
+    // EventQR - Event Category constrained to predetermined list via hidden Spinner + custom dropdown (matches Rewards picker style), not in SRS/SDD Event Request Form spec (scope addition)
+    private lateinit var txtSelectedEventCategory: TextView
+    private lateinit var spinnerEventCategory: Spinner
+    private lateinit var cardEventCategory: View
+    private lateinit var spinnerArrow: ImageView
+    private var selectedEventCategory: String = ""
+    private var isCategoryDropdownOpen = false
+    private var eventCategoryPopup: PopupWindow? = null
+    private val categoryOptions = listOf("Academic", "Seminar", "Workshop", "Sports", "Cultural", "Organizational", "Others")
     private lateinit var targetAudienceInput: EditText
     private lateinit var capacityInput: EditText
     private lateinit var venueInput: EditText
@@ -63,8 +73,6 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var submitProgress: ProgressBar
     private lateinit var submitButton: Button
     private lateinit var formScrollView: ScrollView
-    private var isCategoryDropdownOpen = false
-    private var lastDismissTimeMs = 0L
     private var successDialog: AlertDialog? = null
     private var isSubmitting = false
     private var selectedPosterFile: File? = null
@@ -178,50 +186,15 @@ class RequestEventActivity : AppCompatActivity() {
     private fun bindViews() {
         eventNameInput = findViewById(R.id.eventNameInput)
         eventDescriptionInput = findViewById(R.id.eventDescriptionInput)
-        eventCategoryInput = findViewById(R.id.eventCategoryInput)
-        val categoryOptions = listOf("Academic", "Seminar", "Workshop", "Sports", "Cultural", "Organizational", "Others")
-        eventCategoryInput.setAdapter(android.widget.ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, categoryOptions))
-        eventCategoryInput.threshold = 0
-        eventCategoryInput.setText("", false)
-        // EventQR - intercept touch event directly (onClickListener doesn't prevent default AutoCompleteTextView reopen behavior)
-        eventCategoryInput.setOnTouchListener { view, event ->
-            android.util.Log.d("CategoryDropdown", "TOUCH action=${event.action} isPopupShowing=${eventCategoryInput.isPopupShowing} flag=$isCategoryDropdownOpen")
-            if (event.action == MotionEvent.ACTION_UP) {
-                val now = System.currentTimeMillis()
-                if (now - lastDismissTimeMs < 250) {
-                    android.util.Log.d("CategoryDropdown", "IGNORED touch-passthrough after dismiss (now=$now, lastDismiss=$lastDismissTimeMs)")
-                    view.performClick()
-                    true
-                } else {
-                    if (isCategoryDropdownOpen) {
-                        android.util.Log.d("CategoryDropdown", "CALLING dismissDropDown")
-                        eventCategoryInput.dismissDropDown()
-                        isCategoryDropdownOpen = false
-                    } else {
-                        android.util.Log.d("CategoryDropdown", "CALLING showDropDown")
-                        eventCategoryInput.showDropDown()
-                        isCategoryDropdownOpen = true
-                    }
-                    view.performClick()
-                    true
-                }
-            } else {
-                false
-            }
+        txtSelectedEventCategory = findViewById(R.id.txtSelectedEventCategory)
+        cardEventCategory = findViewById(R.id.cardEventCategory)
+        spinnerArrow = findViewById(R.id.spinnerArrow)
+        spinnerEventCategory = findViewById(R.id.spinnerEventCategory)
+        val categoryAdapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_item, categoryOptions).also {
+            it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        eventCategoryInput.setOnDismissListener {
-            android.util.Log.d("CategoryDropdown", "DISMISS fired, flag was=$isCategoryDropdownOpen")
-            isCategoryDropdownOpen = false
-            lastDismissTimeMs = System.currentTimeMillis()
-            android.util.Log.d("CategoryDropdown", "DISMISS timestamp recorded: $lastDismissTimeMs")
-        }
-        // EventQR - suppress default AutoCompleteTextView auto-show-on-focus, manual touch listener has sole control
-        eventCategoryInput.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-            android.util.Log.d("CategoryDropdown", "FOCUS changed, hasFocus=$hasFocus")
-        }
-        // EventQR - block manual text entry, dropdown-only selection + visual arrow indicator
-        eventCategoryInput.inputType = InputType.TYPE_NULL
-        eventCategoryInput.keyListener = null
+        spinnerEventCategory.adapter = categoryAdapter
+        cardEventCategory.setOnClickListener { setCategoryDropdownOpen(!isCategoryDropdownOpen) }
         targetAudienceInput = findViewById(R.id.targetAudienceInput)
         capacityInput = findViewById(R.id.capacityInput)
         venueInput = findViewById(R.id.venueInput)
@@ -383,7 +356,10 @@ class RequestEventActivity : AppCompatActivity() {
         }
 
         val eventName = eventNameInput.requiredValue("Event name is required")
-        val eventCategory = eventCategoryInput.requiredValue("Event category is required")
+        val eventCategory = selectedEventCategory.trim().takeIf { it.isNotEmpty() }
+        if (eventCategory == null) {
+            failures += txtSelectedEventCategory to "Event category is required"
+        }
         val eventDescription = eventDescriptionInput.requiredValue("Event description is required")
         val targetAudience = targetAudienceInput.requiredValue("Target audience is required")
         val capacity = capacityInput.positiveIntValue("Capacity must be a positive number")
@@ -520,6 +496,8 @@ class RequestEventActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        eventCategoryPopup?.dismiss()
+        eventCategoryPopup = null
         successDialog?.dismiss()
         successDialog = null
         super.onDestroy()
@@ -537,13 +515,79 @@ class RequestEventActivity : AppCompatActivity() {
 
     private fun clearFieldErrors() {
         listOf(
-            eventNameInput, eventDescriptionInput, eventCategoryInput, targetAudienceInput,
+            eventNameInput, eventDescriptionInput, targetAudienceInput,
             capacityInput, venueInput, startDateTimeInput, endDateTimeInput,
             registrationStartDateTimeInput, registrationEndDateTimeInput,
             requesterNameInput, contactEmailInput, contactNumberInput,
             reasonForRequestInput,
         ).forEach { it.error = null }
     }
+
+    private fun renderCategoryDropdown() {
+        eventCategoryPopup?.dismiss()
+        eventCategoryPopup = PopupWindow(
+            buildCategoryDropdownView(),
+            cardEventCategory.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true,
+        ).apply {
+            isOutsideTouchable = true
+            elevation = dp(8).toFloat()
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { isCategoryDropdownOpen = false; normalizeChevron(spinnerArrow, false) }
+        }
+    }
+
+    private fun buildCategoryDropdownView(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundResource(R.drawable.bg_card)
+        categoryOptions.forEachIndexed { index, option ->
+            addView(LinearLayout(this@RequestEventActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(14), dp(16), dp(14))
+                setBackgroundColor(if (index == spinnerEventCategory.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setOnClickListener {
+                    spinnerEventCategory.setSelection(index, false)
+                    txtSelectedEventCategory.text = option
+                    selectedEventCategory = option
+                    renderCategoryDropdown()
+                    setCategoryDropdownOpen(false)
+                }
+                addView(TextView(this@RequestEventActivity).apply {
+                    text = option
+                    setTextColor(if (index == spinnerEventCategory.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
+                    textSize = 15f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+            })
+        }
+    }
+
+    private fun setCategoryDropdownOpen(open: Boolean) {
+        if (open && categoryOptions.isEmpty()) return
+        if (open) {
+            if (eventCategoryPopup == null || cardEventCategory.width > 0 && eventCategoryPopup?.width != cardEventCategory.width) {
+                renderCategoryDropdown()
+            }
+            isCategoryDropdownOpen = true
+            normalizeChevron(spinnerArrow, true)
+            eventCategoryPopup?.showAsDropDown(cardEventCategory, 0, 0)
+        } else {
+            eventCategoryPopup?.dismiss()
+            isCategoryDropdownOpen = false
+            normalizeChevron(spinnerArrow, false)
+        }
+    }
+
+    private fun normalizeChevron(view: View, open: Boolean) {
+        if (view is ImageView) {
+            view.rotation = if (open) 180f else 0f
+        }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun configureDateTimeField(
         field: EditText,

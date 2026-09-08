@@ -41,6 +41,18 @@ object EventStatusBadgeStyler {
         EventStatus.CANCELLED -> R.drawable.bg_event_badge_cancelled
     }
 
+    /** Rounded-square date badge background per status. */
+    @DrawableRes
+    fun dateBadgeRes(status: EventStatus): Int = when (status) {
+        EventStatus.APPROVED -> R.drawable.bg_dashboard_event_date_upcoming
+        EventStatus.ACTIVE -> R.drawable.bg_dashboard_event_date_active
+        EventStatus.ENDED -> R.drawable.bg_dashboard_event_date_completed
+        EventStatus.DRAFT -> R.drawable.bg_dashboard_event_date_draft
+        EventStatus.PENDING_REVIEW -> R.drawable.bg_dashboard_event_date_pending_review
+        EventStatus.REJECTED -> R.drawable.bg_dashboard_event_date_rejected
+        EventStatus.CANCELLED -> R.drawable.bg_dashboard_event_date_cancelled
+    }
+
     /** Saturated primary/accent color for a status (used for top strips, text, progress bars). */
     fun primaryColor(context: Context, status: EventStatus): Int =
         ContextCompat.getColor(context, textColorRes(status))
@@ -49,7 +61,13 @@ object EventStatusBadgeStyler {
     fun bind(view: TextView, status: EventStatus) {
         view.text = displayLabel(status)
         view.setBackgroundResource(backgroundRes(status))
-        view.setTextColor(ContextCompat.getColor(view.context, textColorRes(status)))
+        view.setTextColor(
+            when (status) {
+                EventStatus.APPROVED, EventStatus.ACTIVE, EventStatus.ENDED ->
+                    ContextCompat.getColor(view.context, R.color.eventqr_text)
+                else -> ContextCompat.getColor(view.context, textColorRes(status))
+            },
+        )
     }
 
     fun displayLabel(status: EventStatus): String = when (status) {
