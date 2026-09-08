@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -130,8 +131,10 @@ public class EventService implements EventLookupPort {
                 event.getRegistrationCloseAt());
     }
 
-    @CacheEvict(cacheNames = "events", allEntries = true)
-    @CacheEvict(cacheNames = "events", key = "#eventId")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", allEntries = true),
+            @CacheEvict(cacheNames = "events", key = "#eventId")
+    })
     public EventResponse update(UUID eventId, EventRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
@@ -149,8 +152,10 @@ public class EventService implements EventLookupPort {
         return toResponse(eventRepository.save(event));
     }
 
-    @CacheEvict(cacheNames = "events", allEntries = true)
-    @CacheEvict(cacheNames = "events", key = "#eventId")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", allEntries = true),
+            @CacheEvict(cacheNames = "events", key = "#eventId")
+    })
     public EventResponse updateStatus(UUID eventId, EventStatus status) {
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
