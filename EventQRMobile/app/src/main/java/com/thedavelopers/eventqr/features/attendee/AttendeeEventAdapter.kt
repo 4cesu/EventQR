@@ -43,6 +43,7 @@ class AttendeeEventAdapter(
         private val regCountView: TextView = itemView.findViewById(R.id.txtRegistrationCount)
         private val regPercentView: TextView = itemView.findViewById(R.id.txtRegistrationPercent)
         private val progressBar: android.widget.ProgressBar = itemView.findViewById(R.id.pbRegistration)
+        private val dateBadgeView: View = itemView.findViewById(R.id.layoutEventDate)
 
         fun bind(item: AttendeeEventResponse) {
             val status = EventStatusBadgeStyler.resolve(item.status, item.eventStartAt, item.eventEndAt)
@@ -51,6 +52,7 @@ class AttendeeEventAdapter(
             titleView.text = item.title.ifBlank { "Untitled event" }
 
             EventStatusBadgeStyler.bind(statusView, status)
+            dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(status))
 
             if (item.eventStartAt != null) {
                 val zonedDateTime = item.eventStartAt.atZone(java.time.ZoneId.of("Asia/Manila"))

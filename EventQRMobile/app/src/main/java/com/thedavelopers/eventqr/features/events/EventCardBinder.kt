@@ -51,6 +51,10 @@ object EventCardBinder {
 
         EventStatusBadgeStyler.bind(view.findViewById(R.id.txtAttendeeEventStatus), eventStatus)
 
+        view.findViewById<View>(R.id.layoutEventDate).setBackgroundResource(
+            EventStatusBadgeStyler.dateBadgeRes(eventStatus),
+        )
+
         view.findViewById<TextView>(R.id.txtEventDay).text = day
         view.findViewById<TextView>(R.id.txtEventMonth).text = month
         view.findViewById<TextView>(R.id.txtAttendeeEventDateTime).text = time
