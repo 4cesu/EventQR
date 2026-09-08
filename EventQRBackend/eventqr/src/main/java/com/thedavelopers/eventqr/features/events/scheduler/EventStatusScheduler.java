@@ -12,6 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 
+/**
+ * Scheduled sweep that transitions events between statuses based on wall-clock time.
+ *
+ * <p>SINGLE-INSTANCE CONSTRAINT: this scheduler (and any other @Scheduled job in the app,
+ * e.g. the password-reset-token purge) assumes exactly one app instance is running.
+ * No distributed lock (ShedLock) is applied yet; running multiple replicas would cause
+ * duplicate sweeps/updates. Introduce ShedLock before scaling to >1 instance.
+ */
 @Component
 public class EventStatusScheduler {
 

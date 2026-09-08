@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ public class PasswordResetService {
     private static final Duration RESET_TTL = Duration.ofMinutes(30);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int TOKEN_BYTE_LENGTH = 32;
+    private static final long PURGE_INTERVAL_MS = 3_600_000L; // hourly
 
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final UserProfileRepository userProfileRepository;
@@ -125,6 +127,21 @@ public class PasswordResetService {
         byte[] bytes = new byte[TOKEN_BYTE_LENGTH];
         SECURE_RANDOM.nextBytes(bytes);
         return HexFormat.of().formatHex(bytes);
+    }
+
+    /**
+     * Hourly sweep that deletes expired reset tokens, consumed or not. Prevents the
+     * password_reset_tokens table from growing unbounded (a per-user request can only
+     * invalidate the user's own unused tokens; used + expired rows would otherwise
+     * accumulate forever). Single-instance scheduler (see {@code EventStatusScheduler}).
+     */
+    @Scheduled(fixedDelay = PURGE_INTERVAL_MS)
+    @Transactional
+    public void purgeExpiredTokens() {
+        int purged = passwordResetTokenRepository.deleteByExpiresAtBefore(Instant.now());
+        if (purged > 0) {
+            log.info("Purged {} expired password reset token(s)", purged);
+        }
     }
 
     private String normalizeEmail(String email) {

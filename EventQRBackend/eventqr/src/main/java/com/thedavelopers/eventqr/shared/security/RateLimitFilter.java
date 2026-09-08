@@ -1,10 +1,11 @@
 package com.thedavelopers.eventqr.shared.security;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -40,8 +41,13 @@ public class RateLimitFilter implements Filter {
 
     private static final int BURST = 200;
     private static final double RATE_PER_SECOND = BURST / 10.0; // 200 / 10s
+    private static final int MAX_KEYS = 10_000;
+    private static final Duration IDLE_EXPIRY = Duration.ofMinutes(5);
 
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
+            .maximumSize(MAX_KEYS)
+            .expireAfterAccess(IDLE_EXPIRY)
+            .build();
 
     @Override
     public void doFilter(jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res, FilterChain chain)
@@ -51,11 +57,8 @@ public class RateLimitFilter implements Filter {
         String key = ClientIp.from(request);
 
         long now = System.currentTimeMillis();
-        Bucket bucket = buckets.compute(key, (k, existing) -> {
-            Bucket current = existing != null ? existing : Bucket.empty(now);
-            current.refill(now);
-            return current;
-        });
+        Bucket bucket = buckets.get(key, k -> Bucket.empty(now));
+        bucket.refill(now);
         if (!bucket.tryConsume()) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
@@ -97,8 +100,17 @@ public class RateLimitFilter implements Filter {
             return tokensMillis.get();
         }
 
-        /** Add tokens accrued since the last refill (capped at capacity). */
-        void refill(long now) {
+        /**
+         * Add tokens accrued since the last refill (capped at capacity).
+         *
+         * <p>Synchronized so that {@code lastRefillAt} and the token accumulation form
+         * one critical section: without this, two concurrent refills could both read the
+         * same {@code lastRefillAt}, both credit the same elapsed window, and double-count
+         * the refill (~2x the intended rate). Serializing the refill is cheap per request
+         * and keeps the accumulate-and-cap CAS loop intact for the token update itself.
+         * {@code tryConsume} stays lock-free (it only touches the AtomicLong).
+         */
+        synchronized void refill(long now) {
             long elapsedMs = now - lastRefillAt;
             if (elapsedMs <= 0) {
                 return;

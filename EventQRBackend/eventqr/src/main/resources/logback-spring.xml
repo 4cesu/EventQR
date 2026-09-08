@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Structured JSON logging for production / cloud log ingestion (Render, Loki, ...).
+
+  PII masking (emails, tokens, etc.) is performed at the CALL SITE in application
+  code via LogRedaction before anything reaches the logger. This encoder only
+  serializes the already-redacted messages/markers — it must NOT add pattern-based
+  conversions (e.g. %replace on the raw message) that could reintroduce raw values,
+  and exceptions/messages are emitted verbatim as they were constructed upstream.
+-->
+<configuration>
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdc>true</includeMdc>
+            <includeContext>true</includeContext>
+            <customFields>{"application":"eventqr"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+</configuration>

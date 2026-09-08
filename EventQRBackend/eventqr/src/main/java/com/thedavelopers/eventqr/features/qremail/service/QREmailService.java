@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +74,17 @@ public class QREmailService {
                     exception.getMessage(), exception);
             return new DeliveryResult(registrationId, null, EmailDeliveryStatus.FAILED);
         }
+    }
+
+    /**
+     * Asynchronous entry point used by controllers and after-commit listeners so the
+     * email gateway calls (and the internal 250ms retry sleep) never block a Tomcat
+     * request thread. Runs on the bounded {@code eventTaskExecutor} (see AsyncConfig);
+     * the bounded queue applies backpressure rather than unbounded thread growth.
+     */
+    @Async("eventTaskExecutor")
+    public void sendForRegistrationSafelyAsync(UUID registrationId) {
+        sendForRegistrationSafely(registrationId);
     }
 
     private DeliveryResult send(EventRegistration registration, QrCredential credential) {

@@ -36,18 +36,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            try {
-                UUID userId = jwtService.extractUserIdFromBearer(header);
-                AccountRole role = jwtService.extractRoleFromBearer(header);
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userId,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (UnauthorizedException exception) {
+            if (jwtService.isRevoked(header)) {
                 SecurityContextHolder.clearContext();
+            } else {
+                try {
+                    UUID userId = jwtService.extractUserIdFromBearer(header);
+                    AccountRole role = jwtService.extractRoleFromBearer(header);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userId,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (UnauthorizedException exception) {
+                    SecurityContextHolder.clearContext();
+                }
             }
         }
         filterChain.doFilter(request, response);

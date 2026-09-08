@@ -1,8 +1,11 @@
 package com.thedavelopers.eventqr.features.users.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,8 +60,17 @@ public class UserService implements AttendeeDirectoryPort {
         return toResponse(userProfileRepository.save(userProfile));
     }
 
-    public List<UserResponse> findAllUsers() {
-        return userProfileRepository.findAll().stream().map(this::toResponse).toList();
+    public Page<UserResponse> findAllUsers(Pageable pageable) {
+        return userProfileRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    public Page<UserResponse> findByRole(AccountRole role, Pageable pageable) {
+        return userProfileRepository.findByRole(role, pageable).map(this::toResponse);
+    }
+
+    /** Admin-scoped listing: excludes privileged roles the caller must never see. */
+    public Page<UserResponse> findByRoleNotIn(Collection<AccountRole> excludedRoles, Pageable pageable) {
+        return userProfileRepository.findByRoleNotIn(excludedRoles, pageable).map(this::toResponse);
     }
 
     public UserResponse findOne(UUID userId) {

@@ -87,7 +87,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout() {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
+        jwtService.revoke(request.getHeader("Authorization"));
         return ResponseEntity.ok(ApiResponse.success("Logout processed", null));
     }
 

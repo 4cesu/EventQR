@@ -27,9 +27,11 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSu
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
+import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
+import com.thedavelopers.eventqr.shared.security.RegistrationRateLimiter;
 
 @RestController
 @RequestMapping("/api/v1/registrations")
@@ -41,21 +43,29 @@ public class RegistrationController {
     private final JwtService jwtService;
     private final EventService eventService;
     private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
+    private final RegistrationRateLimiter registrationRateLimiter;
 
     public RegistrationController(RegistrationService registrationService, QrCredentialService qrCredentialService,
                                   QREmailService qrEmailService, JwtService jwtService,
-                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository) {
+                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository,
+                                  RegistrationRateLimiter registrationRateLimiter) {
         this.registrationService = registrationService;
         this.qrCredentialService = qrCredentialService;
         this.qrEmailService = qrEmailService;
         this.jwtService = jwtService;
         this.eventService = eventService;
         this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
+        this.registrationRateLimiter = registrationRateLimiter;
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(@Valid @RequestBody RegistrationRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.register(request)));
+    public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(HttpServletRequest request,
+                                                                                @Valid @RequestBody RegistrationRequest regRequest) {
+        if (!registrationRateLimiter.allow(request, regRequest.email())) {
+            throw new TooManyRequestsException(
+                    "Too many registration requests. Please try again later.");
+        }
+        return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.register(regRequest)));
     }
 
     @GetMapping("/me")
@@ -124,7 +134,7 @@ public class RegistrationController {
                                                                      @PathVariable UUID registrationId) {
         requireRegistrationAccess(request, registrationId);
         registrationService.getOrCreateQrCredential(registrationId);
-        qrEmailService.sendForRegistrationSafely(registrationId);
+        qrEmailService.sendForRegistrationSafelyAsync(registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR email delivery attempted",
                 registrationService.getOrCreateQrCredential(registrationId)));
     }
@@ -134,7 +144,7 @@ public class RegistrationController {
                                                                           @PathVariable UUID registrationId) {
         requireRegistrationAccess(request, registrationId);
         registrationService.getOrCreateQrCredential(registrationId);
-        qrEmailService.sendForRegistrationSafely(registrationId);
+        qrEmailService.sendForRegistrationSafelyAsync(registrationId);
         return ResponseEntity.ok(ApiResponse.success("QR email retry attempted",
             registrationService.getOrCreateQrCredential(registrationId)));
     }

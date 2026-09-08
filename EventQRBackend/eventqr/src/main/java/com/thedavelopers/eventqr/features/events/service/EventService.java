@@ -182,17 +182,17 @@ public class EventService implements EventLookupPort {
     }
 
     public void incrementCurrentAttendeeCount(UUID eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
-        event.setCurrentAttendeeCount(safeCount(event.getCurrentAttendeeCount()) + 1);
-        eventRepository.save(event);
+        // Atomic DB-side increment guarded by capacity (capacity = 0 is unlimited).
+        // Avoids the lost-update race of read-modify-write under concurrent registrations.
+        int updated = eventRepository.incrementAttendeeCountIfAvailable(eventId);
+        if (updated == 0) {
+            throw new ConflictException("Event is at capacity");
+        }
     }
 
     public void decrementCurrentAttendeeCount(UUID eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
-        event.setCurrentAttendeeCount(Math.max(0, safeCount(event.getCurrentAttendeeCount()) - 1));
-        eventRepository.save(event);
+        // Atomic DB-side decrement clamped at 0 (GREATEST guard) on the SQL side.
+        eventRepository.decrementAttendeeCount(eventId);
     }
 
     private EventResponse toResponse(Event event) {

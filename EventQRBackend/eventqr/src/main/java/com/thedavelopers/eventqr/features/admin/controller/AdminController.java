@@ -5,6 +5,10 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,16 +54,22 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> listUsers(HttpServletRequest request,
-                                                                     @RequestParam(required = false) AccountRole role) {
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> listUsers(HttpServletRequest request,
+                                                                     @RequestParam(required = false) AccountRole role,
+                                                                     @RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "20") int size) {
         requireAdmin(request);
-        List<UserResponse> users;
-        if (role != null) {
-            users = userService.findAllUsers().stream()
-                    .filter(u -> u.role() == role)
-                    .toList();
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<UserResponse> users;
+        if (callerRole == AccountRole.SUPER_ADMIN) {
+            users = role != null ? userService.findByRole(role, pageable) : userService.findAllUsers(pageable);
+        } else if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            users = Page.empty(pageable);
+        } else if (role != null) {
+            users = userService.findByRole(role, pageable);
         } else {
-            users = userService.findAllUsers();
+            users = userService.findByRoleNotIn(List.of(AccountRole.ADMIN, AccountRole.SUPER_ADMIN), pageable);
         }
         return ResponseEntity.ok(ApiResponse.success(users));
     }

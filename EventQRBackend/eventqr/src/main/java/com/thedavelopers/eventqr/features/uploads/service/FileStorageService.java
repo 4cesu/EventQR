@@ -24,6 +24,12 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 @Transactional
 public class FileStorageService {
 
+    // TODO(production): migrate file storage from the bytea column to S3 (or Render Disk)
+    // before launch. Short-term mitigations in place: uploads are capped at 5 MB with the
+    // size check before any full content read, and /content is streamed with a Content-Length
+    // so responses never double-copy through the JSON/base64 envelope. The metadata GET still
+    // returns base64 content because the mobile clients decode it directly (EventDetail /
+    // EditEventDetails banner previews) — that contract stays until the clients move to /content.
     private static final double EVENT_POSTER_MIN_RATIO = 1.55;
     private static final double EVENT_POSTER_MAX_RATIO = 1.90;
 
@@ -88,6 +94,12 @@ public class FileStorageService {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File is required");
         }
+        // Reject oversize uploads BEFORE pulling the content into memory: MultipartFile
+        // may be backed by a temp file, and getBytes() would force a full read of a file
+        // we are about to reject.
+        if (file.getSize() > MAX_IMAGE_BYTES) {
+            throw new BadRequestException("Image must not exceed 5 MB");
+        }
         byte[] content = readBytes(file);
         String detectedType = MediaTypeDetector.detect(content);
         String declaredType = normalizeDeclaredContentType(file.getContentType());
@@ -97,9 +109,6 @@ public class FileStorageService {
         }
         if (!isAllowedImageType(detectedType)) {
             throw new BadRequestException("Selected file is not a readable JPG, JPEG, or PNG image");
-        }
-        if (file.getSize() > MAX_IMAGE_BYTES) {
-            throw new BadRequestException("Image must not exceed 5 MB");
         }
         String normalizedPurpose = normalizePurpose(purpose);
         if ("event-poster".equals(normalizedPurpose) || "event-logo".equals(normalizedPurpose)) {
