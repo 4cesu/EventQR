@@ -85,7 +85,12 @@ class StaffRepository(context: Context) {
     suspend fun printIdBatch(eventId: String, attendeeUserIds: List<java.util.UUID>, reprint: Boolean) =
         safeApiCall { apiService.printIdBatch(eventId, IdBatchPrintRequest(attendeeUserIds, reprint)) }
 
-    suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
+    suspend fun getRegistrationsByEvent(eventId: String): NetworkResult<List<RegistrationResponse>> =
+        when (val result = safeApiCall { apiService.getRegistrationsByEvent(eventId) }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
 
     suspend fun getNotificationsByRecipient(recipientUserId: String) = safeApiCall { apiService.getNotificationsByRecipient(recipientUserId) }
 

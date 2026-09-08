@@ -25,8 +25,18 @@ import java.util.UUID
 
 class AttendeeRepository(context: Context) {
     private val apiService = ApiClient.getService(context)
-    suspend fun getEvents() = safeApiCall { apiService.getAttendeeVisibleEvents() }
-    suspend fun getBrowseEvents() = safeApiCall { apiService.getAttendeeBrowseEvents() }
+    suspend fun getEvents(): NetworkResult<List<AttendeeEventResponse>> =
+        when (val result = safeApiCall { apiService.getAttendeeVisibleEvents() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
+    suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> =
+        when (val result = safeApiCall { apiService.getAttendeeBrowseEvents() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
     suspend fun getEvent(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
     suspend fun getEventAvailability(eventId: String) = safeApiCall { apiService.getEventAvailability(eventId) }
     suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }
@@ -47,10 +57,12 @@ class AttendeeRepository(context: Context) {
     suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
     suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
     suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
-        safeApiCall { apiService.getMyRegistrations() }.also { result ->
-            if (result is NetworkResult.Success) {
-                RegistrationsCache.set(result.data)
+        when (val result = safeApiCall { apiService.getMyRegistrations() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content).also {
+                RegistrationsCache.set(result.data.content)
             }
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
         }
     suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }
     suspend fun getMyTransactions() = safeApiCall { apiService.getMyTransactions() }
@@ -58,7 +70,12 @@ class AttendeeRepository(context: Context) {
     suspend fun linkQrCredential(registrationId: String) = safeApiCall { apiService.linkQrCredential(registrationId) }
     suspend fun getQrCredentialById(qrCredentialId: String) = safeApiCall { apiService.getQrCredentialById(qrCredentialId) }
     suspend fun getRegistration(registrationId: String) = safeApiCall { apiService.getRegistration(registrationId) }
-    suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
+    suspend fun getRegistrationsByEvent(eventId: String): NetworkResult<List<RegistrationResponse>> =
+        when (val result = safeApiCall { apiService.getRegistrationsByEvent(eventId) }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
     suspend fun getQrCredentialByRegistration(registrationId: String) = safeApiCall { apiService.getQrCredentialByRegistration(registrationId) }
     suspend fun markQrDisplayed(qrCredentialId: String) = safeApiCall { apiService.markQrDisplayed(qrCredentialId) }
     suspend fun markQrDownloaded(qrCredentialId: String) = safeApiCall { apiService.markQrDownloaded(qrCredentialId) }
