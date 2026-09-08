@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort.AttendeeSnapshot;
@@ -122,11 +123,35 @@ public class UserService implements AttendeeDirectoryPort {
         userProfileRepository.delete(userProfile);
     }
 
-    public UserResponse changeRoleResponse(UUID userId, AccountRole role) {
-        UserProfile userProfile = userProfileRepository.findById(userId)
+    public UserResponse changeRoleResponse(UUID callerUserId, AccountRole callerRole, UUID userId, AccountRole role) {
+        if (role == null) {
+            throw new BadRequestException("Target role is required");
+        }
+        UserProfile target = userProfileRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-        userProfile.setRole(role);
-        return toResponse(userProfileRepository.save(userProfile));
+
+        // SUPER_ADMIN is the only role that may assign ADMIN/SUPER_ADMIN roles at all.
+        if (callerRole == AccountRole.SUPER_ADMIN) {
+            return toResponse(saveRole(target, role));
+        }
+
+        // A plain ADMIN must never be able to promote anyone (including themselves) to
+        // ADMIN/SUPER_ADMIN, manage another admin account, or change their own role.
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            throw new ForbiddenException("Only super admins can assign admin roles");
+        }
+        if (target.getRole() == AccountRole.ADMIN || target.getRole() == AccountRole.SUPER_ADMIN) {
+            throw new ForbiddenException("Admins cannot manage admin accounts");
+        }
+        if (target.getId().equals(callerUserId)) {
+            throw new ForbiddenException("Admins cannot change their own role");
+        }
+        return toResponse(saveRole(target, role));
+    }
+
+    private UserProfile saveRole(UserProfile target, AccountRole role) {
+        target.setRole(role);
+        return userProfileRepository.save(target);
     }
 
     @Override

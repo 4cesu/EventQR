@@ -95,7 +95,13 @@ public class UserController {
                                                                 @PathVariable UUID userId,
                                                                 @PathVariable AccountRole role) {
         requireAdmin(request);
-        return ResponseEntity.ok(ApiResponse.success("Role updated", userService.changeRoleResponse(userId, role)));
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        return ResponseEntity.ok(ApiResponse.success("Role updated",
+                userService.changeRoleResponse(currentUserId(request), callerRole, userId, role)));
+    }
+
+    private UUID currentUserId(HttpServletRequest request) {
+        return jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
     }
 
     private void requireAdmin(HttpServletRequest request) {

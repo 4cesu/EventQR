@@ -48,8 +48,8 @@ public class EventController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<EventResponse>> create(HttpServletRequest request, @Valid @RequestBody EventRequest event) {
-        requireAuthenticated(request);
-        return ResponseEntity.ok(ApiResponse.success("Event submitted", eventService.create(event)));
+        requireOrganizer(request);
+        return ResponseEntity.ok(ApiResponse.success("Event submitted", eventService.create(currentUserId(request), event)));
     }
 
     @PutMapping("/{eventId}/review")
@@ -104,8 +104,16 @@ public class EventController {
         return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents(PageRequest.of(page, size))));
     }
 
-    private void requireAuthenticated(HttpServletRequest request) {
-        jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+    private void requireOrganizer(HttpServletRequest request) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ORGANIZER || role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer access required");
+    }
+
+    private UUID currentUserId(HttpServletRequest request) {
+        return jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
     }
 
     private void requireAdmin(HttpServletRequest request) {

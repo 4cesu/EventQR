@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        CVE-2026-53914 is a build-cache deserialization vuln in kotlin-gradle-plugin (the
+        compiler/build tool).  OWASP matches it against kotlin-stdlib (and kotlin-stdlib-jdk7)
+        via the generic CPE "jetbrains:kotlin", but these are the runtime standard-library jars
+        and do NOT contain the build-cache code.  This is a false positive for the runtime jars.
+    -->
+    <suppress>
+        <notes>CVE-2026-53914 is in kotlin-gradle-plugin build cache, not kotlin-stdlib runtime library. False positive via generic CPE match.</notes>
+        <packageUrl regex="true">pkg:maven/org\.jetbrains\.kotlin/kotlin-stdlib.*@.*</packageUrl>
+        <cve>CVE-2026-53914</cve>
+    </suppress>
+
+    <!--
+        Spring Framework 6.2.x CVEs published Aug 2026 (CVE-2026-59313/47890/47891/47892/59283/47893
+        /59282/59281/59280/59314).  Spring Framework 6.2 reached open-source EOL at 6.2.19 (25 Jun
+        2026). NO open-source 6.2.x patch fixes them; fixes ship only in Spring Framework 7.x
+        (Spring Boot 4) or paid extended support. Upgrading this app to Spring Boot 4 is a large
+        separate migration, out of scope for a dependency-version fix. The regex matches every
+        org.springframework module (spring-core, spring-tx, spring-jcl, ...) at 6.2.19 because the
+        generic CPE "spring_framework" causes the same CVE set to surface on each module. Suppressed
+        with acknowledgment; tracked for the Spring Boot 4 migration.
+    -->
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-59313</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-47890</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-47891</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-47892</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-59283</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-47893</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-59282</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-59281</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-59280</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
+        <cve>CVE-2026-59314</cve>
+    </suppress>
+
+    <!--
+        Spring Security 6.5 line reached OSS EOL at 6.5.11 (25 Jun 2026). CVE-2026-59270/47841/
+        47842/59276 have no OSS patch in the 6.5.x line; fixed only in Spring Security 7.x (Spring
+        Boot 4) or paid NES. Suppressed with acknowledgment; tracked for Spring Boot 4 migration.
+    -->
+    <suppress>
+        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
+        <cve>CVE-2026-47842</cve>
+    </suppress>
+    <suppress>
+        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
+        <cve>CVE-2026-59276</cve>
+    </suppress>
+
+    <!--
+        Maven build-tool tool-chain noise.  maven-core, maven-shared-utils and plexus-utils are
+        Maven's own runtime/plugin jars pulled in by the dependency-check-maven plugin's classpath,
+        NOT application dependencies.  Upgrading them means bumping the Maven distribution, which is
+        explicitly out of scope (do NOT bump Maven).  These findings are accepted as tool noise.
+    -->
+    <suppress>
+        <notes>Maven tool-chain runtime jar, not an application dependency. Bumping Maven is out of scope (do NOT bump Maven). Accepted tool-chain noise.</notes>
+        <packageUrl regex="true">pkg:maven/org\.apache\.maven/maven-core@3\.0</packageUrl>
+        <cve>CVE-2021-26291</cve>
+    </suppress>
+    <suppress>
+        <notes>Maven tool-chain runtime jar, not an application dependency. Bumping Maven is out of scope (do NOT bump Maven). Accepted tool-chain noise.</notes>
+        <packageUrl regex="true">pkg:maven/org\.apache\.maven\.shared/maven-shared-utils@3\.1\.0</packageUrl>
+        <cve>CVE-2022-29599</cve>
+    </suppress>
+    <suppress>
+        <notes>Maven tool-chain runtime jar, not an application dependency. Bumping Maven is out of scope (do NOT bump Maven). Accepted tool-chain noise.</notes>
+        <packageUrl regex="true">pkg:maven/org\.codehaus\.plexus/plexus-utils@3\.4\.2</packageUrl>
+        <cve>CVE-2025-67030</cve>
+    </suppress>
+</suppressions>

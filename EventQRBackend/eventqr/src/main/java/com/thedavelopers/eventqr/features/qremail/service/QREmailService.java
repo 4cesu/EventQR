@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegist
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort;
+import com.thedavelopers.eventqr.shared.utils.LogRedaction;
 
 @Service
 public class QREmailService {
@@ -77,7 +78,7 @@ public class QREmailService {
     private DeliveryResult send(EventRegistration registration, QrCredential credential) {
         String recipientEmail = registration.getAttendeeEmail();
         log.info("Preparing QR email registrationId={} qrCredentialId={} recipient={}",
-            registration.getId(), credential.getId(), recipientEmail);
+            registration.getId(), credential.getId(), LogRedaction.maskEmail(recipientEmail));
         EmailDeliveryLog deliveryLog = newLog(registration, credential, recipientEmail, EmailDeliveryStatus.RETRY_PENDING, null);
         saveLog(deliveryLog);
         if (!isValidEmail(recipientEmail)) {
@@ -106,7 +107,7 @@ public class QREmailService {
     private void sendMessage(String recipientEmail, String attendeeName, String qrValue, Integer registrationNumber) {
         byte[] qrImageBytes = qrCredentialPort.renderQrImage(qrValue);
         String attendeeId = registrationNumber != null ? String.format("#%03d", registrationNumber) : null;
-        log.debug("QR image bytes retrieved registrationEmail={} byteCount={}", recipientEmail, qrImageBytes.length);
+        log.debug("QR image bytes retrieved registrationEmail={} byteCount={}", LogRedaction.maskEmail(recipientEmail), qrImageBytes.length);
         emailGatewayService.send(recipientEmail, templateBuilder.build(attendeeName, qrValue, qrImageBytes, attendeeId));
     }
 

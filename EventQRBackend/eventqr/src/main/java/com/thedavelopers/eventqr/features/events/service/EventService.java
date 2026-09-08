@@ -38,7 +38,7 @@ public class EventService implements EventLookupPort {
         this.eventRepository = eventRepository;
     }
 
-    public EventResponse create(EventRequest request) {
+    public EventResponse create(UUID organizerUserId, EventRequest request) {
         Event event = new Event();
         event.setTitle(request.title().trim());
         event.setDescription(request.description());
@@ -51,7 +51,8 @@ public class EventService implements EventLookupPort {
         event.setCapacity(request.capacity());
         event.setCurrentAttendeeCount(0);
         event.setRewardsEnabled(Boolean.TRUE.equals(request.rewardsEnabled()));
-        event.setOrganizerUserId(request.organizerUserId());
+        // Ownership is always derived from the authenticated caller, never from the request body.
+        event.setOrganizerUserId(organizerUserId);
         event.setStatus(EventStatus.PENDING_REVIEW);
         return toResponse(eventRepository.save(event));
     }
@@ -129,27 +130,6 @@ public class EventService implements EventLookupPort {
                 now,
                 event.getRegistrationOpenAt(),
                 event.getRegistrationCloseAt());
-    }
-
-    @Caching(evict = {
-            @CacheEvict(cacheNames = "events", allEntries = true),
-            @CacheEvict(cacheNames = "events", key = "#eventId")
-    })
-    public EventResponse update(UUID eventId, EventRequest request) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
-        event.setTitle(request.title().trim());
-        event.setDescription(request.description());
-        event.setLocation(request.location());
-        event.setEventLogoUrl(request.eventLogoUrl());
-        event.setRegistrationOpenAt(request.registrationOpenAt());
-        event.setRegistrationCloseAt(request.registrationCloseAt());
-        event.setEventStartAt(request.eventStartAt());
-        event.setEventEndAt(request.eventEndAt());
-        event.setCapacity(request.capacity());
-        event.setRewardsEnabled(Boolean.TRUE.equals(request.rewardsEnabled()));
-        event.setOrganizerUserId(request.organizerUserId());
-        return toResponse(eventRepository.save(event));
     }
 
     @Caching(evict = {

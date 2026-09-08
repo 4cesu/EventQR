@@ -67,6 +67,7 @@ public class AdminController {
     @GetMapping("/users/{userId}")
     public ResponseEntity<ApiResponse<UserResponse>> findUser(HttpServletRequest request, @PathVariable UUID userId) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         return ResponseEntity.ok(ApiResponse.success(userService.findOne(userId)));
     }
 
@@ -75,6 +76,7 @@ public class AdminController {
                                                                @PathVariable UUID userId,
                                                                @Valid @RequestBody ProfileUpdateRequest body) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UserResponse updated = userService.updateProfile(userId, body.fullName(), body.phoneNumber());
         logAdminAction(request, "ACCOUNT_UPDATED", updated.fullName(), null, updated.userId());
         return ResponseEntity.ok(ApiResponse.success("User updated", updated));
@@ -85,6 +87,7 @@ public class AdminController {
                                                                 @PathVariable UUID userId,
                                                                 @Valid @RequestBody UserStatusRequest body) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UserResponse updated = userService.updateStatus(userId, body.status());
         logAdminAction(request, "ACCOUNT_STATUS_UPDATED", updated.fullName(), null, updated.userId());
         return ResponseEntity.ok(ApiResponse.success("Status updated", updated));
@@ -95,7 +98,8 @@ public class AdminController {
                                                               @PathVariable UUID userId,
                                                               @Valid @RequestBody UserRoleRequest body) {
         requireAdmin(request);
-        UserResponse updated = userService.changeRoleResponse(userId, body.role());
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        UserResponse updated = userService.changeRoleResponse(currentAdminId(request), callerRole, userId, body.role());
         logAdminAction(request, "ACCOUNT_ROLE_UPDATED", updated.fullName(), null, updated.userId());
         return ResponseEntity.ok(ApiResponse.success("Role updated", updated));
     }

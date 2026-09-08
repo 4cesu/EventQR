@@ -20,6 +20,8 @@ import com.thedavelopers.eventqr.features.qremail.service.EmailGatewayService;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
+import com.thedavelopers.eventqr.shared.utils.LogRedaction;
 import com.thedavelopers.eventqr.shared.utils.PasswordValidator;
 
 @Service
@@ -82,7 +84,7 @@ public class PasswordResetService {
         try {
             emailGatewayService.sendSimple(normalizedEmail, subject, html);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {}", normalizedEmail, e);
+            log.error("Failed to send password reset email to {}", LogRedaction.maskEmail(normalizedEmail), e);
         }
     }
 
@@ -129,6 +131,9 @@ public class PasswordResetService {
         if (email == null || email.isBlank()) {
             throw new BadRequestException("Email is required");
         }
-        return email.trim().toLowerCase();
+        // Use the same canonical form as the forgot-password rate limiter so the recipient
+        // that actually receives the reset email matches the rate-limit key, and so Gmail
+        // +tag/dot aliases resolve to the user's real account inbox.
+        return EmailNormalizer.canonicalize(email);
     }
 }

@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.service.UserService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
+import com.thedavelopers.eventqr.shared.security.ForgotPasswordRateLimiter;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
 @RestController
@@ -40,14 +41,17 @@ public class AuthController {
     private final JwtService jwtService;
     private final PasswordResetService passwordResetService;
     private final ChangePasswordService changePasswordService;
+    private final ForgotPasswordRateLimiter forgotPasswordRateLimiter;
 
     public AuthController(AuthService authService, UserService userService, JwtService jwtService,
-                          PasswordResetService passwordResetService, ChangePasswordService changePasswordService) {
+                          PasswordResetService passwordResetService, ChangePasswordService changePasswordService,
+                          ForgotPasswordRateLimiter forgotPasswordRateLimiter) {
         this.authService = authService;
         this.userService = userService;
         this.jwtService = jwtService;
         this.passwordResetService = passwordResetService;
         this.changePasswordService = changePasswordService;
+        this.forgotPasswordRateLimiter = forgotPasswordRateLimiter;
     }
 
     @PostMapping("/register")
@@ -87,10 +91,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Logout processed", null));
     }
 
-    // TODO: add rate limiting on forgot-password (e.g. Bucket4j or a simple in-memory counter) to prevent email-spam abuse
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        passwordResetService.requestReset(request.email());
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(HttpServletRequest request,
+                                                            @Valid @RequestBody ForgotPasswordRequest forgotPassword) {
+        if (!forgotPasswordRateLimiter.allow(request, forgotPassword.email())) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException(
+                    "Too many password reset requests. Please try again later.");
+        }
+        passwordResetService.requestReset(forgotPassword.email());
         return ResponseEntity.ok(ApiResponse.success("If an account with that email exists, a reset link has been sent", null));
     }
 
