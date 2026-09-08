@@ -242,11 +242,23 @@ END $$;
 -- notifications → transaction_logs (nullable)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint
-                 WHERE conname='fk_notifications_transaction' AND connamespace='public'::regnamespace) THEN
+                 WHERE conname='fk_notifications_transaction' AND connamespace='public'::regnamespace)
+     AND NOT EXISTS (
+       SELECT 1 FROM pg_constraint c
+       JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+       WHERE c.connamespace='public'::regnamespace
+         AND c.contype='f'
+         AND c.conrelid='notifications'::regclass
+         AND a.attname='related_transaction_id') THEN
     ALTER TABLE notifications
         ADD CONSTRAINT fk_notifications_transaction
         FOREIGN KEY (related_transaction_id) REFERENCES transaction_logs(id)
         ON DELETE SET NULL;
+  ELSE
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname='fk_notifications_transaction' AND connamespace='public'::regnamespace) THEN
+      RAISE NOTICE 'V18: skipping fk_notifications_transaction: FK already covers notifications(related_transaction_id)';
+    END IF;
   END IF;
 END $$;
 
@@ -352,11 +364,22 @@ END $$;
 -- point_transactions → transaction_logs (source)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint
-                 WHERE conname='fk_point_transactions_source' AND connamespace='public'::regnamespace) THEN
+                 WHERE conname='fk_point_transactions_source' AND connamespace='public'::regnamespace)
+     AND NOT EXISTS (SELECT 1 FROM point_transactions pt
+                     LEFT JOIN transaction_logs tl ON tl.id = pt.source_transaction_id
+                     WHERE pt.source_transaction_id IS NOT NULL AND tl.id IS NULL) THEN
     ALTER TABLE point_transactions
         ADD CONSTRAINT fk_point_transactions_source
         FOREIGN KEY (source_transaction_id) REFERENCES transaction_logs(id)
         ON DELETE RESTRICT;
+  ELSE
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname='fk_point_transactions_source' AND connamespace='public'::regnamespace) THEN
+      RAISE NOTICE 'V18: skipping fk_point_transactions_source: % orphan row(s) in point_transactions.source_transaction_id',
+        (SELECT count(*) FROM point_transactions pt
+         LEFT JOIN transaction_logs tl ON tl.id = pt.source_transaction_id
+         WHERE pt.source_transaction_id IS NOT NULL AND tl.id IS NULL);
+    END IF;
   END IF;
 END $$;
 
