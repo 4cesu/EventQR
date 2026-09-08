@@ -12,6 +12,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventApprovalRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
+import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRequest
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
@@ -25,6 +26,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleReq
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerUserSearchDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentUpdateRequestDto
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
@@ -257,7 +259,12 @@ class OrganizerRepository(private val context: Context) {
     suspend fun deleteScanPurposeForMvp(eventId: String, purposeId: String) =
         safeApiCall { apiService.deleteOrganizerScanPurpose(eventId, purposeId) }
 
-    suspend fun getEvents() = safeApiCall { apiService.getEvents() }
+    suspend fun getEvents(): NetworkResult<List<EventResponse>> =
+        when (val result = safeApiCall { apiService.getEvents() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
     suspend fun fetchOrganizerEvents() = safeApiCall { apiService.getOrganizerEvents() }
     suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
     suspend fun updateOrganizerEvent(eventId: String, request: com.thedavelopers.eventqr.features.events.model.dto.EventRequest) =
@@ -296,7 +303,12 @@ class OrganizerRepository(private val context: Context) {
     suspend fun createUser(request: UserRequest) = safeApiCall { apiService.createUser(request) }
     suspend fun changeUserRole(userId: String, role: com.thedavelopers.eventqr.core.api.dto.AccountRole) = safeApiCall { apiService.changeUserRole(userId, role) }
 
-    suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
+    suspend fun getRegistrationsByEvent(eventId: String): NetworkResult<List<RegistrationResponse>> =
+        when (val result = safeApiCall { apiService.getRegistrationsByEvent(eventId) }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
 
     suspend fun createScanPurpose(request: ScanPurposeRequest) = safeApiCall { apiService.createScanPurpose(request) }
     suspend fun getScanPurposesByEvent(eventId: String) = safeApiCall { apiService.getScanPurposesByEvent(eventId) }

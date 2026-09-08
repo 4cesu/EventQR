@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.core.api
 
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
+import com.thedavelopers.eventqr.core.api.dto.PageResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest
@@ -159,13 +160,13 @@ interface ApiService {
     suspend fun activateEvent(@Path("eventId") eventId: String): ApiResponse<EventResponse>
 
     @GET("events")
-    suspend fun getEvents(): ApiResponse<List<EventResponse>>
+    suspend fun getEvents(): ApiResponse<PageResponse<EventResponse>>
 
     @GET("events/attendee-visible")
-    suspend fun getAttendeeVisibleEvents(): ApiResponse<List<AttendeeEventResponse>>
+    suspend fun getAttendeeVisibleEvents(): ApiResponse<PageResponse<AttendeeEventResponse>>
 
     @GET("events/attendee-browse")
-    suspend fun getAttendeeBrowseEvents(): ApiResponse<List<AttendeeEventResponse>>
+    suspend fun getAttendeeBrowseEvents(): ApiResponse<PageResponse<AttendeeEventResponse>>
 
     @GET("events/{eventId}")
     suspend fun getEventById(@Path("eventId") eventId: String): ApiResponse<AttendeeEventResponse>
@@ -341,7 +342,7 @@ interface ApiService {
     ): ApiResponse<OrganizerTransactionRuleDto>
 
     @GET("registrations/me")
-    suspend fun getMyRegistrations(): ApiResponse<List<RegistrationResponse>>
+    suspend fun getMyRegistrations(): ApiResponse<PageResponse<RegistrationResponse>>
 
     @GET("attendees/me/events/{eventId}/transactions")
     suspend fun getMyEventTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
@@ -365,7 +366,7 @@ interface ApiService {
     suspend fun getRegistration(@Path("registrationId") registrationId: String): ApiResponse<RegistrationResponse>
 
     @GET("registrations/event/{eventId}")
-    suspend fun getRegistrationsByEvent(@Path("eventId") eventId: String): ApiResponse<List<RegistrationResponse>>
+    suspend fun getRegistrationsByEvent(@Path("eventId") eventId: String): ApiResponse<PageResponse<RegistrationResponse>>
 
     @GET("qr-credentials/registration/{registrationId}")
     suspend fun getQrCredentialByRegistration(@Path("registrationId") registrationId: String): ApiResponse<QrCredentialSnapshot>

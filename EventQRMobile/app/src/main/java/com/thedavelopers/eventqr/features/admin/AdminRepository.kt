@@ -53,7 +53,11 @@ class AdminRepository(private val context: Context) {
     }
 
     suspend fun loadEvents(): NetworkResult<List<EventResponse>> =
-        safeApiCall { apiService.getEvents() }
+        when (val result = safeApiCall { apiService.getEvents() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> result
+            NetworkResult.Loading -> NetworkResult.Loading
+        }
 
     suspend fun loadAuditLogs(): NetworkResult<List<AuditLogResponse>> =
         safeApiCall { apiService.getAdminAuditLogs() }
