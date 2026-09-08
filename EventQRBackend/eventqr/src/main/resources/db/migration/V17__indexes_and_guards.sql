@@ -38,9 +38,23 @@ CREATE INDEX IF NOT EXISTS idx_transaction_logs_attendee_event_scanned ON transa
 -- purposes, and allowDuplicate=false is the default. Only one APPROVED scan per
 -- registration+purpose is ever expected. If business ever changes to allow multi-use
 -- purposes, replace with SELECT...FOR UPDATE in app layer and DROP this index.
-CREATE UNIQUE INDEX IF NOT EXISTS uq_txn_logs_approved_reg_purpose
-    ON transaction_logs(registration_id, scan_purpose_id)
-    WHERE transaction_result = 'APPROVED';
+--
+-- Guard: on a legacy-drifted DB with duplicate (registration_id, scan_purpose_id)
+-- APPROVED groups, this index cannot be created. Skip only if duplicates exist;
+-- greenfield DBs with clean data pass the guard and create normally.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM (
+      SELECT registration_id, scan_purpose_id
+      FROM transaction_logs
+      WHERE transaction_result = 'APPROVED'
+      GROUP BY registration_id, scan_purpose_id
+      HAVING count(*) > 1
+  ) d) THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_txn_logs_approved_reg_purpose
+        ON transaction_logs(registration_id, scan_purpose_id)
+        WHERE transaction_result = 'APPROVED';
+  END IF;
+END $$;
 
 -- ============================================================
 -- QR_CREDENTIALS INDEXES
@@ -78,9 +92,23 @@ CREATE INDEX IF NOT EXISTS idx_reward_redemptions_att_reward_status ON reward_re
 
 -- Partial unique: one REDEEMED redemption per user+reward+event.
 -- REDEEMED is terminal; PENDING/CANCELLED can be re-requested.
-CREATE UNIQUE INDEX IF NOT EXISTS uq_reward_redemptions_redeemed
-    ON reward_redemptions(event_id, attendee_user_id, reward_id)
-    WHERE status = 'REDEEMED';
+--
+-- Guard: on a legacy-drifted DB with duplicate (event_id, attendee_user_id, reward_id)
+-- REDEEMED groups, this index cannot be created. Skip only if duplicates exist;
+-- greenfield DBs with clean data pass the guard and create normally.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM (
+      SELECT event_id, attendee_user_id, reward_id
+      FROM reward_redemptions
+      WHERE status = 'REDEEMED'
+      GROUP BY event_id, attendee_user_id, reward_id
+      HAVING count(*) > 1
+  ) d) THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_reward_redemptions_redeemed
+        ON reward_redemptions(event_id, attendee_user_id, reward_id)
+        WHERE status = 'REDEEMED';
+  END IF;
+END $$;
 
 -- ============================================================
 -- POINT_TRANSACTIONS INDEXES
