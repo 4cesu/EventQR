@@ -62,7 +62,7 @@ public class RewardService {
         this.scanPurposeRepository = scanPurposeRepository;
     }
 
-    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, allEntries = true)
+    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#request.eventId()")
     public RewardResponse saveReward(RewardRequest request) {
         Reward reward = new Reward();
         reward.setEventId(request.eventId());
@@ -94,7 +94,7 @@ public class RewardService {
         scanPurposeRepository.save(scanPurpose);
     }
 
-    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, allEntries = true)
+    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#eventId")
     public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
         Reward reward = rewardRepository.findById(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
@@ -108,7 +108,7 @@ public class RewardService {
         return toResponse(rewardRepository.save(reward));
     }
 
-    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, allEntries = true)
+    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#eventId")
     public void deleteReward(UUID eventId, UUID rewardId) {
         Reward reward = rewardRepository.findById(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));

@@ -66,7 +66,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.qrEmailService = qrEmailService;
     }
 
-    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
+    @CacheEvict(cacheNames = {"events", "registrations"}, key = "#request.eventId()")
     public RegistrationSubmissionResponse register(RegistrationRequest request) {
         EventLookupPort.EventSnapshot eventSnapshot = eventLookupPort.findById(request.eventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + request.eventId()));
@@ -172,7 +172,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         return toResponse(registration);
     }
 
-    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
+    @CacheEvict(cacheNames = {"events", "registrations"}, key = "#attendeeUserId")
     public RegistrationResponse cancel(UUID registrationId, UUID attendeeUserId) {
         EventRegistration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));

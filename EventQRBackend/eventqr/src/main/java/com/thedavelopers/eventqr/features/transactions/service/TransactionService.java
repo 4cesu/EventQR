@@ -140,7 +140,7 @@ public class TransactionService {
                 "QR credential verified", Instant.now());
     }
 
-    @CacheEvict(cacheNames = "transaction-rules", allEntries = true)
+    @CacheEvict(cacheNames = "transaction-rules", key = "#request.eventId()")
     public TransactionResponse record(TransactionRequest request) {
         var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
         if (eventSnapshot.status() == EventStatus.ENDED) {
