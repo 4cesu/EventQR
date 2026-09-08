@@ -1,8 +1,11 @@
 package com.thedavelopers.eventqr.features.uploads.controller;
 
+import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -61,16 +64,19 @@ public class UploadController {
     }
 
     @GetMapping(value = "/files/{fileId}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> getFileContent(HttpServletRequest request, @PathVariable UUID fileId) {
+    public ResponseEntity<Resource> getFileContent(HttpServletRequest request, @PathVariable UUID fileId) {
         requireFileAccess(request, fileId);
-        StoredFileResponse file = fileStorageService.find(fileId);
         FileStorageService.StoredFileContent content = fileStorageService.readContent(fileId);
-        MediaType mediaType = file.contentType() == null || file.contentType().isBlank()
+        MediaType mediaType = content.contentType() == null || content.contentType().isBlank()
                 ? MediaType.APPLICATION_OCTET_STREAM
-                : MediaType.parseMediaType(file.contentType());
+                : MediaType.parseMediaType(content.contentType());
+        // Streamed resource with explicit Content-Length: the bytea payload is bounded
+        // at 5 MB by the upload path, and this avoids an extra full-body copy through the
+        // JSON/base64 envelope. (Blob still crosses one memory hop until the S3 migration.)
         return ResponseEntity.ok()
                 .contentType(mediaType)
-                .body(content.content());
+                .contentLength(content.content().length)
+                .body(new InputStreamResource(new ByteArrayInputStream(content.content())));
     }
 
     @DeleteMapping("/files/{fileId}")

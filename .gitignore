@@ -1,3 +1,11 @@
 opencode.json
 EVENTQR_DESIGN_SYSTEM.md
 AGENTS.md
+
+# Tooling / local state
+.opencode/
+.serena/
+**/.serena/
+build_output.log
+dependency-check-scan*.log
+dependency-check-scan*.err

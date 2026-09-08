@@ -5,6 +5,10 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,16 +54,22 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> listUsers(HttpServletRequest request,
-                                                                     @RequestParam(required = false) AccountRole role) {
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> listUsers(HttpServletRequest request,
+                                                                     @RequestParam(required = false) AccountRole role,
+                                                                     @RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "20") int size) {
         requireAdmin(request);
-        List<UserResponse> users;
-        if (role != null) {
-            users = userService.findAllUsers().stream()
-                    .filter(u -> u.role() == role)
-                    .toList();
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<UserResponse> users;
+        if (callerRole == AccountRole.SUPER_ADMIN) {
+            users = role != null ? userService.findByRole(role, pageable) : userService.findAllUsers(pageable);
+        } else if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            users = Page.empty(pageable);
+        } else if (role != null) {
+            users = userService.findByRole(role, pageable);
         } else {
-            users = userService.findAllUsers();
+            users = userService.findByRoleNotIn(List.of(AccountRole.ADMIN, AccountRole.SUPER_ADMIN), pageable);
         }
         return ResponseEntity.ok(ApiResponse.success(users));
     }
@@ -67,6 +77,7 @@ public class AdminController {
     @GetMapping("/users/{userId}")
     public ResponseEntity<ApiResponse<UserResponse>> findUser(HttpServletRequest request, @PathVariable UUID userId) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         return ResponseEntity.ok(ApiResponse.success(userService.findOne(userId)));
     }
 
@@ -75,6 +86,7 @@ public class AdminController {
                                                                @PathVariable UUID userId,
                                                                @Valid @RequestBody ProfileUpdateRequest body) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UserResponse updated = userService.updateProfile(userId, body.fullName(), body.phoneNumber());
         logAdminAction(request, "ACCOUNT_UPDATED", updated.fullName(), null, updated.userId());
         return ResponseEntity.ok(ApiResponse.success("User updated", updated));
@@ -85,6 +97,7 @@ public class AdminController {
                                                                 @PathVariable UUID userId,
                                                                 @Valid @RequestBody UserStatusRequest body) {
         requireAdmin(request);
+        forbidManagingAdminTargets(request, userId);
         UserResponse updated = userService.updateStatus(userId, body.status());
         logAdminAction(request, "ACCOUNT_STATUS_UPDATED", updated.fullName(), null, updated.userId());
         return ResponseEntity.ok(ApiResponse.success("Status updated", updated));
@@ -95,7 +108,8 @@ public class AdminController {
                                                               @PathVariable UUID userId,
                                                               @Valid @RequestBody UserRoleRequest body) {
         requireAdmin(request);
-        UserResponse updated = userService.changeRoleResponse(userId, body.role());
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        UserResponse updated = userService.changeRoleResponse(currentAdminId(request), callerRole, userId, body.role());
         logAdminAction(request, "ACCOUNT_ROLE_UPDATED", updated.fullName(), null, updated.userId());
         return ResponseEntity.ok(ApiResponse.success("Role updated", updated));
     }

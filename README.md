@@ -230,6 +230,12 @@ PORT=10000
 
 Do not commit real secrets, production URLs, or private deployment values to version control.
 
+## Database migrations (Flyway) — fresh-deploy path
+
+- The schema baseline lives in `V16__baseline_schema.sql` (`CREATE TABLE IF NOT EXISTS`, idempotent). On a fresh (empty) database, Flyway runs V16 then applies V17+ as normal migrations; Hibernate's `ddl-auto=validate` is safe because it only verifies the entity mapping against the migrated schema.
+- Never change `spring.jpa.hibernate.ddl-auto` back to `update` or `create` on any environment that Flyway has already migrated — the two approaches fight over schema ownership and Flyway checksums drift.
+- `spring.flyway.baseline-on-migrate=true` is only meant for pre-existing non-Flyway databases; a clean deploy does not rely on it.
+
 ## Security Notes
 
 This repository should not expose:

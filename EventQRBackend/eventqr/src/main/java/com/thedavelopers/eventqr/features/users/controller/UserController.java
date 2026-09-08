@@ -5,10 +5,13 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -50,20 +53,23 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserResponse>>> list(HttpServletRequest request,
-                                                                @RequestParam(required = false) AccountRole role) {
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> list(HttpServletRequest request,
+                                                                @RequestParam(required = false) AccountRole role,
+                                                                @RequestParam(defaultValue = "0") int page,
+                                                                @RequestParam(defaultValue = "20") int size) {
         requireAdmin(request);
         AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        List<UserResponse> users;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<UserResponse> users;
         if (callerRole == AccountRole.SUPER_ADMIN) {
-            users = userService.findAllUsers();
+            users = role != null ? userService.findByRole(role, pageable) : userService.findAllUsers(pageable);
+        } else if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            // A plain ADMIN must never list admin accounts; an empty page keeps the contract uniform.
+            users = Page.empty(pageable);
+        } else if (role != null) {
+            users = userService.findByRole(role, pageable);
         } else {
-            users = userService.findAllUsers().stream()
-                    .filter(u -> u.role() != AccountRole.ADMIN && u.role() != AccountRole.SUPER_ADMIN)
-                    .toList();
-        }
-        if (role != null) {
-            users = users.stream().filter(u -> u.role() == role).toList();
+            users = userService.findByRoleNotIn(List.of(AccountRole.ADMIN, AccountRole.SUPER_ADMIN), pageable);
         }
         return ResponseEntity.ok(ApiResponse.success(users));
     }
@@ -95,7 +101,13 @@ public class UserController {
                                                                 @PathVariable UUID userId,
                                                                 @PathVariable AccountRole role) {
         requireAdmin(request);
-        return ResponseEntity.ok(ApiResponse.success("Role updated", userService.changeRoleResponse(userId, role)));
+        AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        return ResponseEntity.ok(ApiResponse.success("Role updated",
+                userService.changeRoleResponse(currentUserId(request), callerRole, userId, role)));
+    }
+
+    private UUID currentUserId(HttpServletRequest request) {
+        return jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
     }
 
     private void requireAdmin(HttpServletRequest request) {

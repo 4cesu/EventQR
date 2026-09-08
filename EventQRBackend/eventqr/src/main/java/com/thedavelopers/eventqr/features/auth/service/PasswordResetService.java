@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,8 @@ import com.thedavelopers.eventqr.features.qremail.service.EmailGatewayService;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
+import com.thedavelopers.eventqr.shared.utils.LogRedaction;
 import com.thedavelopers.eventqr.shared.utils.PasswordValidator;
 
 @Service
@@ -30,6 +33,7 @@ public class PasswordResetService {
     private static final Duration RESET_TTL = Duration.ofMinutes(30);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int TOKEN_BYTE_LENGTH = 32;
+    private static final long PURGE_INTERVAL_MS = 3_600_000L; // hourly
 
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final UserProfileRepository userProfileRepository;
@@ -82,7 +86,7 @@ public class PasswordResetService {
         try {
             emailGatewayService.sendSimple(normalizedEmail, subject, html);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {}", normalizedEmail, e);
+            log.error("Failed to send password reset email to {}", LogRedaction.maskEmail(normalizedEmail), e);
         }
     }
 
@@ -125,10 +129,28 @@ public class PasswordResetService {
         return HexFormat.of().formatHex(bytes);
     }
 
+    /**
+     * Hourly sweep that deletes expired reset tokens, consumed or not. Prevents the
+     * password_reset_tokens table from growing unbounded (a per-user request can only
+     * invalidate the user's own unused tokens; used + expired rows would otherwise
+     * accumulate forever). Single-instance scheduler (see {@code EventStatusScheduler}).
+     */
+    @Scheduled(fixedDelay = PURGE_INTERVAL_MS)
+    @Transactional
+    public void purgeExpiredTokens() {
+        int purged = passwordResetTokenRepository.deleteByExpiresAtBefore(Instant.now());
+        if (purged > 0) {
+            log.info("Purged {} expired password reset token(s)", purged);
+        }
+    }
+
     private String normalizeEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new BadRequestException("Email is required");
         }
-        return email.trim().toLowerCase();
+        // Use the same canonical form as the forgot-password rate limiter so the recipient
+        // that actually receives the reset email matches the rate-limit key, and so Gmail
+        // +tag/dot aliases resolve to the user's real account inbox.
+        return EmailNormalizer.canonicalize(email);
     }
 }

@@ -9,6 +9,7 @@ import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort.EventSnapshot
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.interfaces.RegistrationCommandPort;
+import com.thedavelopers.eventqr.shared.interfaces.RegistrationEmailRequestedEvent;
 import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort;
 import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort.RegistrationSnapshot;
 
@@ -51,19 +53,22 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final QrCredentialPort qrCredentialPort;
     private final EventService eventService;
     private final QREmailService qrEmailService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
                                EventLookupPort eventLookupPort,
                                QrCredentialPort qrCredentialPort,
                                EventService eventService,
-                               QREmailService qrEmailService) {
+                               QREmailService qrEmailService,
+                               ApplicationEventPublisher applicationEventPublisher) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.eventLookupPort = eventLookupPort;
         this.qrCredentialPort = qrCredentialPort;
         this.eventService = eventService;
         this.qrEmailService = qrEmailService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @CacheEvict(cacheNames = {"events", "registrations"}, key = "#request.eventId()")
@@ -135,7 +140,10 @@ public class RegistrationService implements RegistrationLookupPort, Registration
 
         log.info("Starting QR email delivery registrationId={} qrCredentialId={}",
             registrationId, qrCredential.qrCredentialId());
-        qrEmailService.sendForRegistrationSafely(savedRegistration.getId());
+        // Publish after-commit — the email (gateway call + retry sleeps) must NOT run
+        // inside this transaction holding a JDBC connection. RegistrationEmailListener
+        // dispatches it onto the bounded async executor once the commit completes.
+        applicationEventPublisher.publishEvent(new RegistrationEmailRequestedEvent(registrationId));
         log.info("Registration workflow completed registrationId={} qrCredentialId={}",
             registrationId, qrCredential.qrCredentialId());
 
@@ -206,7 +214,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
 
     public QrCredentialSnapshot linkQrCredential(UUID registrationId) {
         QrCredentialSnapshot qrCredential = getOrCreateQrCredential(registrationId);
-        qrEmailService.sendForRegistrationSafely(registrationId);
+        qrEmailService.sendForRegistrationSafelyAsync(registrationId);
         return qrCredential;
     }
 

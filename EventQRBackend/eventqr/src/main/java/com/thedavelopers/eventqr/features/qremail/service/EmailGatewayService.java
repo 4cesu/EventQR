@@ -11,6 +11,8 @@ import brevoModel.SendSmtpEmailAttachment;
 import brevoModel.SendSmtpEmailSender;
 import brevoModel.SendSmtpEmailTo;
 
+import com.thedavelopers.eventqr.shared.utils.LogRedaction;
+
 @Service
 public class EmailGatewayService {
 
@@ -31,8 +33,8 @@ public class EmailGatewayService {
                     .content(content.qrImageBytes())
                     .name("qrImage.png");
             log.debug("Sending QR code as inline attachment recipient={} attachmentName={} byteCount={}",
-                recipientEmail, "qrImage.png", content.qrImageBytes().length);
-            log.debug("Sending QR email through Brevo REST API recipient={}", recipientEmail);
+                LogRedaction.maskEmail(recipientEmail), "qrImage.png", content.qrImageBytes().length);
+            log.debug("Sending QR email through Brevo REST API recipient={}", LogRedaction.maskEmail(recipientEmail));
             SendSmtpEmail email = new SendSmtpEmail()
                     .sender(new SendSmtpEmailSender().email(senderEmail).name("EventQR"))
                     .addToItem(new SendSmtpEmailTo().email(recipientEmail))
@@ -40,7 +42,7 @@ public class EmailGatewayService {
                     .htmlContent(content.html())
                     .addAttachmentItem(qrAttachment);
             transactionalEmailsApi.sendTransacEmail(email);
-            log.debug("Brevo REST API accepted QR email recipient={}", recipientEmail);
+            log.debug("Brevo REST API accepted QR email recipient={}", LogRedaction.maskEmail(recipientEmail));
         } catch (ApiException | RuntimeException exception) {
             throw new IllegalStateException("QR email could not be sent through Brevo REST API", exception);
         }
@@ -48,14 +50,14 @@ public class EmailGatewayService {
 
     public void sendSimple(String recipientEmail, String subject, String htmlContent) {
         try {
-            log.debug("Sending simple email through Brevo REST API recipient={}", recipientEmail);
+            log.debug("Sending simple email through Brevo REST API recipient={}", LogRedaction.maskEmail(recipientEmail));
             SendSmtpEmail email = new SendSmtpEmail()
                     .sender(new SendSmtpEmailSender().email(senderEmail).name("EventQR"))
                     .addToItem(new SendSmtpEmailTo().email(recipientEmail))
                     .subject(subject)
                     .htmlContent(htmlContent);
             transactionalEmailsApi.sendTransacEmail(email);
-            log.debug("Brevo REST API accepted simple email recipient={}", recipientEmail);
+            log.debug("Brevo REST API accepted simple email recipient={}", LogRedaction.maskEmail(recipientEmail));
         } catch (ApiException | RuntimeException exception) {
             throw new IllegalStateException("Email could not be sent through Brevo REST API", exception);
         }

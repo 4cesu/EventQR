@@ -13,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thedavelopers.eventqr.shared.response.ErrorResponse;
@@ -49,6 +50,15 @@ public class SecurityConfig {
                 .anyRequest().authenticated());
 
         http.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
+
+        // Security headers for the JSON API. HSTS is safe here because Render terminates
+        // TLS in front of the app; subdomains are also served over HTTPS by Render.
+        http.headers(headers -> headers
+                .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                .contentTypeOptions(Customizer.withDefaults())
+                .frameOptions(frame -> frame.deny())
+                .referrerPolicy(policy -> policy.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .cacheControl(Customizer.withDefaults()));
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

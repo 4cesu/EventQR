@@ -8,6 +8,10 @@ COPY .mvn .mvn
 RUN chmod +x mvnw
 
 COPY src ./src
+# Tests are NOT run here: the image build skips them to keep the package layer fast and
+# hermetic. CI is responsible for `mvn test` (and dependency-check) before this build is
+# invoked — see README "Development Guidelines". Never gate a deploy on the image build
+# alone without a green test run upstream.
 RUN ./mvnw clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-jammy AS runtime

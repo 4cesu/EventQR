@@ -41,11 +41,12 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     /**
      * Atomic capacity increment with oversell guard. Returns 1 if accepted, 0 if at capacity.
+     * Events with capacity = 0 are unlimited and always accept.
      * (Design §5.1)
      */
     @Modifying
     @Query("UPDATE Event e SET e.currentAttendeeCount = e.currentAttendeeCount + 1, e.updatedAt = CURRENT_TIMESTAMP " +
-           "WHERE e.id = :eventId AND e.currentAttendeeCount < e.capacity")
+           "WHERE e.id = :eventId AND (e.capacity = 0 OR e.currentAttendeeCount < e.capacity)")
     int incrementAttendeeCountIfAvailable(@Param("eventId") UUID eventId);
 
     /**
