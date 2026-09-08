@@ -89,15 +89,6 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun bindActions() {
-        findViewById<View>(R.id.cardAdminEventRequests).setOnClickListener {
-            openRequests()
-        }
-        findViewById<View>(R.id.cardAdminAccounts).setOnClickListener {
-            startActivity(Intent(this, AdminAccountManagementActivity::class.java))
-        }
-        findViewById<View>(R.id.cardAdminAuditLogs).setOnClickListener {
-            startActivity(Intent(this, AdminAuditLogsActivity::class.java))
-        }
         findViewById<View>(R.id.cardAdminNotifications).setOnClickListener {
             startActivity(Intent(this, AdminNotificationManagementActivity::class.java))
         }
