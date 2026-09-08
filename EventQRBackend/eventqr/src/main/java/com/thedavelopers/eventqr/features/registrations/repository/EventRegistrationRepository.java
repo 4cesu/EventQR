@@ -28,10 +28,12 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     List<EventRegistration> findByEventId(UUID eventId);
 
+    @Query("select e from EventRegistration e left join fetch e.event where e.eventId = :eventId")
     Page<EventRegistration> findByEventId(UUID eventId, Pageable pageable);
 
     List<EventRegistration> findByAttendeeUserId(UUID attendeeUserId);
 
+    @Query("select e from EventRegistration e left join fetch e.event where e.attendeeUserId = :attendeeUserId")
     Page<EventRegistration> findByAttendeeUserId(UUID attendeeUserId, Pageable pageable);
 
     Page<EventRegistration> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId, Pageable pageable);

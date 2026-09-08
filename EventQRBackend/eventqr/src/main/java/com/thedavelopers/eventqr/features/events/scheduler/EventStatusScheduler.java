@@ -27,7 +27,6 @@ public class EventStatusScheduler {
 
     @Scheduled(fixedRate = SWEEP_INTERVAL_MS)
     @Transactional
-    @CacheEvict(cacheNames = "events", allEntries = true)
     public void transitionOverdueEvents() {
         Instant now = Instant.now();
 
