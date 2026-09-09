@@ -7,6 +7,7 @@ import io.appium.java_client.android.options.UiAutomator2Options;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
@@ -26,7 +27,8 @@ public abstract class BaseTest {
     @BeforeEach
     public void setUp() throws MalformedURLException {
         UiAutomator2Options options = new UiAutomator2Options();
-        options.setNoReset(true);
+        options.setNoReset(false);
+        options.setAutoGrantPermissions(true);
         options.setAvd(TestConfig.AVD_NAME);
         options.setApp(TestConfig.APK_PATH);
         options.setAppPackage(TestConfig.APP_PACKAGE);
@@ -34,6 +36,20 @@ public abstract class BaseTest {
 
         driver = new AndroidDriver(new URL(TestConfig.APPIUM_URL), options);
         wait = new WebDriverWait(driver, Duration.ofSeconds(TestConfig.DEFAULT_WAIT_SECONDS));
+        openAppToLoginScreen();
+    }
+
+    protected void openAppToLoginScreen() {
+        WebDriverWait longWait = new WebDriverWait(driver, Duration.ofSeconds(TestConfig.LONG_WAIT_SECONDS));
+        try {
+            longWait.until(ExpectedConditions.presenceOfElementLocated(AppiumBy.id(id("btnSignIn"))));
+            tap(id("btnSignIn"));
+        } catch (TimeoutException ignored) {
+        }
+        try {
+            longWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.id(id("edtEmail"))));
+        } catch (TimeoutException ignored) {
+        }
     }
 
     @AfterEach
@@ -87,7 +103,9 @@ public abstract class BaseTest {
 
     protected boolean isDisplayed(String resourceId) {
         try {
-            return driver.findElement(AppiumBy.id(resourceId)).isDisplayed();
+            new WebDriverWait(driver, Duration.ofSeconds(TestConfig.DEFAULT_WAIT_SECONDS))
+                    .until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.id(resourceId)));
+            return true;
         } catch (Exception e) {
             return false;
         }
@@ -95,8 +113,9 @@ public abstract class BaseTest {
 
     protected boolean isTextDisplayed(String text) {
         try {
-            return driver.findElement(
-                    AppiumBy.androidUIAutomator("new UiSelector().text(\"" + text + "\")")).isDisplayed();
+            new WebDriverWait(driver, Duration.ofSeconds(TestConfig.DEFAULT_WAIT_SECONDS))
+                    .until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.androidUIAutomator("new UiSelector().text(\"" + text + "\")")));
+            return true;
         } catch (Exception e) {
             return false;
         }

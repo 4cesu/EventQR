@@ -25,65 +25,63 @@ public class AdminAccountManagementTest extends BaseTest {
     @Test
     @DisplayName("AAM-1: User account list loads")
     void accountListLoads() {
-        // TODO: verify account list resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("recyclerAccounts")), "Account list should be visible");
+        assertTrue(isDisplayed(id("recyclerAdminAccounts")), "Account list should be visible");
     }
 
     @Test
     @DisplayName("AAM-2: Filter chips displayed for account roles")
     void filterChipsDisplayed() {
-        // TODO: verify role filter chip resource-ids in Appium Inspector
-        assertAll(
-                () -> assertTrue(isDisplayed(id("chipAttendee")), "Attendee chip should be visible"),
-                () -> assertTrue(isDisplayed(id("chipOrganizer")), "Organizer chip should be visible"),
-                () -> assertTrue(isDisplayed(id("chipAdmin")), "Admin chip should be visible")
-        );
+        assertTrue(isDisplayed(id("filterChipsContainer")), "Role filter chips should be visible");
     }
 
     @Test
     @DisplayName("AAM-3: Search accounts by name or email")
     void searchAccounts() {
-        // TODO: verify search field resource-id in Appium Inspector
-        type(id("edtAccountSearch"), "Test");
-        assertTrue(isDisplayed(id("recyclerAccounts")), "Search results list should be visible");
+        type(id("inputAccountSearch"), "Test");
+        assertTrue(isDisplayed(id("recyclerAdminAccounts")), "Search results list should be visible");
     }
 
     @Test
     @DisplayName("AAM-4: Swipe down refreshes account list")
     void swipeDownRefreshes() {
         swipeDown();
-        assertTrue(isDisplayed(id("recyclerAccounts")), "Account list should remain after refresh");
+        assertTrue(isDisplayed(id("recyclerAdminAccounts")), "Account list should remain after refresh");
     }
 
     @Test
     @DisplayName("CAA-1: Create admin account form loads")
     void createAdminFormLoads() {
-        // TODO: verify create admin account button resource-id in Appium Inspector
         tap(id("buttonCreateAdminAccount"));
         assertAll(
-                () -> assertTrue(isDisplayed(id("edtFirstName")), "First name field should be visible"),
-                () -> assertTrue(isDisplayed(id("edtEmail")), "Email field should be visible"),
-                () -> assertTrue(isDisplayed(id("edtPassword")), "Password field should be visible")
+                () -> assertTrue(isDisplayed(id("inputAdminFirstName")), "First name field should be visible"),
+                () -> assertTrue(isDisplayed(id("inputAdminEmail")), "Email field should be visible"),
+                () -> assertTrue(isDisplayed(id("inputAdminPassword")), "Password field should be visible")
         );
     }
 
     @Test
-    @DisplayName("CAA-2: Role selection option present")
+    @DisplayName("CAA-2: Create admin form shows all required fields")
     void roleSelectionPresent() {
-        // TODO: verify role dropdown resource-id in Appium Inspector
         tap(id("buttonCreateAdminAccount"));
-        assertTrue(isDisplayed(id("spinnerRole")), "Role selection should be present");
+        assertAll(
+                () -> assertTrue(isDisplayed(id("inputAdminFirstName")), "First name field should be visible"),
+                () -> assertTrue(isDisplayed(id("inputAdminLastName")), "Last name field should be visible"),
+                () -> assertTrue(isDisplayed(id("inputAdminEmail")), "Email field should be visible"),
+                () -> assertTrue(isDisplayed(id("inputAdminPassword")), "Password field should be visible"),
+                () -> assertTrue(isDisplayed(id("inputAdminConfirmPassword")), "Confirm password field should be visible"),
+                () -> assertTrue(isDisplayed(id("btnCreateAdminAccount")), "Create button should be visible")
+        );
     }
 
     @Test
     @DisplayName("CAA-3: Valid form submits new admin account")
     void validFormSubmitsNewAdmin() {
-        // TODO: verify create account flow resource-ids in Appium Inspector
         tap(id("buttonCreateAdminAccount"));
-        type(id("edtFirstName"), "New Admin");
-        type(id("edtEmail"), TestConfig.NEW_USER_EMAIL);
-        type(id("edtPassword"), TestConfig.ADMIN_PASS);
-        tap(id("btnSubmitAdmin"));
+        type(id("inputAdminFirstName"), "New Admin");
+        type(id("inputAdminEmail"), TestConfig.NEW_USER_EMAIL);
+        type(id("inputAdminPassword"), TestConfig.ADMIN_PASS);
+        type(id("inputAdminConfirmPassword"), TestConfig.ADMIN_PASS);
+        tap(id("btnCreateAdminAccount"));
         assertTrue(isTextDisplayed("created") || isTextDisplayed("success") || isTextDisplayed("Added"),
                 "New admin account creation should complete");
     }

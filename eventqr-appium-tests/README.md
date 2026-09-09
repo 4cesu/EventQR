@@ -62,6 +62,37 @@ These must be confirmed against the actual APK before running. Use either:
 - **Android Studio Layout Inspector**: while the app runs on the emulator, open
   `Layout Inspector` and copy `resource-id`s from the view tree
 
+## Self-Service Runbook (this machine)
+
+One command starts everything (emulator + Appium with `ANDROID_HOME` set) and runs the suite:
+
+```powershell
+# from eventqr-appium-tests\
+.\run-tests.ps1                 # full suite
+.\run-tests.ps1 -Test LoginTest # single class: ".\run-tests.ps1 -Test LoginTest"
+```
+
+Inspect the current screen's real resource-ids while the app runs on the emulator:
+
+```powershell
+.\dump-ui.ps1
+```
+
+Fixes vs. original scaffold (verified against the live app):
+- Fresh app state per test (`noReset=false`) + `autoGrantPermissions(true)` so sessions never leak
+- `setUp()` auto-navigates Landing -> Sign In before each test
+- `isDisplayed`/`isTextDisplayed` now wait (up to `DEFAULT_WAIT_SECONDS`) instead of instant poll — fixes dashboard-login race conditions
+- LoginPage: forgot-password link id `txtForgotPassword`; RegistrationPage ids `edtFirstName`/`edtLastName`/`edtPhoneNumber`/`btnRegister`
+- Appium must run with `ANDROID_HOME=C:\Users\matth\AppData\Local\Android\Sdk` (script does this)
+- Verified `APP_ACTIVITY=.features.landing.LandingActivity` (matches AndroidManifest launcher)
+
+Still TODO (will fail until corrected — none are crash/harness bugs):
+- Attendee/Staff/Organizer dashboard assertions use `txtWelcome` (unverified). Dump the real dashboard id with `.\dump-ui.ps1` after logging in and update `AttendeeDashboardPage`/`StaffDashboardPage`/`OrganizerDashboardPage`.
+- Field-error assertions (`txtEmailError`, `txtPasswordError`, `tilEmail`, `tilPassword`) and the login loading indicator (`progressLogin`/text "Loading") are unverified.
+- Series of per-role test ids across attendee/staff/organizer/admin tests remain TODOs (marked in code).
+
+Test accounts (Supabase, password `Test123!`): attendee@/staff@/organizer@/admin@/superadmin@gmail.com.
+
 ## Important Notes
 
 - All `TODO` resource-ids must be verified against the actual APK before running
