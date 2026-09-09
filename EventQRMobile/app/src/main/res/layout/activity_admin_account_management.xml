@@ -6,17 +6,26 @@
     android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/eventqr_card"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="18dp"
-        android:paddingBottom="14dp"
-        android:text="Account Management"
-        android:textColor="#111827"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_height="56dp"
+        android:background="@drawable/bg_header_surface_outline"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Account Management"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/eventqr_bg"
@@ -12,49 +13,33 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_admin_header_gradient"
-            android:orientation="vertical"
-            android:paddingStart="18dp"
-            android:paddingTop="22dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="22dp">
+            android:layout_height="56dp"
+            android:background="@drawable/bg_header_surface_outline"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="16dp">
 
             <ImageButton
                 android:id="@+id/buttonBack"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back"
-                android:padding="10dp"
+                android:padding="8dp"
                 android:src="@drawable/ic_back_chevron"
-                android:tag="light_back_button"
-                android:tint="@android:color/white" />
+                app:tint="@color/text_primary" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="Super Admin Portal"
-                android:textColor="#E6E9FF"
-                android:textSize="15sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Create Admin Account"
-                android:textColor="@android:color/white"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Use this page only to create administrator accounts for EventQR."
-                android:textColor="#E0E7FF"
-                android:textSize="14sp" />
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:textColor="@color/text_primary" />
         </LinearLayout>
 
         <LinearLayout
