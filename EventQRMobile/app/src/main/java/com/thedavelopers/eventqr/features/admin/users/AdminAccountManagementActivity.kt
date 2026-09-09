@@ -245,6 +245,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
+                    loadAccounts()
                 }
                 NetworkResult.Loading -> Unit
             }
