@@ -4,17 +4,22 @@ import com.thedavelopers.eventqr.base.BaseTest;
 
 public class RegistrationPage extends BaseTest {
 
-    private static final String FULL_NAME_FIELD = "edtFullName";
+    private static final String FIRST_NAME_FIELD = "edtFirstName";
+    private static final String LAST_NAME_FIELD = "edtLastName";
     private static final String EMAIL_FIELD = "edtEmail";
-    private static final String PHONE_FIELD = "edtPhone";
+    private static final String PHONE_FIELD = "edtPhoneNumber";
     private static final String PASSWORD_FIELD = "edtPassword";
     private static final String CONFIRM_PASSWORD_FIELD = "edtConfirmPassword";
-    private static final String CREATE_ACCOUNT_BUTTON = "btnCreateAccount";
+    private static final String CREATE_ACCOUNT_BUTTON = "btnRegister";
     private static final String REQUIREMENTS_PANEL = "layoutPasswordRequirements";
     private static final String STRENGTH_BAR = "passwordStrengthBar";
 
     public void enterFullName(String name) {
-        type(id(FULL_NAME_FIELD), name);
+        String[] parts = name.trim().split("\\s+", 2);
+        type(id(FIRST_NAME_FIELD), parts[0]);
+        if (parts.length > 1) {
+            type(id(LAST_NAME_FIELD), parts[1]);
+        }
     }
 
     public void enterEmail(String email) {

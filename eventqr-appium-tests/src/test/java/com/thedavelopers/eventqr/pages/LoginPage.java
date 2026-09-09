@@ -14,7 +14,7 @@ public class LoginPage extends BaseTest {
     private static final String EMAIL_FIELD = "edtEmail";
     private static final String PASSWORD_FIELD = "edtPassword";
     private static final String SIGN_IN_BUTTON = "btnSignIn";
-    private static final String FORGOT_PASSWORD_LINK = "btnForgotPassword";
+    private static final String FORGOT_PASSWORD_LINK = "txtForgotPassword";
     private static final String REGISTER_LINK = "btnRegister";
     private static final String EMAIL_ERROR = "tilEmail";
     private static final String PASSWORD_ERROR = "tilPassword";
@@ -52,9 +52,25 @@ public class LoginPage extends BaseTest {
     }
 
     public void login(String email, String password) {
+        clearFields();
         enterEmail(email);
         enterPassword(password);
         tapSignIn();
+    }
+
+    /**
+     * Clears email and password fields so the LoginPage can be reused
+     * without restarting the app (e.g. after signing out).
+     */
+    public void clearFields() {
+        try {
+            type(full(EMAIL_FIELD), "");
+        } catch (Exception ignored) {
+        }
+        try {
+            type(full(PASSWORD_FIELD), "");
+        } catch (Exception ignored) {
+        }
     }
 
     public boolean isEmailFieldErrorVisible() {
