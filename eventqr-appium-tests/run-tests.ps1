@@ -28,12 +28,30 @@ $env:JAVA_HOME = $JdkPath
 $env:ANDROID_HOME = $sdk
 $env:ANDROID_SDK_ROOT = $sdk
 
+function Invoke-AdbWithTimeout {
+    param([string[]]$Arguments, [int]$TimeoutSec = 10)
+    $job = Start-Job -ScriptBlock {
+        param($exe, $args)
+        & $exe @args 2>$null
+    } -ArgumentList $adb, $Arguments
+    $completed = Wait-Job $job -Timeout $TimeoutSec
+    if ($completed) {
+        $result = Receive-Job $job
+        Remove-Job $job -Force
+        return $result
+    } else {
+        Stop-Job $job -Force
+        Remove-Job $job -Force
+        return $null
+    }
+}
+
 function Wait-Booted {
     for ($i = 0; $i -lt 60; $i++) {
         try {
-            $state = & $adb get-state 2>$null
-            if ($state -eq "device") {
-                $boot = (& $adb shell getprop sys.boot_completed 2>$null)
+            $state = Invoke-AdbWithTimeout -Arguments @("get-state") -TimeoutSec 10
+            if ($state -and $state.Trim() -eq "device") {
+                $boot = Invoke-AdbWithTimeout -Arguments @("shell", "getprop", "sys.boot_completed") -TimeoutSec 10
                 if ($boot -and $boot.Trim() -eq "1") { return $true }
             }
         } catch {}
@@ -45,6 +63,15 @@ function Wait-Booted {
 function Ensure-Emulator {
     $booted = Wait-Booted
     if ($booted) { return }
+    # Kill zombie emulator if adb shows device but shell is unresponsive
+    $connected = Invoke-AdbWithTimeout -Arguments @("get-state") -TimeoutSec 5
+    if ($connected -and $connected.Trim() -eq "device") {
+        Write-Host "Emulator appears zombie (adb connected but shell unresponsive). Killing..."
+        & $adb kill-server 2>$null
+        Start-Sleep -Seconds 2
+        Get-Process qemu-system*, emulator* -ErrorAction SilentlyContinue | Stop-Process -Force
+        Start-Sleep -Seconds 3
+    }
     Write-Host "Starting emulator $avd ..."
     Start-Process $emu -ArgumentList "-avd", $avd, "-no-snapshot-save" -WindowStyle Minimized
     if (-not (Wait-Booted)) {
