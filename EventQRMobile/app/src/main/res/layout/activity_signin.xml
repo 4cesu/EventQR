@@ -2,17 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="290dp"
-        android:background="@drawable/bg_signin_header"
+        android:layout_height="238dp"
+        android:background="@color/eventqr_bg"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="32dp"
-        android:paddingTop="60dp">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="42dp">
 
         <ImageView
             android:layout_width="96dp"
@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="10dp"
             android:text="Sign In"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
@@ -46,7 +46,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#FFFFFF"
+        android:background="@color/eventqr_bg"
         android:orientation="vertical"
         android:paddingHorizontal="32dp"
         android:paddingTop="34dp"
@@ -66,7 +66,7 @@
             android:layout_height="54dp"
             android:layout_marginTop="8dp"
             android:autoText="false"
-            android:background="@drawable/bg_signin_field"
+            android:background="@color/eventqr_bg"
             android:drawableStart="@drawable/email_icon"
             android:drawablePadding="12dp"
             android:hint="Enter email address"
@@ -92,7 +92,7 @@
             android:layout_height="54dp"
             android:layout_marginTop="8dp"
             android:autoText="false"
-            android:background="@drawable/bg_signin_field"
+            android:background="@color/eventqr_bg"
             android:drawableStart="@drawable/password_icon"
             android:drawableEnd="@drawable/ic_visibility_on"
             android:drawablePadding="12dp"
@@ -144,7 +144,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="24dp"
-            android:background="@drawable/bg_signin_button"
+            android:background="@color/eventqr_bg"
             android:elevation="5dp"
             android:stateListAnimator="@null"
             android:text="Sign In"
@@ -156,9 +156,8 @@
         <LinearLayout
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/bg_signin_register"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"

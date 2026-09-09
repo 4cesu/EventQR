@@ -6,7 +6,4 @@
         android:startColor="@color/eventqr_navy"
         android:centerColor="@color/eventqr_indigo"
         android:endColor="@color/eventqr_purple" />
-    <corners
-        android:bottomLeftRadius="36dp"
-        android:bottomRightRadius="36dp" />
 </shape>

@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <TextView
@@ -37,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/button_rounded"
+                android:background="@color/eventqr_bg"
                 android:text="Refresh Users"
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Target user ID"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -57,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Email"
                 android:inputType="textEmailAddress"
                 android:padding="14dp"
@@ -68,7 +68,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Full name"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -78,7 +78,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Phone"
                 android:inputType="phone"
                 android:padding="14dp"
@@ -89,7 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Temporary password"
                 android:inputType="textPassword"
                 android:padding="14dp"
@@ -100,7 +100,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:paddingHorizontal="14dp" />
 
             <Button
@@ -108,7 +108,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/button_rounded"
+                android:background="@color/eventqr_bg"
                 android:text="Create User"
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
@@ -118,7 +118,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/transparent_alt"
+                android:background="@color/eventqr_bg"
                 android:text="Change Role"
                 android:textAllCaps="false"
                 android:textColor="#1F2937" />

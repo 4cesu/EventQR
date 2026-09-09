@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="@color/eventqr_bg"
     android:fillViewport="true"
     android:scrollbars="none">
 
@@ -15,7 +15,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_eventqr_gradient"
+            android:background="@color/eventqr_bg"
             android:gravity="center_horizontal"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/landing_header_padding_h"
@@ -46,7 +46,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/landing_btn_height"
                 android:layout_marginTop="@dimen/landing_btn_margin_top"
-                android:background="@drawable/bg_white_pill_button"
+                android:background="@color/eventqr_bg"
                 android:elevation="3dp"
                 android:text="Sign In"
                 android:textAllCaps="false"
@@ -60,7 +60,7 @@
                 android:layout_height="@dimen/landing_btn_height"
                 android:layout_marginTop="@dimen/landing_btn_margin_top"
                 android:layout_marginBottom="@dimen/landing_btn_margin_bottom"
-                android:background="@drawable/bg_dark_outline_button"
+                android:background="@color/eventqr_bg"
                 android:text="Create Account"
                 android:textAllCaps="false"
                 android:textColor="@color/brand_on_primary"
@@ -72,7 +72,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/surface_alt"
+            android:background="@color/eventqr_bg"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/landing_feature_padding_h"
             android:paddingTop="@dimen/landing_feature_padding_top"
@@ -110,7 +110,7 @@
                     <ImageView
                         android:layout_width="@dimen/landing_icon_size"
                         android:layout_height="@dimen/landing_icon_size"
-                        android:background="@drawable/dark_ic_qr_code"
+                        android:background="@color/eventqr_bg"
                         android:padding="@dimen/landing_icon_padding"
                         android:contentDescription="QR code icon"
                         android:scaleType="centerInside" />
@@ -167,7 +167,7 @@
                     <ImageView
                         android:layout_width="@dimen/landing_icon_size"
                         android:layout_height="@dimen/landing_icon_size"
-                        android:background="@drawable/dark_ic_check_mark"
+                        android:background="@color/eventqr_bg"
                         android:padding="@dimen/landing_icon_padding"
                         android:contentDescription="Verification check icon"
                         android:scaleType="centerInside" />
@@ -224,7 +224,7 @@
                     <ImageView
                         android:layout_width="@dimen/landing_icon_size"
                         android:layout_height="@dimen/landing_icon_size"
-                        android:background="@drawable/dark_ic_star"
+                        android:background="@color/eventqr_bg"
                         android:padding="@dimen/landing_icon_padding"
                         android:contentDescription="Rewards star icon"
                         android:scaleType="centerInside" />

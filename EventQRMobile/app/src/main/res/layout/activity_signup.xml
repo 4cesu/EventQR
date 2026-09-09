@@ -2,13 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="238dp"
-        android:background="@drawable/bg_rounded_header"
+        android:background="@color/eventqr_bg"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
@@ -79,7 +79,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
                         android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_auth_field_focus"
+                        android:background="@color/eventqr_bg"
                         android:hint="John"
                         android:inputType="textPersonName"
                         android:paddingHorizontal="14dp"
@@ -108,7 +108,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
                         android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_auth_field_focus"
+                        android:background="@color/eventqr_bg"
                         android:hint="Doe"
                         android:inputType="textPersonName"
                         android:paddingHorizontal="14dp"
@@ -132,7 +132,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:background="@color/eventqr_bg"
                 android:drawableStart="@drawable/email_icon"
                 android:drawablePadding="10dp"
                 android:hint="johndoe@gmail.com"
@@ -156,7 +156,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:background="@color/eventqr_bg"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -178,7 +178,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:background="@null"
+                    android:background="@color/eventqr_bg"
                     android:hint="9123456789"
                     android:inputType="number"
                     android:maxLength="10"
@@ -212,7 +212,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:background="@color/eventqr_bg"
                 android:drawableStart="@drawable/password_icon"
                 android:drawableEnd="@drawable/ic_visibility_on"
                 android:drawablePadding="10dp"
@@ -228,7 +228,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_password_requirements"
+                android:background="@color/eventqr_bg"
                 android:orientation="vertical"
                 android:padding="12dp"
                 android:visibility="gone">
@@ -243,7 +243,7 @@
                         android:layout_width="0dp"
                         android:layout_height="4dp"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/eventqr_bg" />
 
                     <View
                         android:id="@+id/viewStrength2"
@@ -251,7 +251,7 @@
                         android:layout_height="4dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/eventqr_bg" />
 
                     <View
                         android:id="@+id/viewStrength3"
@@ -259,7 +259,7 @@
                         android:layout_height="4dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/eventqr_bg" />
 
                     <View
                         android:id="@+id/viewStrength4"
@@ -267,7 +267,7 @@
                         android:layout_height="4dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/eventqr_bg" />
                 </LinearLayout>
 
                 <RelativeLayout
@@ -342,7 +342,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:background="@color/eventqr_bg"
                 android:drawableStart="@drawable/password_icon"
                 android:drawableEnd="@drawable/ic_visibility_on"
                 android:drawablePadding="10dp"
@@ -353,12 +353,22 @@
                 android:textColorHint="#71717A"
                 android:textSize="14sp" />
 
+            <CheckBox
+                android:id="@+id/chkTerms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:buttonTint="@color/eventqr_indigo"
+                android:text="I agree to the Terms &amp; Conditions"
+                android:textColor="#111827"
+                android:textSize="14sp" />
+
             <Button
                 android:id="@+id/btnRegister"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="24dp"
-                android:background="@drawable/bg_auth_button_press"
+                android:background="@color/eventqr_bg"
                 android:elevation="4dp"
                 android:stateListAnimator="@null"
                 android:text="Create Account"
@@ -370,9 +380,8 @@
             <LinearLayout
                 android:id="@+id/btnSignIn"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_link_button"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
