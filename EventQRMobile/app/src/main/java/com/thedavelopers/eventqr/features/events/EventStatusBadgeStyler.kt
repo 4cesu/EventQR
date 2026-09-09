@@ -100,12 +100,9 @@ object EventStatusBadgeStyler {
     }
 
     /**
-     * Date-derived fallback for screens (Attendee list/dashboard/detail) that derive the
-     * shown state from eventStartAt/eventEndAt rather than from the backend [EventStatus].
-     *
-     * FLAGGED DEVIATION: the backend EventStatus enum should be authoritative. This helper is
-     * provided so existing date-based flows can reuse the centralized styling without
-     * duplication; it maps "before start" -> [EventStatus.APPROVED] (Upcoming),
+     * Date-derived status used as the primary display rule, matching the pill filters
+     * (AttendeeEventsActivity) that derive state from eventStartAt/eventEndAt vs. now.
+     * Maps "before start" -> [EventStatus.APPROVED] (Upcoming),
      * "past end" -> [EventStatus.ENDED] (Completed), otherwise [EventStatus.ACTIVE].
      */
     fun fromDates(startAt: Instant?, endAt: Instant?, now: Instant = Instant.now()): EventStatus {
@@ -119,10 +116,22 @@ object EventStatusBadgeStyler {
     }
 
     /**
-     * Resolves the backend [EventStatus] when present, falling back to a date-derived
-     * status only when the backend enum is null/missing (toward the flagged deviation above).
-     * The backend enum is the authoritative source.
+     * Resolves the displayed status from dates as the PRIMARY rule, so badges agree with the
+     * ACTIVE/UPCOMING/COMPLETED pill filters (which derive purely from eventStartAt/eventEndAt
+     * vs. now). Only statuses that are NOT time-derived (DRAFT, PENDING_REVIEW, REJECTED,
+     * CANCELLED) are kept from the backend `status` field. Time-derived backend values
+     * (APPROVED, ACTIVE, ENDED) are overridden by the date computation, since the backend may
+     * stamp ACTIVE before start time (e.g. admin-approved creation requests).
      */
-    fun resolve(status: EventStatus?, startAt: Instant?, endAt: Instant?, now: Instant = Instant.now()): EventStatus =
-        status ?: fromDates(startAt, endAt, now)
+    fun resolve(status: EventStatus?, startAt: Instant?, endAt: Instant?, now: Instant = Instant.now()): EventStatus {
+        val effective = status ?: EventStatus.APPROVED
+        return when (effective) {
+            EventStatus.DRAFT,
+            EventStatus.PENDING_REVIEW,
+            EventStatus.REJECTED,
+            EventStatus.CANCELLED,
+            -> effective
+            else -> fromDates(startAt, endAt, now)
+        }
+    }
 }

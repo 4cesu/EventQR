@@ -243,7 +243,11 @@ public class EventCreationRequestService {
         }
         event.setRewardsEnabled(hasRequestedFeature(request, "Rewards and points"));
         event.setOrganizerUserId(request.getRequesterUserId());
-        event.setStatus(EventStatus.ACTIVE);
+        // Future-dated events stay APPROVED until the scheduler flips them to ACTIVE at start time
+        // (see EventStatusScheduler); only now/past events are stamped ACTIVE immediately.
+        event.setStatus(request.getStartDateTime().isAfter(Instant.now())
+                ? EventStatus.APPROVED
+                : EventStatus.ACTIVE);
         event.setApprovedByUserId(request.getReviewedByUserId());
         event.setApprovedAt(request.getReviewedAt());
         event.setRejectionReason(null);

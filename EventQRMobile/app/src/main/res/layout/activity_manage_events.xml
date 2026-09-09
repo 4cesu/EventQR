@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <TextView
@@ -37,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/button_rounded"
+                android:background="@color/eventqr_bg"
                 android:text="Refresh Events"
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Event ID"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -57,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Title"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -67,7 +67,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="96dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:gravity="top|start"
                 android:hint="Description"
                 android:inputType="textMultiLine"
@@ -79,7 +79,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Location"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -89,7 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Registration open ISO-8601"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -99,7 +99,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Registration close ISO-8601"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -109,7 +109,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Event start ISO-8601"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -119,7 +119,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Event end ISO-8601"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -129,7 +129,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Capacity"
                 android:inputType="number"
                 android:padding="14dp"
@@ -140,7 +140,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Organizer user ID"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -164,7 +164,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:hint="Reviewer user ID"
                 android:padding="14dp"
                 android:singleLine="true" />
@@ -174,7 +174,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
+                android:background="@color/eventqr_bg"
                 android:gravity="top|start"
                 android:hint="Rejection reason"
                 android:inputType="textMultiLine"
@@ -185,7 +185,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/button_rounded"
+                android:background="@color/eventqr_bg"
                 android:text="Create Event"
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
@@ -195,7 +195,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/transparent_alt"
+                android:background="@color/eventqr_bg"
                 android:text="Review Event"
                 android:textAllCaps="false"
                 android:textColor="#1F2937" />
@@ -205,7 +205,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/transparent_alt"
+                android:background="@color/eventqr_bg"
                 android:text="Activate Event"
                 android:textAllCaps="false"
                 android:textColor="#1F2937" />

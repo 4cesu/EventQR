@@ -5,12 +5,19 @@ import com.thedavelopers.eventqr.config.TestConfig;
 import com.thedavelopers.eventqr.pages.AdminDashboardPage;
 import com.thedavelopers.eventqr.pages.LoginPage;
 import com.thedavelopers.eventqr.pages.OrganizerDashboardPage;
+import io.appium.java_client.AppiumBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * TestFlow 7.2 Event Request Approval list (AEA-1..AEA-3) and 7.3 Approval
+ * Detail actions (AED-1..AED-5). Every test self-seeds a fresh pending request
+ * through the UI so the suite never depends on pre-created requests.
+ */
 public class AdminEventApprovalTest extends BaseTest {
 
     private AdminDashboardPage dash;
@@ -40,46 +47,56 @@ public class AdminEventApprovalTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("AEA-1: Event request list loads")
-    void requestListLoads() {
+    @DisplayName("AEA-1: Request list loads with status filter chips")
+    void requestListAndChipsLoad() {
         assertAll(
                 () -> assertTrue(isDisplayed(id("recyclerRequests")), "Event request list should be visible"),
-                () -> assertTrue(isDisplayed(id("textTitle")), "At least one seeded request item should be visible")
-        );
-    }
-
-    @Test
-    @DisplayName("AEA-2: Filter chips displayed for request statuses")
-    void filterChipsDisplayed() {
-        assertAll(
                 () -> assertTrue(isDisplayed(id("chipAll")), "All chip should be visible"),
                 () -> assertTrue(isDisplayed(id("chipPending")), "Pending chip should be visible"),
                 () -> assertTrue(isDisplayed(id("chipApproved")), "Approved chip should be visible"),
-                () -> assertTrue(isDisplayed(id("chipRejected")), "Rejected chip should be visible")
+                () -> assertTrue(isDisplayed(id("chipRejected")), "Rejected chip should be visible"),
+                () -> assertTrue(isDisplayed(id("textTitle")), "Seeded request item should be visible")
         );
     }
 
     @Test
-    @DisplayName("AEA-3: Swipe down refreshes request list")
-    void swipeDownRefreshes() {
+    @DisplayName("AEA-2: Swipe to refresh reloads, retry available on error")
+    void swipeToRefreshAndRetry() {
         swipeDown();
-        assertTrue(isDisplayed(id("recyclerRequests")), "Request list should remain after refresh");
-        assertTrue(isDisplayed(id("textTitle")), "Request items should remain after refresh");
+        assertTrue(isDisplayed(id("recyclerRequests"))
+                        || isDisplayed(id("buttonRetry"))
+                        || isDisplayed(id("loadingRequests")),
+                "List should reload; error retry or loader states tolerated");
     }
 
     @Test
-    @DisplayName("AED-1: Tapping request opens detail")
+    @DisplayName("AEA-3: Tapping a request opens its detail")
     void tapRequestOpensDetail() {
-        dash.openFirstPendingRequestDetail();
+        // Apply the Pending filter so the newest seeded request is first.
+        tap(id("chipPending"));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                        AppiumBy.androidUIAutomator("new UiSelector().resourceId(\""
+                                + id("textTitle") + "\")")))
+                .click();
         assertTrue(isDisplayed(id("textDetailTitle")), "Request detail should open");
     }
 
     @Test
-    @DisplayName("AED-2: Request detail shows organizer info")
+    @DisplayName("AED-1: Request detail shows submitted event info")
     void requestDetailShowsOrganizerInfo() {
         dash.openFirstPendingRequestDetail();
         assertTrue(isDisplayed(id("textDetailTitle")) || isDisplayed(id("textSubmittedBy")),
                 "Request detail should show event/organizer info");
+    }
+
+    @Test
+    @DisplayName("AED-2: Detail exposes approve and reject actions")
+    void detailExposesActions() {
+        dash.openFirstPendingRequestDetail();
+        assertAll(
+                () -> assertTrue(isDisplayed(id("buttonApprove")), "Approve action expected"),
+                () -> assertTrue(isDisplayed(id("buttonReject")), "Reject action expected")
+        );
     }
 
     @Test

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared (organizerShell / organizerRefreshShell) -->
+    <item name="nav_header_title" type="id" />
+    <item name="nav_header_action" type="id" />
+    <item name="nav_header_back" type="id" />
+
+    <!-- EventManagementHubActivity (emh_) -->
+    <item name="emh_header_banner" type="id" />
+    <item name="emh_status_badge" type="id" />
+    <item name="emh_event_title" type="id" />
+    <item name="emh_stats_row" type="id" />
+    <item name="emh_stat_registered" type="id" />
+    <item name="emh_stat_capacity" type="id" />
+    <item name="emh_stat_available" type="id" />
+    <item name="emh_section_title" type="id" />
+    <item name="emh_menu_edit" type="id" />
+    <item name="emh_menu_staff" type="id" />
+    <item name="emh_menu_scan" type="id" />
+    <item name="emh_menu_transaction" type="id" />
+    <item name="emh_menu_id" type="id" />
+
+    <!-- EditEventDetailsActivity (eed_) -->
+    <item name="eed_schedule_card" type="id" />
+    <item name="eed_schedule_title" type="id" />
+    <item name="eed_reg_open_value" type="id" />
+    <item name="eed_reg_close_value" type="id" />
+    <item name="eed_event_start_value" type="id" />
+    <item name="eed_event_end_value" type="id" />
+    <item name="eed_form_card" type="id" />
+    <item name="eed_form_title" type="id" />
+    <item name="eed_title_input" type="id" />
+    <item name="eed_description_input" type="id" />
+    <item name="eed_venue_input" type="id" />
+    <item name="eed_capacity_input" type="id" />
+    <item name="eed_banner_preview" type="id" />
+    <item name="eed_banner_status" type="id" />
+    <item name="eed_banner_pick_button" type="id" />
+    <item name="eed_locked_note" type="id" />
+    <item name="eed_status" type="id" />
+    <item name="eed_save_button" type="id" />
+
+    <!-- ManageRewardsActivity (mrw_) -->
+    <item name="mrw_event_selector" type="id" />
+    <item name="mrw_event_summary_title" type="id" />
+    <item name="mrw_event_summary_count" type="id" />
+    <item name="mrw_rewards_label" type="id" />
+    <item name="mrw_rewards_desc" type="id" />
+    <item name="mrw_rewards_switch" type="id" />
+    <item name="mrw_section_title" type="id" />
+    <item name="mrw_reward_host" type="id" />
+    <item name="mrw_reward_name" type="id" />
+    <item name="mrw_reward_points" type="id" />
+    <item name="mrw_reward_stock" type="id" />
+    <item name="mrw_reward_edit" type="id" />
+    <item name="mrw_reward_remove" type="id" />
+    <item name="mrw_reward_title_input" type="id" />
+    <item name="mrw_reward_points_input" type="id" />
+    <item name="mrw_reward_quantity_input" type="id" />
+    <item name="mrw_reward_duplicate_switch" type="id" />
+
+    <!-- ManageScanPurposesActivity (msp_) -->
+    <item name="msp_purpose_host" type="id" />
+    <item name="msp_purpose_toggle" type="id" />
+    <item name="msp_type_spinner" type="id" />
+    <item name="msp_name_input" type="id" />
+    <item name="msp_desc_input" type="id" />
+    <item name="msp_points_input" type="id" />
+    <item name="msp_duplicate_check" type="id" />
+    <item name="msp_duplicate_helper" type="id" />
+    <item name="msp_tracking_only_check" type="id" />
+
+    <!-- IdTemplateSettingsActivity (idt_) -->
+    <item name="idt_locked_card" type="id" />
+    <item name="idt_toggles_card" type="id" />
+    <item name="idt_preview_container" type="id" />
+    <item name="idt_status" type="id" />
+    <item name="idt_save_button" type="id" />
+
+    <!-- TransactionLogsActivity (tlg_) -->
+    <item name="tlg_search" type="id" />
+    <item name="tlg_summary" type="id" />
+    <item name="tlg_list" type="id" />
+    <item name="tlg_detail" type="id" />
+    <item name="tlg_filter_row" type="id" />
+</resources>

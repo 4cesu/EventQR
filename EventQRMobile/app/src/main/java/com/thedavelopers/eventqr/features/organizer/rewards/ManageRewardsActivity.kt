@@ -113,6 +113,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         content.setBackgroundColor(BG)
 
         content.addView(card().apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_event_selector
             addView(text("Select Event", 13, false, MUTED))
             addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) { event ->
                 if (event.id == selectedEvent.id) return@eventSelector
@@ -136,9 +137,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
             ).apply { setMargins(0, dp(14), 0, dp(14)) }
 
             eventSummaryTitle = text(selectedEvent.title, 13, true, PURPLE).apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_event_summary_title
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
-            eventSummaryCount = text("0 rewards", 13, false, MUTED)
+            eventSummaryCount = text("0 rewards", 13, false, MUTED).apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_event_summary_count
+            }
             addView(eventSummaryTitle)
             addView(eventSummaryCount)
         })
@@ -151,12 +155,16 @@ open class ManageRewardsActivity : AppCompatActivity() {
             row.addView(LinearLayout(this@ManageRewardsActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                addView(text("Event Rewards", 16, true, TEXT))
+                addView(text("Event Rewards", 16, true, TEXT).apply {
+                    id = com.thedavelopers.eventqr.R.id.mrw_rewards_label
+                })
                 addView(text("Enable or disable reward redemption for this event", 13, false, MUTED).apply {
+                    id = com.thedavelopers.eventqr.R.id.mrw_rewards_desc
                     setPadding(0, dp(4), dp(8), 0)
                 })
             })
             rewardsEnabledSwitch = SwitchCompat(this@ManageRewardsActivity).apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_rewards_switch
                 isChecked = rewardsEnabled
                 setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
             }
@@ -164,8 +172,11 @@ open class ManageRewardsActivity : AppCompatActivity() {
             addView(row)
         })
 
-        content.addView(section("Rewards"))
+        content.addView(section("Rewards").apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_section_title
+        })
         rewardHost = LinearLayout(this).apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_reward_host
             orientation = LinearLayout.VERTICAL
         }
         content.addView(rewardHost)
@@ -258,6 +269,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER_VERTICAL
             }
             header.addView(text(reward.name, 17, true, TEXT).apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_reward_name
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
             header.addView(text(badgeText, 12, true, badgeColor).apply {
@@ -280,8 +292,11 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(0, dp(12), 0, 0)
             }
-            meta.addView(metaText("☆ ${formatCount(reward.pointsRequired)} pts"))
+            meta.addView(metaText("☆ ${formatCount(reward.pointsRequired)} pts").apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_reward_points
+            })
             meta.addView(text(if (stock == null) "${formatCount(claimed)} claimed" else "${formatCount(claimed)}/${formatCount(stock)} claimed", 12, false, MUTED).apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_reward_stock
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             })
             addView(meta)
@@ -299,8 +314,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 ).apply { setMargins(0, dp(14), 0, 0) }
             }
-            actions.addView(actionButton("Edit", false) { showRewardDialog(reward) })
-            actions.addView(actionButton("Remove", true) { confirmDeleteReward(reward) })
+            actions.addView(actionButton("Edit", false) { showRewardDialog(reward) }.apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_reward_edit
+            })
+            actions.addView(actionButton("Remove", true) { confirmDeleteReward(reward) }.apply {
+                id = com.thedavelopers.eventqr.R.id.mrw_reward_remove
+            })
             addView(actions)
         }
     }
@@ -331,23 +350,27 @@ open class ManageRewardsActivity : AppCompatActivity() {
             setPadding(dp(20), dp(12), dp(20), 0)
         }
         val titleInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_reward_title_input
             hint = "e.g. Coffee Voucher"
             setText(reward?.name.orEmpty())
             isSingleLine = true
         }
         val pointsInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_reward_points_input
             hint = "e.g. 100"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.pointsRequired?.toString().orEmpty())
             isSingleLine = true
         }
         val quantityInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_reward_quantity_input
             hint = "e.g. 50"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.stockQuantity?.toString().orEmpty())
             isSingleLine = true
         }
         val duplicateSwitch = SwitchCompat(this).apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_reward_duplicate_switch
             text = "Allow duplicate claims"
             isChecked = reward?.allowDuplicateClaims == true
             setTextColor(0xFF151A2D.toInt())

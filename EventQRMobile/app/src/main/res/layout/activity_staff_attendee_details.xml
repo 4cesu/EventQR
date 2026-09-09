@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@drawable/bg_header_surface_outline"
+        android:background="@color/eventqr_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="8dp"
@@ -19,7 +19,7 @@
             android:id="@+id/btnBackToTransactionResult"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@color/eventqr_bg"
             android:contentDescription="Back"
             android:padding="8dp"
             android:src="@drawable/ic_back_chevron"
@@ -68,7 +68,7 @@
                         android:id="@+id/txtDetailAvatar"
                         android:layout_width="64dp"
                         android:layout_height="64dp"
-                        android:background="@drawable/bg_profile_button"
+                        android:background="@color/eventqr_bg"
                         android:gravity="center"
                         android:text="A"
                         android:textColor="#FFFFFF"
@@ -120,7 +120,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card"
+                android:background="@color/eventqr_bg"
                 android:orientation="vertical"
                 android:padding="16dp">
 
@@ -133,7 +133,7 @@
                     <TextView android:id="@+id/txtDetailEventName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/eventqr_bg" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -144,7 +144,7 @@
                     <TextView android:id="@+id/txtDetailRegistrationId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/eventqr_bg" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -152,10 +152,10 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Status" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailRegistrationStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_badge_default" android:includeFontPadding="false" android:paddingHorizontal="12dp" android:paddingVertical="5dp" android:textColor="@color/eventqr_badge_default_text" android:textSize="12sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/txtDetailRegistrationStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@color/eventqr_bg" android:includeFontPadding="false" android:paddingHorizontal="12dp" android:paddingVertical="5dp" android:textColor="@color/eventqr_badge_default_text" android:textSize="12sp" android:textStyle="bold" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/eventqr_bg" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -166,7 +166,7 @@
                     <TextView android:id="@+id/txtDetailCheckInTime" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/eventqr_bg" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -177,7 +177,7 @@
                     <TextView android:id="@+id/txtDetailPointsBalance" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/eventqr_bg" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -201,7 +201,7 @@
                     android:layout_height="48dp"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_event_filter_chip_selected"
+                    android:background="@color/eventqr_bg"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
@@ -231,7 +231,7 @@
                     android:layout_height="48dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_scan_again_button"
+                    android:background="@color/eventqr_bg"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
@@ -289,7 +289,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_card"
+                    android:background="@color/eventqr_bg"
                     android:gravity="center"
                     android:padding="24dp"
                     android:text="No transactions recorded yet"

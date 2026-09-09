@@ -23,8 +23,33 @@ public class AdminDashboardPage extends BaseTest {
     // Request list item (item_admin_event_request.xml)
     private static final String REQUEST_ITEM_TITLE = "textTitle";
 
+    // Pending-requests alert banner (activity_admin_dashboard.xml)
+    private static final String CARD_PENDING_ALERT = "cardPendingAlert";
+    private static final String TEXT_PENDING_ALERT = "textPendingAlert";
+
+    // Bottom navigation
+    private static final String BOTTOM_NAV_DASHBOARD = "navDashboard";
+
     public boolean isDashboardVisible() {
         return isDisplayed(id("textAdminPortalTitle"));
+    }
+
+    /** True when the pending-requests alert banner is rendered (hidden when 0 pending). */
+    public boolean isPendingAlertVisible() {
+        return isDisplayed(id(CARD_PENDING_ALERT));
+    }
+
+    public String getPendingAlertText() {
+        return getText(id(TEXT_PENDING_ALERT));
+    }
+
+    /** Opens the Requests list from the pending-requests alert banner. */
+    public void tapPendingAlert() {
+        tap(id(CARD_PENDING_ALERT));
+    }
+
+    public void tapDashboardTab() {
+        tap(id(BOTTOM_NAV_DASHBOARD));
     }
 
     public void tapPortalSwitcher() {

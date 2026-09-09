@@ -43,17 +43,29 @@ open class TransactionLogsActivity : AppCompatActivity() {
         }
 
         search = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.tlg_search
             hint = "Search attendee, QR ID, transaction ID, staff, or event"
             background = rounded(Color.WHITE, 10, BORDER, density = resources.displayMetrics.density)
             setPadding(dp(12), 0, dp(12), 0)
         }
-        summary = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        detail = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        summary = LinearLayout(this).apply {
+            id = com.thedavelopers.eventqr.R.id.tlg_summary
+            orientation = LinearLayout.VERTICAL
+        }
+        list = LinearLayout(this).apply {
+            id = com.thedavelopers.eventqr.R.id.tlg_list
+            orientation = LinearLayout.VERTICAL
+        }
+        detail = LinearLayout(this).apply {
+            id = com.thedavelopers.eventqr.R.id.tlg_detail
+            orientation = LinearLayout.VERTICAL
+        }
         content.addView(search)
         content.addView(filterChips(listOf("All", "Approved", "Rejected")) {
             filter = it
             render()
+        }.apply {
+            id = com.thedavelopers.eventqr.R.id.tlg_filter_row
         })
         content.addView(summary)
         content.addView(list)

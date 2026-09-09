@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@drawable/bg_header_surface_outline"
+        android:background="@color/eventqr_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
@@ -46,7 +46,7 @@
                 android:id="@+id/cardScannerEvent"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="@drawable/bg_staff_scan_dark_card"
+                android:background="@color/eventqr_bg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
@@ -56,7 +56,7 @@
                 <View
                     android:layout_width="8dp"
                     android:layout_height="8dp"
-                    android:background="@drawable/bg_staff_scanner_status_dot" />
+                    android:background="@color/eventqr_bg" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -115,7 +115,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_gray_card"
+                android:background="@color/eventqr_bg"
                 android:padding="16dp"
                 android:text="No assigned events are available for this staff account."
                 android:textColor="@color/text_secondary"
@@ -136,7 +136,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="68dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card"
+                android:background="@color/eventqr_bg"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="16dp">
@@ -190,7 +190,7 @@
                 android:id="@+id/layoutPurposeDropdown"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
+                android:background="@color/eventqr_bg"
                 android:orientation="vertical"
                 android:visibility="gone" />
 
@@ -199,7 +199,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="324dp"
                 android:layout_marginTop="20dp"
-                android:background="@drawable/bg_staff_scan_camera"
+                android:background="@color/eventqr_bg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
@@ -214,25 +214,25 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="top|start"
-                        android:background="@drawable/bg_filter_chip_active" />
+                        android:background="@color/eventqr_bg" />
 
                     <View
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="top|end"
-                        android:background="@drawable/bg_filter_chip_active" />
+                        android:background="@color/eventqr_bg" />
 
                     <View
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="bottom|start"
-                        android:background="@drawable/bg_filter_chip_active" />
+                        android:background="@color/eventqr_bg" />
 
                     <View
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="bottom|end"
-                        android:background="@drawable/bg_filter_chip_active" />
+                        android:background="@color/eventqr_bg" />
 
                     <FrameLayout
                         android:id="@+id/frameCameraContainer"
@@ -240,7 +240,7 @@
                         android:layout_height="180dp"
                         android:layout_gravity="center"
                         android:clipChildren="true"
-                        android:background="@drawable/bg_staff_scan_qr_placeholder">
+                        android:background="@color/eventqr_bg">
 
                         <SurfaceView
                             android:id="@+id/surfaceInlineCameraPreview"
@@ -272,7 +272,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:background="@drawable/bg_card"
+                android:background="@color/eventqr_bg"
                 android:orientation="vertical"
                 android:padding="16dp">
 
@@ -296,7 +296,7 @@
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_soft_input_no_stroke"
+                        android:background="@color/eventqr_bg"
                         android:hint="Attendee ID (e.g. #001) or scan QR"
                         android:inputType="text"
                         android:paddingHorizontal="16dp"
@@ -308,7 +308,7 @@
                         android:layout_width="96dp"
                         android:layout_height="48dp"
                         android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_scanner_button"
+                        android:background="@color/eventqr_bg"
                         android:text="Verify"
                         android:textAllCaps="false"
                         android:textColor="#FFFFFF"
@@ -343,14 +343,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="76dp"
-        android:background="@drawable/bg_bottom_nav"
+        android:background="@color/eventqr_bg"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingHorizontal="20dp">
 
-        <LinearLayout android:id="@+id/navDashboard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Dashboard" android:padding="8dp" android:src="@drawable/ic_nav_home" app:tint="#000000" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Dashboard" android:textColor="#6B7280" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
-        <LinearLayout android:id="@+id/navScanner" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@drawable/bg_nav_icon_active" android:contentDescription="Scan" android:padding="8dp" android:src="@drawable/ic_scan" app:tint="#FFFFFF" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Scan" android:textColor="#312E81" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
-        <LinearLayout android:id="@+id/navEvents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Events" android:padding="8dp" android:src="@drawable/ic_calendar" app:tint="#000000" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Events" android:textColor="#6B7280" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
-        <LinearLayout android:id="@+id/navLogs" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Logs" android:padding="8dp" android:src="@drawable/ic_file" app:tint="#000000" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Logs" android:textColor="#6B7280" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
+        <LinearLayout android:id="@+id/navDashboard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@color/eventqr_bg" android:contentDescription="Dashboard" android:padding="8dp" android:src="@drawable/ic_nav_home" app:tint="#000000" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Dashboard" android:textColor="#6B7280" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
+        <LinearLayout android:id="@+id/navScanner" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@color/eventqr_bg" android:contentDescription="Scan" android:padding="8dp" android:src="@drawable/ic_scan" app:tint="#FFFFFF" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Scan" android:textColor="#312E81" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
+        <LinearLayout android:id="@+id/navEvents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@color/eventqr_bg" android:contentDescription="Events" android:padding="8dp" android:src="@drawable/ic_calendar" app:tint="#000000" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Events" android:textColor="#6B7280" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
+        <LinearLayout android:id="@+id/navLogs" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="38dp" android:layout_height="38dp" android:background="@color/eventqr_bg" android:contentDescription="Logs" android:padding="8dp" android:src="@drawable/ic_file" app:tint="#000000" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Logs" android:textColor="#6B7280" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
     </LinearLayout>
 </LinearLayout>

@@ -7,6 +7,7 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.view.MotionEvent
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -26,6 +27,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var phoneCounterText: TextView
     private lateinit var passwordInput: EditText
     private lateinit var confirmPasswordInput: EditText
+    private lateinit var termsCheckBox: CheckBox
     private lateinit var registerButton: Button
     private lateinit var signInButton: android.view.View
     private lateinit var passwordLengthRequirement: TextView
@@ -50,6 +52,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         phoneCounterText = findViewById(R.id.txtPhoneCounter)
         passwordInput = findViewById(R.id.edtPassword)
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
+        termsCheckBox = findViewById(R.id.chkTerms)
         registerButton = findViewById(R.id.btnRegister)
         signInButton = findViewById(R.id.btnSignIn)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
@@ -76,6 +79,12 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             override fun afterTextChanged(s: Editable?) = Unit
         })
         updatePasswordRequirements(passwordInput.text.toString())
+
+        // Terms gating (TestFlow REG-9/REG-10): Create Account stays disabled
+        // until the password meets all requirements AND the terms checkbox is checked.
+        termsCheckBox.setOnCheckedChangeListener { _, _ ->
+            updateRegisterButtonState()
+        }
 
         registerButton.setOnClickListener {
             // EventQR - UI validation deviation beyond SRS UC-01 field spec
@@ -107,9 +116,16 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     }
 
     override fun showLoading(isLoading: Boolean) {
-        registerButton.isEnabled = !isLoading && Validators.isValidSignUpPassword(passwordInput.text.toString())
+        registerButton.isEnabled = !isLoading && isRegistrationFormValid()
         registerButton.text = if (isLoading) "Creating account..." else "Create Account"
     }
+
+    /**
+     * Exposes the terms checkbox state (plain public method; the contract
+     * interface stays minimal since the presenter gates nothing on it —
+     * button enablement is enforced entirely in the view).
+     */
+    fun isTermsAccepted(): Boolean = termsCheckBox.isChecked
 
     override fun showFieldError(field: String, message: String?) {
         when (field) {
@@ -134,7 +150,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private fun updatePasswordRequirements(password: String) {
         if (password.isEmpty()) {
             requirementsLayout.visibility = android.view.View.GONE
-            registerButton.isEnabled = false
+            updateRegisterButtonState()
             return
         }
         requirementsLayout.visibility = android.view.View.VISIBLE
@@ -153,7 +169,14 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         ).count { it }
 
         updateStrengthUI(metCount)
-        registerButton.isEnabled = requirements.isValid
+        updateRegisterButtonState()
+    }
+
+    private fun isRegistrationFormValid(): Boolean =
+        Validators.isValidSignUpPassword(passwordInput.text.toString()) && termsCheckBox.isChecked
+
+    private fun updateRegisterButtonState() {
+        registerButton.isEnabled = isRegistrationFormValid()
     }
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {

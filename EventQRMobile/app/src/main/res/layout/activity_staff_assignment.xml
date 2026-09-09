@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_alt"
+    android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@drawable/bg_header_surface_outline"
+        android:background="@color/eventqr_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="8dp"
@@ -19,7 +19,7 @@
             android:id="@+id/btnStaffAssignmentBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@color/eventqr_bg"
             android:contentDescription="@string/back"
             android:padding="8dp"
             android:src="@drawable/ic_back_chevron"
@@ -40,7 +40,7 @@
             android:id="@+id/btnAddStaff"
             android:layout_width="78dp"
             android:layout_height="38dp"
-            android:background="@drawable/bg_primary_button"
+            android:background="@color/eventqr_bg"
             android:text="@string/staff_add_button"
             android:textAllCaps="false"
             android:textColor="@android:color/white"

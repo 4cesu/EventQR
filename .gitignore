@@ -3,6 +3,8 @@ EVENTQR_DESIGN_SYSTEM.md
 AGENTS.md
 
 # Tooling / local state
+.idea/
+.vscode/
 .opencode/
 .serena/
 **/.serena/
