@@ -69,4 +69,29 @@ class AuthRepository(context: Context) {
     fun saveUserRole(role: AccountRole?) {
         sessionManager.saveRole(role)
     }
+
+    /**
+     * Re-issues the access token against the user's CURRENT role in the database
+     * and stores the refreshed token locally. Used after a role change (e.g. an
+     * event request approval upgrading an attendee to organizer) so the client
+     * reflects the new role without requiring a logout/login.
+     *
+     * The refresh response carries the fresh token + role but omits some profile
+     * fields (the backend login record has no phone), so the existing locally
+     * stored profile values are preserved.
+     */
+    suspend fun refreshSessionToken(): NetworkResult<LoginResponse> =
+        safeApiCall { apiService.refreshToken() }.also { result ->
+            if (result is NetworkResult.Success) {
+                val refreshed = result.data
+                // Preserve locally stored profile fields that the refresh response omits.
+                val merged = refreshed.copy(
+                    phone = sessionManager.getPhone(),
+                    fullName = sessionManager.getFullName() ?: refreshed.fullName,
+                    email = sessionManager.getEmail() ?: refreshed.email,
+                    userId = sessionManager.getUserId()?.let { runCatching { java.util.UUID.fromString(it) }.getOrNull() } ?: refreshed.userId,
+                )
+                sessionManager.saveLoginResponse(merged)
+            }
+        }
 }

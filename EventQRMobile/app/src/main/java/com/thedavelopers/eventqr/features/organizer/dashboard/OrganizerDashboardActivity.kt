@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
 import com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity
@@ -62,7 +63,13 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         }
         setupNavigation()
         findViewById<LinearLayout>(R.id.layoutBottomNavHost).addView(bottomNav(NAV_DASHBOARD))
-        loadDashboard()
+        // Re-issue the access token so the CURRENT database role is used (an attendee
+        // upgraded to organizer after approval should be able to open this dashboard
+        // immediately, without a logout/login).
+        MainScope().launch {
+            AuthRepository(this@OrganizerDashboardActivity).refreshSessionToken()
+            loadDashboard()
+        }
     }
 
     private fun setupNavigation() {
