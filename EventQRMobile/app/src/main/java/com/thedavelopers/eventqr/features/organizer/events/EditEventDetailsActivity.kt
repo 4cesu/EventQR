@@ -125,9 +125,13 @@ class EditEventDetailsActivity : AppCompatActivity() {
         )
         content.addView(buildLockedSchedule())
         content.addView(buildForm())
-        statusView = text("", 13, false).apply { setPadding(dp(4), dp(8), dp(4), 0) }
+        statusView = text("", 13, false).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_status
+            setPadding(dp(4), dp(8), dp(4), 0)
+        }
         content.addView(statusView)
         saveButton = primaryButton("Save Changes") { saveChanges() }.apply {
+            id = com.thedavelopers.eventqr.R.id.eed_save_button
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 dp(48),
@@ -139,16 +143,30 @@ class EditEventDetailsActivity : AppCompatActivity() {
     }
 
     private fun buildForm(): LinearLayout {
-        val formCard = card(16)
-        formCard.addView(text("Editable details", 15, true, TEXT_COLOR).apply { setPadding(0, 0, 0, dp(4)) })
+        val formCard = card(16).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_form_card
+        }
+        formCard.addView(text("Editable details", 15, true, TEXT_COLOR).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_form_title
+            setPadding(0, 0, 0, dp(4))
+        })
 
-        titleInput = addInput(formCard, "Title", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
-        descriptionInput = addInput(formCard, "Description", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE, singleLine = false, minLines = 3)
-        venueInput = addInput(formCard, "Venue")
-        capacityInput = addInput(formCard, "Capacity", inputType = InputType.TYPE_CLASS_NUMBER)
+        titleInput = addInput(formCard, "Title", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_title_input
+        }
+        descriptionInput = addInput(formCard, "Description", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE, singleLine = false, minLines = 3).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_description_input
+        }
+        venueInput = addInput(formCard, "Venue").apply {
+            id = com.thedavelopers.eventqr.R.id.eed_venue_input
+        }
+        capacityInput = addInput(formCard, "Capacity", inputType = InputType.TYPE_CLASS_NUMBER).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_capacity_input
+        }
 
         formCard.addView(text("Event Banner", 15, true, TEXT_COLOR).apply { setPadding(0, dp(18), 0, dp(6)) })
         bannerPreview = ImageView(this).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_banner_preview
             adjustViewBounds = true
             scaleType = ImageView.ScaleType.CENTER_CROP
             background = rounded(android.graphics.Color.parseColor("#F3F4F6"), 10, BORDER, density = resources.displayMetrics.density)
@@ -157,10 +175,12 @@ class EditEventDetailsActivity : AppCompatActivity() {
         formCard.addView(bannerPreview)
         formCard.addView(
             text("No banner set. Tap below to choose a 16:9 landscape image.", 12, false, MUTED).apply {
+                id = com.thedavelopers.eventqr.R.id.eed_banner_status
                 setPadding(0, dp(8), 0, 0)
             }.also { bannerStatus = it },
         )
         formCard.addView(ghostButton("Choose new banner") { bannerPicker.launch("image/*") }.apply {
+            id = com.thedavelopers.eventqr.R.id.eed_banner_pick_button
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44)).apply {
                 setMargins(0, dp(10), 0, 0)
             }
@@ -168,6 +188,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         formCard.addView(
             text("Locked: eventId, organizer, approval status, registration windows, start date, end date and rewards stay unchanged.", 12, false, MUTED).apply {
+                id = com.thedavelopers.eventqr.R.id.eed_locked_note
                 setPadding(0, dp(12), 0, 0)
             },
         )
@@ -175,13 +196,26 @@ class EditEventDetailsActivity : AppCompatActivity() {
     }
 
     private fun buildLockedSchedule(): LinearLayout {
-        val scheduleCard = card(16)
-        scheduleCard.addView(text("Schedule (Locked)", 15, true, TEXT_COLOR).apply { setPadding(0, 0, 0, dp(4)) })
+        val scheduleCard = card(16).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_schedule_card
+        }
+        scheduleCard.addView(text("Schedule (Locked)", 15, true, TEXT_COLOR).apply {
+            id = com.thedavelopers.eventqr.R.id.eed_schedule_title
+            setPadding(0, 0, 0, dp(4))
+        })
 
-        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time")
-        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time")
-        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time")
-        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time")
+        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time").apply {
+            id = com.thedavelopers.eventqr.R.id.eed_reg_open_value
+        }
+        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time").apply {
+            id = com.thedavelopers.eventqr.R.id.eed_reg_close_value
+        }
+        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time").apply {
+            id = com.thedavelopers.eventqr.R.id.eed_event_start_value
+        }
+        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time").apply {
+            id = com.thedavelopers.eventqr.R.id.eed_event_end_value
+        }
         return scheduleCard
     }
 

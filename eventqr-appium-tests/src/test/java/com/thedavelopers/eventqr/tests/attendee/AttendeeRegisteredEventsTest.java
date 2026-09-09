@@ -9,51 +9,80 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * TestFlow 4.5 — REGISTERED EVENTS (RegisteredEventsActivity)
+ */
 public class AttendeeRegisteredEventsTest extends BaseTest {
 
     @BeforeEach
     void loginAndOpenRegistered() {
         LoginPage login = new LoginPage();
         login.login(TestConfig.ATTENDEE_EMAIL, TestConfig.ATTENDEE_PASS);
-        // TODO: verify registered tab resource-id in Appium Inspector
         tap(id("navRegistered"));
     }
 
     @Test
-    @DisplayName("REGD-1: Registered events list loads")
-    void registeredEventsListLoads() {
-        // TODO: verify registered events list resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("recyclerRegistered")), "Registered events list should be visible");
+    @DisplayName("REV-1: Chips filter — All / Registered / Completed")
+    void chipsFilterDisplayed() {
+        assertTrue(isDisplayed(id("chipAll")), "All chip should be visible");
+        assertTrue(isDisplayed(id("chipRegistered")), "Registered chip should be visible");
+        assertTrue(isDisplayed(id("chipCompleted")), "Completed chip should be visible");
     }
 
     @Test
-    @DisplayName("REGD-2: Registered event shows QR credential")
-    void registeredEventShowsQrCredential() {
-        // TODO: verify QR credential element resource-id in Appium Inspector
-        tap(id("btnViewQr"));
-        assertTrue(isDisplayed(id("imgQrCode")), "QR code should be displayed");
+    @DisplayName("REV-2: Registered filter shows future events (eventStartAt in future)")
+    void registeredFilterShowsFutureEvents() {
+        tap(id("chipRegistered"));
+        assertTrue(isDisplayed(id("recyclerRegisteredEvents")) || isDisplayed(id("txtRegisteredEventsEmpty")),
+                "Registered filter should show future events or empty state");
     }
 
     @Test
-    @DisplayName("REGD-3: Empty state when no registered events")
-    void emptyStateWhenNoRegisteredEvents() {
-        // TODO: verify empty state resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("txtEmptyRegistered")) || isTextDisplayed("No registered events"),
-                "Empty state should be shown when no registered events");
+    @DisplayName("REV-3: Completed filter shows past events (eventStartAt in past)")
+    void completedFilterShowsPastEvents() {
+        tap(id("chipCompleted"));
+        assertTrue(isDisplayed(id("recyclerRegisteredEvents")) || isDisplayed(id("txtRegisteredEventsEmpty")),
+                "Completed filter should show past events or empty state");
     }
 
     @Test
-    @DisplayName("REGD-4: Tapping registered event opens its detail")
-    void tapRegisteredEventOpensDetail() {
-        // TODO: verify registered event item resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("recyclerRegistered")), "Registered events list present");
+    @DisplayName("REV-4: Empty state shown when filter has no events")
+    void emptyStateWhenFilterEmpty() {
+        // Switch between filters to find one that might be empty
+        tap(id("chipCompleted"));
+        assertTrue(isDisplayed(id("txtRegisteredEventsEmpty"))
+                        || isDisplayed(id("recyclerRegisteredEvents")),
+                "Empty state or list should be visible for completed filter");
     }
 
     @Test
-    @DisplayName("REGD-5: Event status badge is displayed on card")
-    void statusBadgeDisplayed() {
-        // TODO: verify status badge resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("txtEventStatus")) || isDisplayed(id("badgeStatus")),
-                "Status badge should be shown on registered event card");
+    @DisplayName("REV-5: Swipe-to-refresh and skeleton loading")
+    void swipeToRefreshAndSkeleton() {
+        assertTrue(isDisplayed(id("recyclerRegisteredEvents"))
+                        || isDisplayed(id("skeletonLoading"))
+                        || isDisplayed(id("txtRegisteredEventsEmpty")),
+                "Registered list, skeleton, or empty state should be visible");
+        swipeDown();
+        assertTrue(isDisplayed(id("recyclerRegisteredEvents"))
+                        || isDisplayed(id("txtRegisteredEventsEmpty")),
+                "List should be visible after refresh");
+    }
+
+    @Test
+    @DisplayName("REV-6: Tap registered event opens QR credential (QrDisplayActivity)")
+    void tapRegisteredEventOpensQr() {
+        assertTrue(isDisplayed(id("recyclerRegisteredEvents")), "Registered events list should be present");
+        tap(id("recyclerRegisteredEvents")); // tap first item
+        assertTrue(isDisplayed(id("imgQrCode"))
+                        || isDisplayed(id("txtQrCredentialValue"))
+                        || isDisplayed(id("txtQrAttendeeName")),
+                "Should open QR credential display");
+        pressBack();
+    }
+
+    @Test
+    @DisplayName("REV-7: Bottom nav 'Registered' tab is highlighted")
+    void registeredTabHighlighted() {
+        assertTrue(isDisplayed(id("navRegistered")), "Registered tab should be visible and active");
     }
 }

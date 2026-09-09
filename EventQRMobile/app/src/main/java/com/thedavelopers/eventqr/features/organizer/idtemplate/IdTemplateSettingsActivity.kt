@@ -70,14 +70,25 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             subtitle = intentEventTitle()?.takeIf { it.isNotBlank() },
             showBack = true,
         )
-        content.addView(lockedFieldsCard())
-        content.addView(toggleCard())
-        previewContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        content.addView(lockedFieldsCard().apply {
+            id = com.thedavelopers.eventqr.R.id.idt_locked_card
+        })
+        content.addView(toggleCard().apply {
+            id = com.thedavelopers.eventqr.R.id.idt_toggles_card
+        })
+        previewContainer = LinearLayout(this).apply {
+            id = com.thedavelopers.eventqr.R.id.idt_preview_container
+            orientation = LinearLayout.VERTICAL
+        }
         content.addView(previewContainer)
         renderPreview()
-        statusView = text("", 13, false).apply { setPadding(dp(4), dp(8), dp(4), 0) }
+        statusView = text("", 13, false).apply {
+            id = com.thedavelopers.eventqr.R.id.idt_status
+            setPadding(dp(4), dp(8), dp(4), 0)
+        }
         content.addView(statusView)
         saveButton = primaryButton("Save ID Display Settings") { saveConfig() }.apply {
+            id = com.thedavelopers.eventqr.R.id.idt_save_button
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 dp(48),

@@ -30,6 +30,28 @@ public class OrganizerDashboardPage extends BaseTest {
 
     // Organizer dashboard (activity_organizer_dashboard.xml)
     private static final String PORTAL_SWITCHER_CHIP = "portalSwitcherChip";
+    private static final String TXT_HEADER_TITLE     = "txtHeaderTitle";
+    private static final String TXT_HEADER_SUBTITLE  = "txtHeaderSubtitle";
+    private static final String STAT_TOTAL_EVENTS    = "txtStatTotalEvents";
+    private static final String STAT_TOTAL_ATTENDEES = "txtStatTotalAttendees";
+    private static final String STAT_TRANSACTIONS    = "txtStatTransactions";
+    private static final String STAT_REWARDS_GIVEN   = "txtStatRewardsGiven";
+    private static final String ACTIVE_EVENTS_CONTAINER = "activeEventsContainer";
+    private static final String BTN_SEE_ALL_EVENTS   = "btnSeeAllEvents";
+    private static final String LAYOUT_EVENTS_EMPTY  = "layoutEventsEmpty";
+    private static final String LAYOUT_DASHBOARD_ERROR = "layoutDashboardError";
+    private static final String TXT_DASHBOARD_ERROR  = "txtDashboardError";
+    private static final String BTN_DASHBOARD_RETRY  = "btnDashboardRetry";
+    private static final String SWIPE_REFRESH_DASHBOARD = "swipeRefreshDashboard";
+
+    // Active-event cards reuse the attendee event-card layout ids
+    private static final String CARD_EVENT_TITLE    = "txtAttendeeEventTitle";
+
+    // Bottom nav rows are text-labelled (OrganizerScreenHelpers nav labels)
+    public static final String NAV_ATTENDEES_LABEL  = "Attendees";
+    public static final String NAV_LOGS_LABEL       = "Logs";
+    public static final String NAV_REPORTS_LABEL    = "Reports";
+    public static final String NAV_REWARDS_LABEL    = "Rewards";
 
     // User dashboard (activity_user_dashboard.xml)
     private static final String REQUEST_EVENT_BTN = "btnNotificationsHub";
@@ -85,7 +107,7 @@ public class OrganizerDashboardPage extends BaseTest {
     }
 
     public void tapManageEvents() {
-        tap(id("btnManageEvents"));
+        tap(id(BTN_SEE_ALL_EVENTS));
     }
 
     public void tapNotificationBell() {
@@ -94,6 +116,137 @@ public class OrganizerDashboardPage extends BaseTest {
 
     public boolean isEventListVisible() {
         return isDisplayed(id("recyclerEvents"));
+    }
+
+    /* ── Organizer dashboard (organizer portal) ────────────────────────── */
+
+    /** True while the organizer dashboard header ("Organizer Portal" + name) is up. */
+    public boolean isOrganizerDashboardVisible() {
+        return isDisplayed(id(TXT_HEADER_TITLE));
+    }
+
+    public String getHeaderSubtitle() {
+        return getText(id(TXT_HEADER_SUBTITLE));
+    }
+
+    public boolean isDisplayedHeaderSubtitle() {
+        return isDisplayed(id(TXT_HEADER_SUBTITLE));
+    }
+
+    public boolean areStatsVisible() {
+        return isDisplayed(id(STAT_TOTAL_EVENTS)) && isDisplayed(id(STAT_TOTAL_ATTENDEES))
+                && isDisplayed(id(STAT_TRANSACTIONS)) && isDisplayed(id(STAT_REWARDS_GIVEN));
+    }
+
+    /** True when the "active events" section rendered at least one card. */
+    public boolean hasActiveEventCards() {
+        return !findElements(id(CARD_EVENT_TITLE)).isEmpty();
+    }
+
+    public boolean showsEventsEmpty() {
+        return isDisplayed(id(LAYOUT_EVENTS_EMPTY));
+    }
+
+    public boolean showsDashboardError() {
+        return isDisplayed(id(LAYOUT_DASHBOARD_ERROR));
+    }
+
+    /** Opens the first active-event card (taps its title; bubbles to row click). */
+    public void openFirstActiveEvent() {
+        waitForVisibleId(id(CARD_EVENT_TITLE)).click();
+    }
+
+    public void tapSeeAllEvents() {
+        tap(id(BTN_SEE_ALL_EVENTS));
+    }
+
+    public void tapPortalSwitcher() {
+        tap(id(PORTAL_SWITCHER_CHIP));
+    }
+
+/** Taps an organizer bottom-nav row by its text label. */
+    public void tapBottomNavLabel(String label) {
+        tapByText(label);
+    }
+
+    /**
+     * Opens the organizer notification management screen via the dynamic bell
+     * (a FrameLayout exposed with contentDescription "Notifications").
+     */
+    public void tapOrganizerNotificationBell() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                AppiumBy.androidUIAutomator(
+                        "new UiSelector().description(\"Notifications\")"))).click();
+    }
+
+    /**
+     * Seeds an APPROVED event owned by the current organizer if the dashboard
+     * has none. Fast path: when the backend already serves cards, no-op.
+     * Slow path (fresh databases): organizer → Attendee Portal → Request Event
+     * → admin approves via Requests → admin switches to Attendee Portal and
+     * signs out → organizer signs back in and lands on the organizer dashboard.
+     *
+     * <p>Must be invoked right after organizer login, while the organizer
+     * dashboard is visible. Waits for the skeleton to settle before deciding
+     * whether seeding is needed.</p>
+     */
+    public void seedApprovedEventIfNone() {
+        long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline) {
+            if (hasActiveEventCards()) {
+                return; // backend already serves owned approved events
+            }
+            if (isVisibleQuick(id(LAYOUT_EVENTS_EMPTY))) {
+                break; // dashboard rendered the empty state → seed
+            }
+            pause(500);
+        }
+        if (hasActiveEventCards()) {
+            return;
+        }
+
+        seedEventRequest(uniqueEventName());
+
+        // Approve it as admin.
+        signOut();
+        LoginPage login = new LoginPage();
+        login.login(TestConfig.ADMIN_EMAIL, TestConfig.ADMIN_PASS);
+        AdminDashboardPage admin = new AdminDashboardPage();
+        admin.openRequestsTab();
+        admin.openFirstPendingRequestDetail();
+        tap(id("buttonApprove"));
+        tap(id("buttonConfirmAction"));
+        waitForVisibleId(id("buttonDone"));
+        tap(id("buttonDone"));
+        pressBack();
+
+        // Admin dashboard has no sign-out — leave via the Attendee Portal.
+        admin.tapPortalSwitcher();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                AppiumBy.androidUIAutomator(
+                        "new UiSelector().text(\"Attendee Portal\")"))).click();
+        waitForVisibleId(id(REQUEST_EVENT_BTN));
+        signOut();
+
+        // Re-login as organizer: lands on organizer dashboard with an approved event.
+        LoginPage orgLogin = new LoginPage();
+        orgLogin.login(TestConfig.ORGANIZER_EMAIL, TestConfig.ORGANIZER_PASS);
+        waitForVisibleId(id(TXT_HEADER_TITLE));
+    }
+
+    private String uniqueEventName() {
+        return "Auto Approved Event " + System.currentTimeMillis();
+    }
+
+    private boolean isVisibleQuick(String resourceId) {
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(1))
+                    .until(ExpectedConditions.visibilityOfElementLocated(
+                            AppiumBy.id(resourceId)));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -122,7 +275,7 @@ public class OrganizerDashboardPage extends BaseTest {
         new WebDriverWait(driver, Duration.ofSeconds(TestConfig.DEFAULT_WAIT_SECONDS))
                 .until(ExpectedConditions.visibilityOfElementLocated(
                         AppiumBy.androidUIAutomator(
-                                "new UiSelector().text(\"Attendee Portal\").clickable(true)")))
+                                "new UiSelector().text(\"Attendee Portal\")")))
                 .click();
 
         // Wait for the user dashboard (Request Event hub) to appear.

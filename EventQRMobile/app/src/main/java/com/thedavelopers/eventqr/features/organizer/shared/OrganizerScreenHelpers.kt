@@ -393,6 +393,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
         val outVal = TypedValue()
         theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true)
         val backIcon = ImageView(this).apply {
+            id = com.thedavelopers.eventqr.R.id.nav_header_back
             setImageResource(com.thedavelopers.eventqr.R.drawable.ic_back_chevron)
             setColorFilter(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
             contentDescription = "Back"
@@ -405,6 +406,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
     }
 
     header.addView(TextView(this).apply {
+        id = com.thedavelopers.eventqr.R.id.nav_header_title
         text = title
         TextViewCompat.setTextAppearance(this, com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
         setTextColor(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
@@ -417,6 +419,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
 
     if (topRightLabel != null) {
         val topBtn = Button(this).apply {
+            id = com.thedavelopers.eventqr.R.id.nav_header_action
             text = topRightLabel
             setAllCaps(false)
             setTextColor(Color.WHITE)
@@ -494,6 +497,7 @@ internal fun AppCompatActivity.organizerShell(
         val outVal = TypedValue()
         theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true)
         val backIcon = ImageView(this).apply {
+            id = com.thedavelopers.eventqr.R.id.nav_header_back
             setImageResource(com.thedavelopers.eventqr.R.drawable.ic_back_chevron)
             setColorFilter(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
             contentDescription = "Back"
@@ -506,6 +510,7 @@ internal fun AppCompatActivity.organizerShell(
     }
 
     header.addView(TextView(this).apply {
+        id = com.thedavelopers.eventqr.R.id.nav_header_title
         text = title
         TextViewCompat.setTextAppearance(this, com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
         setTextColor(if (darkHeader) Color.WHITE else resources.getColor(com.thedavelopers.eventqr.R.color.text_primary, theme))
@@ -518,6 +523,7 @@ internal fun AppCompatActivity.organizerShell(
 
     if (topRightLabel != null) {
         val topBtn = Button(this).apply {
+            id = com.thedavelopers.eventqr.R.id.nav_header_action
             text = topRightLabel
             setAllCaps(false)
             setTextColor(Color.WHITE)

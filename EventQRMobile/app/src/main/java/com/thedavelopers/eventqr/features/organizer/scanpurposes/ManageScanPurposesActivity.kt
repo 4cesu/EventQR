@@ -64,7 +64,10 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             onRefresh = { loadPurposes(showInitialLoading = false) }
         )
         swipeRefresh = shell.swipeRefreshLayout
-        purposeHost = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        purposeHost = LinearLayout(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_purpose_host
+            orientation = LinearLayout.VERTICAL
+        }
         shell.content.addView(purposeHost)
 
         loadPurposes()
@@ -135,6 +138,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             }
             val toggleSwitch = (purposeCard.getChildAt(0) as? LinearLayout)
                 ?.getChildAt(2) as? androidx.appcompat.widget.SwitchCompat
+            toggleSwitch?.id = com.thedavelopers.eventqr.R.id.msp_purpose_toggle
             toggleSwitch?.setOnCheckedChangeListener { _, checked ->
                 togglePurpose(purpose, checked, toggleSwitch)
             }
@@ -191,6 +195,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             ?: purposeTypes.first { it.code == ScanPurposeCode.BOOTH_VISIT }
 
         val duplicateHelper = TextView(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_duplicate_helper
             text = "Always allowed for reward redemption — controlled per-reward on the Rewards page."
             textSize = 12f
             setTextColor(Color.parseColor("#6B7280"))
@@ -198,6 +203,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             visibility = View.GONE
         }
         val duplicateCheck = CheckBox(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_duplicate_check
             text = "Allow duplicate scans"
             isChecked = purpose?.duplicateRule?.lowercase()?.contains("allow") ?: false
         }
@@ -212,6 +218,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
 
         val typeSpinner = Spinner(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_type_spinner
             adapter = ArrayAdapter(
                 this@ManageScanPurposesActivity,
                 android.R.layout.simple_spinner_item,
@@ -230,22 +237,26 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         applyDuplicateLock(selectedType)
 
         val nameInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_name_input
             hint = "Custom name, e.g. Sponsor Booth A"
             setText(purpose?.label.orEmpty())
             setSingleLine(true)
         }
         val descInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_desc_input
             hint = "Description, e.g. Track visits for Sponsor Booth A"
             setText(purpose?.description.orEmpty())
             minLines = 2
         }
         val pointsInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_points_input
             hint = "Points awarded"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(purpose?.pointsValue?.takeIf { it > 0 }?.toString() ?: "0")
             setSingleLine(true)
         }
         val trackingOnlyCheck = CheckBox(this).apply {
+            id = com.thedavelopers.eventqr.R.id.msp_tracking_only_check
             text = "Tracking only (no points)"
             isChecked = purpose?.trackingOnly ?: ((purpose?.pointsValue ?: 0) <= 0 && purpose?.pointsEnabled != true)
             setOnCheckedChangeListener { _, checked ->

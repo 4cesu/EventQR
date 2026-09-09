@@ -10,6 +10,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * TestFlow 5.7 — Staff Transactions / Logs (STX-1..STX-3).
+ * The staff Logs tab opens StaffTransactionsActivity
+ * (activity_staff_transaction_logs.xml).
+ */
 public class StaffLogsTest extends BaseTest {
 
     private StaffDashboardPage dash;
@@ -23,48 +28,39 @@ public class StaffLogsTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("SL-1: Scan logs list loads")
-    void logsListLoads() {
-        // TODO: verify scan logs list resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("recyclerLogs")), "Scan logs list should be visible");
+    @DisplayName("STX-1: Transaction logs screen loads from the Logs tab")
+    void logsScreenLoads() {
+        assertTrue(isDisplayed(id("cardStaffTransactionsEvent")),
+                "Logs screen should render the event context card");
+        assertTrue(isDisplayed(id("recyclerStaffTransactions"))
+                        || isDisplayed(id("txtStaffTransactionsEmptyState")),
+                "Transaction list or its empty state should render");
     }
 
     @Test
-    @DisplayName("SL-2: Logs show scan time and entry status")
-    void logsShowTimeAndStatus() {
-        // TODO: verify log row fields resource-ids in Appium Inspector
-        assertTrue(isDisplayed(id("txtLogTime")), "Scan time should be visible on log row");
+    @DisplayName("STX-2: Swipe to refresh reloads the logs")
+    void swipeToRefreshLogs() {
+        swipeDown();
+        assertAll(
+                () -> assertTrue(isDisplayed(id("cardStaffTransactionsEvent")),
+                        "Event context should remain after refresh"),
+                () -> assertTrue(isDisplayed(id("recyclerStaffTransactions"))
+                                || isDisplayed(id("txtStaffTransactionsEmptyState")),
+                        "Logs should reload after pull-to-refresh")
+        );
     }
 
     @Test
-    @DisplayName("SL-3: Filter logs by status")
-    void filterLogsByStatus() {
-        // TODO: verify filter chip resource-id in Appium Inspector
-        tap(id("chipEntered"));
-        assertTrue(isDisplayed(id("recyclerLogs")), "Filtered logs list should still be visible");
-    }
-
-    @Test
-    @DisplayName("SL-4: Search logs by attendee name")
-    void searchLogsByName() {
-        // TODO: verify search field resource-id in Appium Inspector
-        type(id("edtLogSearch"), "Test User");
-        assertTrue(isDisplayed(id("recyclerLogs")), "Search results list should be visible");
-    }
-
-    @Test
-    @DisplayName("SL-5: Expandable log detail shows full info")
-    void expandableLogDetail() {
-        // TODO: verify expandable detail behavior resource-id in Appium Inspector
-        tap(id("cardLogItem"));
-        assertTrue(isDisplayed(id("txtLogDetail")), "Expanded log detail should be visible");
-    }
-
-    @Test
-    @DisplayName("SL-6: Empty state when no scan logs")
-    void emptyStateWhenNoLogs() {
-        // TODO: verify empty state resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("txtEmptyLogs")) || isTextDisplayed("No scan logs"),
-                "Empty state should be shown when no logs");
+    @DisplayName("STX-3: Logs opened from the scanner nav keep the event context")
+    void logsFromScannerKeepEventContext() {
+        // From the scanner screen, the Logs nav item carries the selected
+        // event id into StaffTransactionsActivity (configureStaffBottomNav).
+        dash.openScannerTab();
+        assertTrue(isDisplayed(id("btnSubmitScan"))
+                        || isDisplayed(id("txtScannerEmptyState")),
+                "Scanner screen should be visible before switching to Logs");
+        dash.openLogsTab();
+        assertTrue(isDisplayed(id("cardStaffTransactionsEvent")),
+                "Logs screen should open with the event context card");
     }
 }

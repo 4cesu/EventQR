@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.organizer.events
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -60,6 +61,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
             val available = (capacity - registeredCount).coerceAtLeast(0)
 
             content.addView(LinearLayout(this@EventManagementHubActivity).apply {
+                id = com.thedavelopers.eventqr.R.id.emh_header_banner
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -78,6 +80,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     true,
                     EventStatusBadgeStyler.primaryColor(this@EventManagementHubActivity, EventStatusBadgeStyler.fromLabel(event.status)),
                 ).apply {
+                    id = com.thedavelopers.eventqr.R.id.emh_status_badge
                     setPadding(dp(12), dp(4), dp(12), dp(4))
                     background = rounded(Color.WHITE, 16, null, density = resources.displayMetrics.density)
                     layoutParams = LinearLayout.LayoutParams(
@@ -87,6 +90,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 })
 
                 addView(text(event.title, 21, true, Color.WHITE).apply {
+                    id = com.thedavelopers.eventqr.R.id.emh_event_title
                     setPadding(0, dp(8), 0, 0)
                 })
             })
@@ -104,16 +108,24 @@ open class EventManagementHubActivity : AppCompatActivity() {
             dataSourceBanner(load)?.let { body.addView(it) }
 
             body.addView(row().apply {
+                id = com.thedavelopers.eventqr.R.id.emh_stats_row
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
-                addView(summaryCard("Registered", formatCount(registeredCount)))
-                addView(summaryCard("Capacity", formatCount(capacity), Color.parseColor("#94A3B8")))
-                addView(summaryCard("Available", formatCount(available), SUCCESS))
+                addView(summaryCard("Registered", formatCount(registeredCount)).apply {
+                    id = com.thedavelopers.eventqr.R.id.emh_stat_registered
+                })
+                addView(summaryCard("Capacity", formatCount(capacity), Color.parseColor("#94A3B8")).apply {
+                    id = com.thedavelopers.eventqr.R.id.emh_stat_capacity
+                })
+                addView(summaryCard("Available", formatCount(available), SUCCESS).apply {
+                    id = com.thedavelopers.eventqr.R.id.emh_stat_available
+                })
             })
 
             body.addView(section("Event Management").apply {
+                id = com.thedavelopers.eventqr.R.id.emh_section_title
                 setPadding(dp(2), dp(20), dp(2), dp(10))
             })
 
@@ -133,7 +145,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
 
             // Colors keyed by label, not position: inserting/reordering rows must never
             // reshuffle the visual identity of the existing entries.
-            menuItems.forEach { (label, icon, target) ->
+            menuItems.forEachIndexed { index, (label, icon, target) ->
                 val (iconTint, iconBg) = when (label) {
                     "Edit Event Details", "View Event Details" -> Color.parseColor("#2563EB") to Color.parseColor("#DBEAFE")
                     "Staff Assignment" -> Color.parseColor("#4F46E5") to Color.parseColor("#E0E7FF")
@@ -142,13 +154,23 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     "ID Display Settings" -> Color.parseColor("#10B981") to Color.parseColor("#D1FAE5")
                     else -> error("Unexpected Event Management hub row: $label")
                 }
+                val menuId = when (label) {
+                    "Edit Event Details", "View Event Details" -> com.thedavelopers.eventqr.R.id.emh_menu_edit
+                    "Staff Assignment" -> com.thedavelopers.eventqr.R.id.emh_menu_staff
+                    "Scan Purposes" -> com.thedavelopers.eventqr.R.id.emh_menu_scan
+                    "Transaction Rules" -> com.thedavelopers.eventqr.R.id.emh_menu_transaction
+                    "ID Display Settings" -> com.thedavelopers.eventqr.R.id.emh_menu_id
+                    else -> View.generateViewId()
+                }
                 body.addView(
                     menuCard(
                         label = label,
                         iconRes = icon,
                         iconTint = iconTint,
                         iconBg = iconBg,
-                    ) { openOrganizerPage(target, event.id, event.title, viewOnly = label == "View Event Details") },
+                    ) { openOrganizerPage(target, event.id, event.title, viewOnly = label == "View Event Details") }.apply {
+                        id = menuId
+                    },
                 )
             }
         }

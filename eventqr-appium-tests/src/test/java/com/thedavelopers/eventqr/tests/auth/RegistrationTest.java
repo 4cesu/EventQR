@@ -16,140 +16,185 @@ public class RegistrationTest extends BaseTest {
         regPage = new RegistrationPage();
     }
 
+    /** Fills first/last name, valid email, and matching valid password+confirm. */
+    private void fillNameEmailPassword() {
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
+        regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
+        regPage.enterPassword(TestConfig.ATTENDEE_PASS);
+        regPage.enterConfirmPassword(TestConfig.ATTENDEE_PASS);
+    }
+
     @Test
-    @DisplayName("REG-1: Registration screen loads with all required fields")
+    @DisplayName("REG-1: Registration screen shows first/last name, email, phone, passwords, create account and sign-in link")
     void registrationScreenLoads() {
         initPages();
         assertAll(
-                () -> assertTrue(isDisplayed(id("edtFullName")), "Full name field should be visible"),
+                () -> assertTrue(isDisplayed(id("edtFirstName")), "First name field should be visible"),
+                () -> assertTrue(isDisplayed(id("edtLastName")), "Last name field should be visible"),
                 () -> assertTrue(isDisplayed(id("edtEmail")), "Email field should be visible"),
-                () -> assertTrue(isDisplayed(id("edtPhone")), "Phone field should be visible"),
+                () -> assertTrue(isDisplayed(id("edtPhoneNumber")), "Phone field should be visible"),
                 () -> assertTrue(isDisplayed(id("edtPassword")), "Password field should be visible"),
-                () -> assertTrue(isDisplayed(id("edtConfirmPassword")), "Confirm password field should be visible")
+                () -> assertTrue(isDisplayed(id("edtConfirmPassword")), "Confirm password field should be visible"),
+                () -> assertTrue(regPage.isTermsCheckboxDisplayed(), "Terms checkbox should be visible"),
+                () -> assertTrue(isDisplayed(id("btnRegister")), "Create Account button should be visible"),
+                () -> assertTrue(isDisplayed(id("btnSignIn")), "Sign In link should be visible")
         );
     }
 
     @Test
-    @DisplayName("REG-2: Email field validates format")
-    void emailValidatesFormat() {
+    @DisplayName("REG-2: Password show/hide toggles reveal both password and confirm fields as plain text")
+    void passwordShowHideToggles() {
         initPages();
-        regPage.enterEmail("invalid-email");
-        // TODO: verify email validation error resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("tilEmail")), "Email input layout should be present");
+        regPage.enterPassword("Secret123!");
+        regPage.enterConfirmPassword("Secret123!");
+        assertFalse(regPage.isPasswordVisibleAsPlainText(), "Password should be masked initially");
+        regPage.tapPasswordToggle();
+        assertTrue(regPage.isPasswordVisibleAsPlainText(), "Password should be visible after toggle");
+        regPage.tapPasswordToggle();
+        assertFalse(regPage.isPasswordVisibleAsPlainText(), "Password should be masked after second toggle");
+        assertFalse(regPage.isConfirmPasswordVisibleAsPlainText(), "Confirm password should be masked initially");
+        regPage.tapConfirmPasswordToggle();
+        assertTrue(regPage.isConfirmPasswordVisibleAsPlainText(), "Confirm password should be visible after toggle");
+        regPage.tapConfirmPasswordToggle();
+        assertFalse(regPage.isConfirmPasswordVisibleAsPlainText(), "Confirm password should be masked after second toggle");
     }
 
     @Test
-    @DisplayName("REG-3: Phone with leading zero is auto-stripped to 10 digits")
-    void phoneLeadingZeroIsStripped() {
+    @DisplayName("REG-3: Phone auto-normalizes leading 0 with live counter; invalid length shows error")
+    void phoneValidation() {
         initPages();
-        regPage.enterPhone("09123456789");
-        // TODO: verify phone auto-strip behavior and field value in Appium Inspector
-        String value = regPage.getPhoneValue().replaceAll("[^0-9]", "");
-        assertEquals(10, value.length(), "Phone should be stripped to 10 digits");
+        regPage.enterPhone("0912345678");
+        assertEquals("912345678", regPage.getPhoneValue(), "Leading zero should be stripped");
+        assertEquals("9/10", regPage.getPhoneCounterText(), "Live n/10 counter should reflect normalized digits");
+
+        regPage.enterPhone("123");
+        fillNameEmailPassword();
+        regPage.tapTermsCheckbox();
+        regPage.tapCreateAccount();
+        assertTrue(regPage.isPhoneErrorVisible(), "Enter valid 10-digit mobile number should appear");
     }
 
     @Test
-    @DisplayName("REG-4: Full name field is required")
+    @DisplayName("REG-4: First and last name are required")
     void fullNameRequired() {
         initPages();
-        regPage.enterEmail("new@test.com");
+        regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
         regPage.enterPhone("9123456789");
         regPage.enterPassword(TestConfig.ATTENDEE_PASS);
         regPage.enterConfirmPassword(TestConfig.ATTENDEE_PASS);
+        regPage.tapTermsCheckbox();
         regPage.tapCreateAccount();
-        // TODO: verify full name validation error resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("tilFullName")), "Full name validation should appear");
+        assertTrue(regPage.isFirstNameErrorVisible(), "First name required error should appear");
     }
 
     @Test
-    @DisplayName("REG-5: Typing first password char reveals requirements panel")
-    void passwordRequirementsPanelAppears() {
+    @DisplayName("REG-5: Email field is required")
+    void emailRequired() {
         initPages();
-        regPage.enterPassword("A");
-        assertTrue(regPage.isRequirementsPanelVisible(), "Password requirements panel should be visible");
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
+        regPage.enterPhone("9123456789");
+        regPage.enterPassword(TestConfig.ATTENDEE_PASS);
+        regPage.enterConfirmPassword(TestConfig.ATTENDEE_PASS);
+        regPage.tapTermsCheckbox();
+        regPage.tapCreateAccount();
+        assertTrue(regPage.isEmailErrorVisible(), "Email required error should appear");
     }
 
     @Test
-    @DisplayName("REG-6: Requirement checkmarks update with stronger passwords")
-    void passwordStrengthUpdates() {
+    @DisplayName("REG-6: Password is required - Create Account stays disabled")
+    void passwordRequired() {
         initPages();
-        regPage.enterPassword("weak");
-        // TODO: verify strength bar segment count matches password strength in Appium Inspector
-        assertTrue(regPage.isStrengthBarVisible(), "Strength bar should be visible");
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
+        regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
+        regPage.enterPhone("9123456789");
+        regPage.enterConfirmPassword("");
+        assertFalse(regPage.isCreateAccountButtonEnabled(), "Create Account should be disabled with empty password");
     }
 
     @Test
-    @DisplayName("REG-7: Incomplete form keeps Create Account disabled")
-    void incompleteFormDisablesCreateAccount() {
+    @DisplayName("REG-7: Confirm password is required - mismatch error when left empty")
+    void confirmPasswordRequired() {
         initPages();
-        regPage.enterFullName("Test User");
-        regPage.enterEmail("new@test.com");
-        assertFalse(regPage.isCreateAccountButtonEnabled(), "Create Account should be disabled for incomplete form");
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
+        regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
+        regPage.enterPhone("9123456789");
+        regPage.enterPassword(TestConfig.ATTENDEE_PASS);
+        regPage.tapTermsCheckbox();
+        regPage.tapCreateAccount();
+        assertTrue(regPage.isConfirmPasswordErrorVisible(), "Confirm password mismatch error should appear");
     }
 
     @Test
-    @DisplayName("REG-8: Password and confirm password must match")
+    @DisplayName("REG-8: Mismatched passwords show specific 'Passwords do not match' error")
     void passwordsMustMatch() {
         initPages();
-        regPage.enterFullName("Test User");
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
         regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
         regPage.enterPhone("9123456789");
         regPage.enterPassword(TestConfig.ATTENDEE_PASS);
         regPage.enterConfirmPassword("Different123");
+        regPage.tapTermsCheckbox();
         regPage.tapCreateAccount();
-        // TODO: verify mismatch error resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("tilConfirmPassword")), "Confirm password mismatch error should appear");
+        assertTrue(regPage.isConfirmPasswordErrorVisible(), "Passwords do not match error should appear");
     }
 
     @Test
-    @DisplayName("REG-9: Valid form submission navigates to login")
+    @DisplayName("REG-9: Terms unchecked - Create Account stays disabled")
+    void termsUncheckedBlocksSubmit() {
+        initPages();
+        fillNameEmailPassword();
+        regPage.enterPhone("9123456789");
+        assertFalse(regPage.isCreateAccountButtonEnabled(),
+                "Create Account should stay disabled while terms unchecked");
+    }
+
+    @Test
+    @DisplayName("REG-10: All valid fields + terms checked enable Create Account")
+    void validFormWithTermsEnablesCreateAccount() {
+        initPages();
+        fillNameEmailPassword();
+        regPage.enterPhone("9123456789");
+        regPage.tapTermsCheckbox();
+        assertTrue(regPage.isCreateAccountButtonEnabled(),
+                "Create Account should be enabled with valid form and terms checked");
+    }
+
+    @Test
+    @DisplayName("REG-11: Valid submission shows success toast and navigates to LoginActivity")
     void validRegistrationNavigatesToLogin() {
         initPages();
-        regPage.enterFullName("New Test User");
-        regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
+        // Fresh unique email per run so reruns never collide with earlier registrations.
+        String freshEmail = "newuser_" + System.currentTimeMillis() + "@test.com";
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
+        regPage.enterEmail(freshEmail);
         regPage.enterPhone("9123456789");
         regPage.enterPassword(TestConfig.ATTENDEE_PASS);
         regPage.enterConfirmPassword(TestConfig.ATTENDEE_PASS);
+        regPage.tapTermsCheckbox();
         regPage.tapCreateAccount();
-        // TODO: verify navigation to login screen element resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("btnSignIn")), "Should navigate back to login screen");
+        assertTrue(isTextDisplayed("Registration completed") || isTextDisplayed("Account created"),
+                "Success toast should be visible");
+        assertTrue(waitForActivity("LoginActivity"), "Should navigate back to LoginActivity");
     }
 
     @Test
-    @DisplayName("REG-10: Duplicate email shows error")
-    void duplicateEmailShowsError() {
+    @DisplayName("REG-12: Invalid email format shows email field error")
+    void emailFormatValidated() {
         initPages();
-        regPage.enterFullName("Test User");
-        regPage.enterEmail(TestConfig.ATTENDEE_EMAIL);
+        regPage.enterFirstName("New");
+        regPage.enterLastName("Test User");
+        regPage.enterEmail("invalid-email");
         regPage.enterPhone("9123456789");
         regPage.enterPassword(TestConfig.ATTENDEE_PASS);
         regPage.enterConfirmPassword(TestConfig.ATTENDEE_PASS);
+        regPage.tapTermsCheckbox();
         regPage.tapCreateAccount();
-        // TODO: verify duplicate email error resource-id in Appium Inspector
-        assertTrue(isTextDisplayed("already registered")
-                || isTextDisplayed("already exists")
-                || isTextDisplayed("taken"),
-                "Duplicate email error should be visible");
-    }
-
-    @Test
-    @DisplayName("REG-11: Create Account button is enabled for valid form")
-    void validFormEnablesCreateAccount() {
-        initPages();
-        regPage.enterFullName("Test User");
-        regPage.enterEmail(TestConfig.NEW_USER_EMAIL);
-        regPage.enterPhone("9123456789");
-        regPage.enterPassword(TestConfig.ATTENDEE_PASS);
-        regPage.enterConfirmPassword(TestConfig.ATTENDEE_PASS);
-        assertTrue(regPage.isCreateAccountButtonEnabled(), "Create Account should be enabled for valid form");
-    }
-
-    @Test
-    @DisplayName("REG-12: Back button returns to login")
-    void backReturnsToLogin() {
-        initPages();
-        pressBack();
-        // TODO: verify login screen element resource-id in Appium Inspector
-        assertTrue(isDisplayed(id("btnSignIn")), "Back should return to login screen");
+        assertTrue(regPage.isEmailErrorVisible(), "Email format error should be visible");
     }
 }

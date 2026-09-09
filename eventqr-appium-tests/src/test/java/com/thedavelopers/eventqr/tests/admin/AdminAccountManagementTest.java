@@ -4,9 +4,11 @@ import com.thedavelopers.eventqr.base.BaseTest;
 import com.thedavelopers.eventqr.config.TestConfig;
 import com.thedavelopers.eventqr.pages.AdminDashboardPage;
 import com.thedavelopers.eventqr.pages.LoginPage;
+import io.appium.java_client.AppiumBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,9 +17,11 @@ public class AdminAccountManagementTest extends BaseTest {
     private AdminDashboardPage dash;
 
     @BeforeEach
-    void loginAsAdminAndOpenAccounts() {
+    void loginAsSuperAdminAndOpenAccounts() {
         LoginPage login = new LoginPage();
-        login.login(TestConfig.ADMIN_EMAIL, TestConfig.ADMIN_PASS);
+        // buttonCreateAdminAccount is only rendered for SUPER_ADMIN accounts
+        // (AdminAccountManagementActivity.isSuperAdmin()); the CAA tests depend on it.
+        login.login(TestConfig.SUPERADMIN_EMAIL, TestConfig.SUPERADMIN_PASS);
         dash = new AdminDashboardPage();
         dash.openAccountsTab();
     }
@@ -77,12 +81,34 @@ public class AdminAccountManagementTest extends BaseTest {
     @DisplayName("CAA-3: Valid form submits new admin account")
     void validFormSubmitsNewAdmin() {
         tap(id("buttonCreateAdminAccount"));
+        // Every required field must be filled: the form blocks submit on a
+        // blank last name and an invalid phone (CreateAdminAccountActivity +
+        // Validators.isValidPhoneNumber).
+        scrollToField("inputAdminFirstName");
         type(id("inputAdminFirstName"), "New Admin");
+        scrollToField("inputAdminLastName");
+        type(id("inputAdminLastName"), "Tester");
+        scrollToField("inputAdminEmail");
         type(id("inputAdminEmail"), TestConfig.NEW_USER_EMAIL);
+        scrollToField("inputAdminPhone");
+        type(id("inputAdminPhone"), "+639123456789");
+        scrollToField("inputAdminPassword");
         type(id("inputAdminPassword"), TestConfig.ADMIN_PASS);
+        scrollToField("inputAdminConfirmPassword");
         type(id("inputAdminConfirmPassword"), TestConfig.ADMIN_PASS);
+        scrollToField("btnCreateAdminAccount");
         tap(id("btnCreateAdminAccount"));
-        assertTrue(isTextDisplayed("created") || isTextDisplayed("success") || isTextDisplayed("Added"),
-                "New admin account creation should complete");
+        // Success finishes the form back on the account-list activity (the
+        // success toast text is backend-driven, so assert the deterministic
+        // navigation instead of matching on toast text).
+        assertTrue(waitForActivity("AdminAccountManagementActivity"),
+                "New admin account creation should complete and return to the account list");
+    }
+
+    private void scrollToField(String resourceId) {
+        String selector = "new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView("
+                + "new UiSelector().resourceId(\"" + id(resourceId) + "\"))";
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                AppiumBy.androidUIAutomator(selector)));
     }
 }
