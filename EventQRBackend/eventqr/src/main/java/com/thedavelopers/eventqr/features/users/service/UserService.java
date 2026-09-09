@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.users.service;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -15,7 +16,9 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionLog
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
+import com.thedavelopers.eventqr.features.users.model.entity.UserTokenRevocation;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
+import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
@@ -35,15 +38,18 @@ public class UserService implements AttendeeDirectoryPort {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final TransactionLogRepository transactionLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserTokenRevocationRepository userTokenRevocationRepository;
 
     public UserService(UserProfileRepository userProfileRepository,
                        EventRegistrationRepository eventRegistrationRepository,
                        TransactionLogRepository transactionLogRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       UserTokenRevocationRepository userTokenRevocationRepository) {
         this.userProfileRepository = userProfileRepository;
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.transactionLogRepository = transactionLogRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userTokenRevocationRepository = userTokenRevocationRepository;
     }
 
     public UserResponse create(UserRequest request) {
@@ -97,7 +103,16 @@ public class UserService implements AttendeeDirectoryPort {
     public UserResponse updateStatus(UUID userId, AccountStatus status) {
         UserProfile userProfile = requireUser(userId);
         userProfile.setStatus(status);
-        return toResponse(userProfileRepository.save(userProfile));
+        UserProfile saved = userProfileRepository.save(userProfile);
+        if (status == AccountStatus.INACTIVE || status == AccountStatus.SUSPENDED) {
+            // Kill existing sessions immediately: no 24h grace for a disabled/suspended
+            // account. The marker is DB-backed and intentionally retained, so tokens
+            // issued before this disable stay dead even after a later re-enable.
+            upsertTokenRevocation(userId, Instant.now());
+        }
+        // ACTIVE is deliberately a no-op for the revocation table — enabling must never
+        // resurrect pre-disable tokens.
+        return toResponse(saved);
     }
 
     public UserResponse changePassword(UUID userId, String currentPassword, String newPassword) {
@@ -116,6 +131,18 @@ public class UserService implements AttendeeDirectoryPort {
         UserProfile userProfile = requireUser(userId);
         userProfile.setStatus(AccountStatus.SUSPENDED);
         userProfileRepository.save(userProfile);
+        upsertTokenRevocation(userId, Instant.now());
+    }
+
+    /**
+     * Records (or refreshes) the revocation marker for a user. The row survives
+     * re-enable on purpose: {@code iat <= revoked_at} tokens must never come back.
+     */
+    private void upsertTokenRevocation(UUID userId, Instant revokedAt) {
+        UserTokenRevocation revocation = userTokenRevocationRepository.findByUserId(userId)
+                .orElseGet(() -> new UserTokenRevocation(userId, revokedAt));
+        revocation.setRevokedAt(revokedAt);
+        userTokenRevocationRepository.save(revocation);
     }
 
     @Transactional(readOnly = true)
