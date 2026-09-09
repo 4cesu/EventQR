@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
@@ -23,6 +24,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.attendee.AttendeeBottomNavItem
 import com.thedavelopers.eventqr.features.attendee.AttendeeRepository
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_CAPACITY
@@ -39,6 +41,7 @@ import com.thedavelopers.eventqr.features.attendee.configureAttendeeBottomNav
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
+import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -124,6 +127,11 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         if (refreshBadgeOnResume) {
             refreshBadgeOnResume = false
             presenter.loadDashboard()
+        }
+        // Re-issue the access token so a role change (e.g. upgraded to organizer after an
+        // event request approval) is reflected without requiring a logout/login.
+        lifecycleScope.launch {
+            AuthRepository(this@DashboardActivity).refreshSessionToken()
         }
     }
 

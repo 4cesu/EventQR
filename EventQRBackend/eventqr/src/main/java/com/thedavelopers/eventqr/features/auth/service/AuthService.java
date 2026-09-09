@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.auth.service;
 
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,5 +43,20 @@ public class AuthService {
         String accessToken = jwtService.createToken(userProfile.getId(), userProfile.getEmail(), userProfile.getRole());
         return new LoginResponse(accessToken, userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
                 userProfile.getRole(), "Login successful");
+    }
+
+    /**
+     * Re-issues a session token for an already authenticated user based on the
+     * user's CURRENT role in the database, rather than the (potentially stale)
+     * role embedded in the presented JWT. This lets a user pick up a role change
+     * (e.g. an attendee upgraded to organizer after their event request is approved)
+     * without forcing a logout/login cycle.
+     */
+    public LoginResponse refreshToken(UUID userId) {
+        UserProfile userProfile = userProfileRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("Invalid session"));
+        String accessToken = jwtService.createToken(userProfile.getId(), userProfile.getEmail(), userProfile.getRole());
+        return new LoginResponse(accessToken, userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
+                userProfile.getRole(), "Session refreshed");
     }
 }

@@ -71,6 +71,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(userService.findOne(userId)));
     }
 
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(HttpServletRequest request) {
+        UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        return ResponseEntity.ok(ApiResponse.success("Session refreshed", authService.refreshToken(userId)));
+    }
+
     @PatchMapping("/me/password")
     public ResponseEntity<ApiResponse<UserResponse>> changePassword(HttpServletRequest request,
                                                                     @Valid @RequestBody PasswordChangeRequest body) {

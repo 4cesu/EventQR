@@ -113,11 +113,19 @@ open class LandingActivity : AppCompatActivity() {
 
     private fun refreshSessionAndNavigate() {
         lifecycleScope.launch {
-            when (val result = AuthRepository(this@LandingActivity).getAuthMe()) {
+            val repo = AuthRepository(this@LandingActivity)
+            // Re-issue the access token so the client reflects the CURRENT role in the
+            // database (e.g. an attendee upgraded to organizer after approval) instead of
+            // the stale role embedded in the old JWT. Fall back to the cached session if
+            // the refresh fails (e.g. offline).
+            when (val refreshed = repo.refreshSessionToken()) {
                 is NetworkResult.Success -> {
-                    sessionManager.saveRole(result.data.role)
-                    sessionManager.updateProfile(result.data.fullName, result.data.phoneNumber)
-                    navigateToDashboard(result.data.role?.name)
+                    repo.getAuthMe().let { me ->
+                        if (me is NetworkResult.Success) {
+                            sessionManager.updateProfile(me.data.fullName, me.data.phoneNumber)
+                        }
+                    }
+                    navigateToDashboard(refreshed.data.role?.name)
                 }
                 is NetworkResult.Error -> navigateToDashboard(sessionManager.getUserRole())
                 NetworkResult.Loading -> navigateToDashboard(sessionManager.getUserRole())
