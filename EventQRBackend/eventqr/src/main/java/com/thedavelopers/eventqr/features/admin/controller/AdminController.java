@@ -157,8 +157,8 @@ public class AdminController {
         if (userService.hasDependentRecords(userId)) {
             throw new BadRequestException("Account has transaction history, cannot be deleted");
         }
-        userService.hardDelete(userId);
         logAdminAction(request, "ACCOUNT_DELETED", target.fullName(), null, userId);
+        userService.hardDelete(userId);
         return ResponseEntity.ok(ApiResponse.success("Account permanently deleted", null));
     }
 
