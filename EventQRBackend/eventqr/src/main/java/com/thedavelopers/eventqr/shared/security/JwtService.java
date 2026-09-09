@@ -36,6 +36,10 @@ public class JwtService {
      * as long as the token's own remaining lifetime (computed at revocation), so a
      * logged-out client cannot replay a token until natural expiry. Memory is bounded
      * by {@link #MAX_REVOKED_TOKENS} and each entry self-expires.
+     *
+     * <p>Note: account-disable/suspend revocation is DB-backed via
+     * {@link UserTokenRevocationChecker}; per-user markers no longer live in this
+     * class.
      */
     private final Cache<String, Long> revokedTokens = Caffeine.newBuilder()
             .maximumSize(MAX_REVOKED_TOKENS)
@@ -119,10 +123,17 @@ public class JwtService {
         return token != null && revokedTokens.getIfPresent(token) != null;
     }
 
+    /**
+     * Parses and validates the bearer token, returning its claims. Invalid,
+     * expired, or malformed headers throw {@link UnauthorizedException}, mirroring
+     * the other extract/check helpers. Single parse point so filters only ever
+     * parse a token once per request.
+     */
+    public Claims extractClaimsFromBearer(String authorizationHeader) {
+        return extractClaims(authorizationHeader);
+    }
+
     public UUID extractUserIdFromBearer(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Missing session token");
-        }
         Claims claims = extractClaims(authorizationHeader);
         String userId = claims.get("userId", String.class);
         if (userId == null || userId.isBlank()) {
@@ -132,7 +143,11 @@ public class JwtService {
     }
 
     public AccountRole extractRoleFromBearer(String authorizationHeader) {
-        Claims claims = extractClaims(authorizationHeader);
+        return extractRoleFrom(extractClaims(authorizationHeader));
+    }
+
+    /** Role lookup from already-parsed claims; mirrors {@link #extractRoleFromBearer(String)}. */
+    public AccountRole extractRoleFrom(Claims claims) {
         String role = claims.get("role", String.class);
         if (role == null || role.isBlank()) {
             throw new UnauthorizedException("Invalid or expired session");

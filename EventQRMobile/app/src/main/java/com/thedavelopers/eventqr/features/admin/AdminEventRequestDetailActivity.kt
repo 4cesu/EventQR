@@ -370,6 +370,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
     private fun toFriendlyError(message: String): String {
         val normalized = message.lowercase()
         return when {
+            normalized.contains("disabled") || normalized.contains("suspend") -> "Account is disabled. Contact support."
             normalized.contains("401") || normalized.contains("unauthorized") -> "Session expired. Please sign in again."
             normalized.contains("403") || normalized.contains("forbidden") || normalized.contains("admin access") -> "Admin access required."
             normalized.contains("404") || normalized.contains("not found") -> "Request not found."

@@ -10,6 +10,7 @@ import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
+import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.UnauthorizedException;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -40,6 +41,7 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), userProfile.getPasswordHash())) {
             throw new UnauthorizedException("Invalid email or password");
         }
+        assertUsableLogin(userProfile);
         String accessToken = jwtService.createToken(userProfile.getId(), userProfile.getEmail(), userProfile.getRole());
         return new LoginResponse(accessToken, userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
                 userProfile.getRole(), "Login successful");
@@ -55,8 +57,21 @@ public class AuthService {
     public LoginResponse refreshToken(UUID userId) {
         UserProfile userProfile = userProfileRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("Invalid session"));
+        assertUsableLogin(userProfile);
         String accessToken = jwtService.createToken(userProfile.getId(), userProfile.getEmail(), userProfile.getRole());
         return new LoginResponse(accessToken, userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
                 userProfile.getRole(), "Session refreshed");
+    }
+
+    /**
+     * Rejects login/session-refresh for accounts that have been disabled or suspended.
+     * PENDING is intentionally not blocked here: no current registration flow sets a
+     * user to PENDING, so it never delineates an unusable account today.
+     */
+    private void assertUsableLogin(UserProfile userProfile) {
+        if (userProfile.getStatus() == AccountStatus.INACTIVE
+                || userProfile.getStatus() == AccountStatus.SUSPENDED) {
+            throw new UnauthorizedException("Account is disabled. Contact support.");
+        }
     }
 }

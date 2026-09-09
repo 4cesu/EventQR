@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.features.registrations.repository.EventRegistra
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
+import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 
@@ -33,6 +34,8 @@ class UserServiceChangeRoleTest {
     private TransactionLogRepository transactionLogRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private UserTokenRevocationRepository userTokenRevocationRepository;
 
     private UserService userService;
 
@@ -45,7 +48,7 @@ class UserServiceChangeRoleTest {
     @BeforeEach
     void setUp() {
         userService = new UserService(userProfileRepository, eventRegistrationRepository,
-                transactionLogRepository, passwordEncoder);
+                transactionLogRepository, passwordEncoder, userTokenRevocationRepository);
         adminId = UUID.randomUUID();
         superAdminId = UUID.randomUUID();
         targetAttendeeId = UUID.randomUUID();
