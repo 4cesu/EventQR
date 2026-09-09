@@ -299,9 +299,6 @@ class OrganizerRepository(private val context: Context) {
     suspend fun reviewEvent(eventId: String, request: EventApprovalRequest) = safeApiCall { apiService.reviewEvent(eventId, request) }
     suspend fun activateEvent(eventId: String) = safeApiCall { apiService.activateEvent(eventId) }
 
-    suspend fun getUsers() = safeApiCall { apiService.getUsers() }
-    suspend fun createUser(request: UserRequest) = safeApiCall { apiService.createUser(request) }
-    suspend fun changeUserRole(userId: String, role: com.thedavelopers.eventqr.core.api.dto.AccountRole) = safeApiCall { apiService.changeUserRole(userId, role) }
 
     suspend fun getRegistrationsByEvent(eventId: String): NetworkResult<List<RegistrationResponse>> =
         when (val result = safeApiCall { apiService.getRegistrationsByEvent(eventId) }) {
