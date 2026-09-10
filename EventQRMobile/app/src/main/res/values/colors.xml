@@ -13,6 +13,7 @@
     <color name="text_primary">#14151A</color>
     <color name="text_secondary">#5B5F6B</color>
     <color name="text_disabled">#A0A4AD</color>
+    <color name="filter_label">#4B5563</color>
 
     <!-- Semantic -->
     <color name="success">#1E8E5A</color>

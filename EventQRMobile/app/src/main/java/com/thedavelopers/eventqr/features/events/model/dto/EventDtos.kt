@@ -62,6 +62,9 @@ data class AttendeeEventResponse(
     val status: EventStatus? = null,
     val rewardsEnabled: Boolean = false,
     val organizerUserId: UUID? = null,
+    // Backend-derived flag; nullable so reflective Gson (no Kotlin adapter) tolerates
+    // a missing/explicit-null field — treat null as "not owned" (default false).
+    val isOwnedByCurrentUser: Boolean? = null,
 )
 
 data class EventAvailabilityResponse(

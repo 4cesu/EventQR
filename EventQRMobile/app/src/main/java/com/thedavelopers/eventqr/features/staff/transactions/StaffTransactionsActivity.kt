@@ -280,11 +280,46 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             ?.atZone(manilaZone)
             ?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH))
             .orEmpty()
+        applyFilterCardState()
     }
 
     private fun bindPurposeHeader() {
         val selected = purposeOptions.firstOrNull { it.id == selectedPurposeId }
         purposeTitleView.text = selected?.label ?: "All Purposes"
+        applyFilterCardState()
+    }
+
+    /**
+     * Swaps the filter cards between the neutral outlined state (default) and the
+     * filled brand chip state (a specific option is selected). Dropdown wiring and
+     * title text are untouched — only background/foreground styling is toggled.
+     */
+    private fun applyFilterCardState() {
+        val eventSelected = selectedEventId != null
+        val purposeSelected = selectedPurposeId != null
+
+        eventCard.setBackgroundResource(
+            if (eventSelected) R.drawable.bg_staff_filter_card_selected else R.drawable.bg_staff_filter_card_neutral
+        )
+        eventTitleView.setTextColor(getColor(if (eventSelected) R.color.surface else R.color.text_primary))
+        eventDateView.setTextColor(getColor(if (eventSelected) R.color.brand_on_primary_muted else R.color.filter_label))
+        eventChevron.setTextColor(getColor(if (eventSelected) R.color.brand_on_primary else R.color.text_secondary))
+        findViewById<View>(R.id.viewEventDot).setBackgroundResource(
+            if (eventSelected) R.drawable.bg_staff_scanner_status_dot else R.drawable.bg_staff_filter_status_dot_neutral
+        )
+        findViewById<TextView>(R.id.txtStaffTransactionsEventLabel)
+            .setTextColor(getColor(if (eventSelected) R.color.brand_on_primary_muted else R.color.filter_label))
+
+        purposeCard.setBackgroundResource(
+            if (purposeSelected) R.drawable.bg_staff_filter_card_selected else R.drawable.bg_staff_filter_card_neutral
+        )
+        purposeTitleView.setTextColor(getColor(if (purposeSelected) R.color.surface else R.color.text_primary))
+        purposeChevron.setTextColor(getColor(if (purposeSelected) R.color.brand_on_primary else R.color.text_secondary))
+        findViewById<View>(R.id.viewPurposeDot).setBackgroundResource(
+            if (purposeSelected) R.drawable.bg_staff_scanner_status_dot else R.drawable.bg_staff_filter_status_dot_neutral
+        )
+        findViewById<TextView>(R.id.txtStaffTransactionsPurposeLabel)
+            .setTextColor(getColor(if (purposeSelected) R.color.brand_on_primary_muted else R.color.filter_label))
     }
 
     private fun toggleEventPopup() {

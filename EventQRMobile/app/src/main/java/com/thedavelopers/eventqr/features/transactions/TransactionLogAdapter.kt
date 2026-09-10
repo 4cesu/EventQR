@@ -38,7 +38,6 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
     override fun getItemCount(): Int = items.size
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val accentBarView: View = itemView.findViewById(R.id.viewAccentBar)
         private val iconContainer: FrameLayout = itemView.findViewById(R.id.iconContainer)
         private val iconView: ImageView = itemView.findViewById(R.id.imgTypeIcon)
         private val attendeeNameView: TextView = itemView.findViewById(R.id.txtAttendeeName)
@@ -51,11 +50,6 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
         fun bind(item: TransactionResponse) {
             val isApproved = item.transactionResult == TransactionResult.APPROVED
             val brandPrimary = ContextCompat.getColor(itemView.context, R.color.brand_primary)
-
-            // Left accent bar: green APPROVED / red REJECTED
-            accentBarView.setBackgroundResource(
-                if (isApproved) R.drawable.bg_scan_accent_green else R.drawable.bg_scan_accent_red
-            )
 
             // Line 1: attendee name + transaction type label
             attendeeNameView.text = item.attendeeName?.takeIf { it.isNotBlank() } ?: "Attendee"

@@ -6,11 +6,11 @@ import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -160,8 +160,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         savingTransaction = true
-        findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.VISIBLE
+        findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.VISIBLE
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
+        findViewById<Button>(R.id.btnContinueTransaction).text = "Logging..."
 
         MainScope().launch {
             val request = TransactionRequest(
@@ -187,8 +188,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
                 NetworkResult.Loading -> Unit
             }
             savingTransaction = false
-            findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.GONE
+            findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.GONE
             findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
+            applyActionLabels()
         }
     }
 
@@ -199,8 +201,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         savingTransaction = true
-        findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.VISIBLE
+        findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.VISIBLE
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
+        findViewById<Button>(R.id.btnContinueTransaction).text = "Printing..."
 
         MainScope().launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffScanResultActivity)
@@ -263,8 +266,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
                 NetworkResult.Loading -> Unit
             }
             savingTransaction = false
-            findViewById<ProgressBar>(R.id.progressScanResult).visibility = View.GONE
+            findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.GONE
             findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
+            applyActionLabels()
         }
     }
 
