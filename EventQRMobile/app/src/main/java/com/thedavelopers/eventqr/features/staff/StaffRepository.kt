@@ -95,4 +95,8 @@ class StaffRepository(context: Context) {
     suspend fun getNotificationsByRecipient(recipientUserId: String) = safeApiCall { apiService.getNotificationsByRecipient(recipientUserId) }
 
     suspend fun getMyNotifications(): NetworkResult<List<NotificationResponse>> = safeApiCall { apiService.getMyNotifications() }
+
+    suspend fun markNotificationRead(notificationId: String) = safeApiCall { apiService.markNotificationRead(notificationId) }
+
+    suspend fun markAllNotificationsRead() = safeApiCall { apiService.markAllNotificationsRead() }
 }

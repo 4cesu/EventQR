@@ -22,5 +22,6 @@ data class NotificationResponse(
     val relatedTransactionId: UUID? = null,
     val relatedRewardRedemptionId: UUID? = null,
     val readAt: Instant? = null,
+    val createdAt: Instant? = null,
     val notificationType: NotificationType? = null,
 )

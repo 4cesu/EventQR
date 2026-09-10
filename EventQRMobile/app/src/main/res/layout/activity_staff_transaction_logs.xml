@@ -9,7 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@drawable/bg_header_surface_outline"
+        android:background="@drawable/bg_header_brand_primary"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
@@ -23,7 +23,7 @@
             android:maxLines="1"
             android:text="Transaction Logs"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
+            android:textColor="@color/brand_on_primary" />
     </LinearLayout>
 
     <LinearLayout
@@ -32,7 +32,7 @@
         android:layout_height="60dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="18dp"
-        android:background="@drawable/bg_staff_scan_dark_card"
+        android:background="@drawable/bg_staff_filter_brand_card"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
@@ -102,7 +102,7 @@
         android:layout_height="60dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/bg_staff_scan_dark_card"
+        android:background="@drawable/bg_staff_filter_brand_card"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"

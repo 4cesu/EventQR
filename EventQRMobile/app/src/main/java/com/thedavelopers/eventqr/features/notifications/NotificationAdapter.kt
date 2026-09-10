@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
-import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.core.util.RelativeTimeUtils
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 
 class NotificationAdapter(
@@ -50,7 +50,7 @@ class NotificationAdapter(
 
             titleView.text = item.title
             messageView.text = item.message
-            dateTimeView.text = if (item.readAt != null) DateFormatters.formatInstant(item.readAt) else "Not read yet"
+            dateTimeView.text = RelativeTimeUtils.formatRelative(item.createdAt ?: item.readAt)
 
             iconContainer.setBackgroundResource(R.drawable.bg_notification_icon_box)
             when {
