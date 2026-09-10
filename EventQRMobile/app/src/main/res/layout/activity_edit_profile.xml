@@ -111,7 +111,7 @@
                                 app:boxCornerRadiusTopStart="8dp"
                                 app:boxStrokeColor="@color/outline"
                                 android:enabled="false"
-                                app:helperText="Managed by administrator"
+
                                 app:hintTextColor="@color/text_secondary"
                                 app:placeholderTextColor="@color/text_disabled">
 
@@ -141,7 +141,7 @@
                                 app:boxCornerRadiusTopStart="8dp"
                                 app:boxStrokeColor="@color/outline"
                                 android:enabled="false"
-                                app:helperText="Contact support to update"
+
                                 app:hintTextColor="@color/text_secondary"
                                 app:placeholderTextColor="@color/text_disabled">
 

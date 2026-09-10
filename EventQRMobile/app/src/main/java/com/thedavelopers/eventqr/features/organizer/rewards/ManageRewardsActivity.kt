@@ -68,8 +68,6 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
-    private lateinit var eventSummaryTitle: TextView
-    private lateinit var eventSummaryCount: TextView
     private lateinit var rewardsEnabledSwitch: SwitchCompat
     private lateinit var rewardHost: LinearLayout
     private lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -120,31 +118,9 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 selectedEvent = event
                 rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)
                 saveSelectedEventId(event.id)
-                bindEventSummary()
                 loadRewards()
                 refreshRewardsEnabledFromServer()
             })
-        })
-
-        content.addView(LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(12), dp(14), dp(12))
-            background = rounded(Color.parseColor("#EEF2FF"), 12, null, density = resources.displayMetrics.density)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, dp(14), 0, dp(14)) }
-
-            eventSummaryTitle = text(selectedEvent.title, 13, true, PURPLE).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_event_summary_title
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            eventSummaryCount = text("0 rewards", 13, false, MUTED).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_event_summary_count
-            }
-            addView(eventSummaryTitle)
-            addView(eventSummaryCount)
         })
 
         content.addView(card(16).apply {
@@ -180,12 +156,9 @@ open class ManageRewardsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
         }
         content.addView(rewardHost)
-        bindEventSummary()
     }
 
     private fun bindEventSummary() {
-        eventSummaryTitle.text = selectedEvent.title
-        eventSummaryCount.text = if (rewards.size == 1) "1 reward" else "${rewards.size} rewards"
         rewardsEnabledSwitch.setOnCheckedChangeListener(null)
         rewardsEnabledSwitch.isChecked = rewardsEnabled
         rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
