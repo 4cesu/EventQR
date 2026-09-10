@@ -82,9 +82,16 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private fun renderFilteredEvents() {
         val now = Instant.now()
         val filtered = when (selectedFilter) {
-            RegisteredEventFilter.ALL -> allItems
-            RegisteredEventFilter.REGISTERED -> allItems.filter { it.eventStartAt?.isAfter(now) ?: true }
-            RegisteredEventFilter.COMPLETED -> allItems.filter { it.eventStartAt?.isBefore(now) ?: false }
+            RegisteredEventFilter.ALL -> {
+                val ongoing = allItems
+                    .filter { it.eventStartAt?.isAfter(now) != true && it.eventEndAt?.isBefore(now) != true }
+                    .sortedBy { it.eventStartAt }
+                val upcoming = allItems.filter { it.eventStartAt?.isAfter(now) == true }.sortedBy { it.eventStartAt }
+                val completed = allItems.filter { it.eventEndAt?.isBefore(now) == true }.sortedByDescending { it.eventEndAt }
+                ongoing + upcoming + completed
+            }
+            RegisteredEventFilter.REGISTERED -> allItems.filter { it.eventEndAt?.isBefore(now) != true }
+            RegisteredEventFilter.COMPLETED -> allItems.filter { it.eventEndAt?.isBefore(now) == true }
         }
         adapter.submitItems(filtered)
         findViewById<View>(R.id.txtRegisteredEventsEmpty).visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE

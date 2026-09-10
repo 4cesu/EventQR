@@ -77,9 +77,9 @@ public class EventReportGenerationService {
     public EventReportSummaryResponse summary(UUID organizerUserId, UUID eventId) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
+        // Registered = registrations excluding CANCELLED and NO_SHOW — must stay in sync with DashboardService canonical count
         long registered = registrations.stream()
-                .filter(registration -> registration.getStatus() != RegistrationStatus.CANCELLED
-                        && registration.getStatus() != RegistrationStatus.NO_SHOW)
+                .filter(reg -> reg.getStatus().isCountedAsRegistered())
                 .count();
         long checkedIn = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.ENTERED).count();
         long exited = registrations.stream().filter(registration -> registration.getStatus() == RegistrationStatus.EXITED).count();

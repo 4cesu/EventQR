@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.events
 
 import android.content.Context
+import android.util.Log
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -19,6 +20,8 @@ import java.time.Instant
  */
 object EventStatusBadgeStyler {
 
+    private const val TAG = "EventStatusBadgeStyler"
+
     @ColorRes
     fun textColorRes(status: EventStatus): Int = when (status) {
         EventStatus.APPROVED -> R.color.eventqr_event_status_upcoming
@@ -28,6 +31,7 @@ object EventStatusBadgeStyler {
         EventStatus.PENDING_REVIEW -> R.color.eventqr_event_status_pending_review
         EventStatus.REJECTED -> R.color.eventqr_event_status_rejected
         EventStatus.CANCELLED -> R.color.eventqr_event_status_cancelled
+        EventStatus.UNKNOWN -> R.color.eventqr_event_status_unknown
     }
 
     @DrawableRes
@@ -39,6 +43,7 @@ object EventStatusBadgeStyler {
         EventStatus.PENDING_REVIEW -> R.drawable.bg_event_badge_pending_review
         EventStatus.REJECTED -> R.drawable.bg_event_badge_rejected
         EventStatus.CANCELLED -> R.drawable.bg_event_badge_cancelled
+        EventStatus.UNKNOWN -> R.drawable.bg_event_badge_unknown
     }
 
     /** Rounded-square date badge background per status. */
@@ -51,6 +56,7 @@ object EventStatusBadgeStyler {
         EventStatus.PENDING_REVIEW -> R.drawable.bg_dashboard_event_date_pending_review
         EventStatus.REJECTED -> R.drawable.bg_dashboard_event_date_rejected
         EventStatus.CANCELLED -> R.drawable.bg_dashboard_event_date_cancelled
+        EventStatus.UNKNOWN -> R.drawable.bg_dashboard_event_date_unknown
     }
 
     /** Saturated primary/accent color for a status (used for top strips, text, progress bars). */
@@ -58,8 +64,8 @@ object EventStatusBadgeStyler {
         ContextCompat.getColor(context, textColorRes(status))
 
     /** Applies label + pill background + text color to an existing TextView. */
-    fun bind(view: TextView, status: EventStatus) {
-        view.text = displayLabel(status)
+    fun bind(view: TextView, status: EventStatus, rawLabel: String? = null) {
+        view.text = displayLabel(status, rawLabel)
         view.setBackgroundResource(backgroundRes(status))
         view.setTextColor(
             when (status) {
@@ -70,7 +76,7 @@ object EventStatusBadgeStyler {
         )
     }
 
-    fun displayLabel(status: EventStatus): String = when (status) {
+    fun displayLabel(status: EventStatus, rawLabel: String? = null): String = when (status) {
         EventStatus.DRAFT -> "Draft"
         EventStatus.PENDING_REVIEW -> "Pending Review"
         EventStatus.APPROVED -> "Upcoming"
@@ -78,24 +84,30 @@ object EventStatusBadgeStyler {
         EventStatus.ACTIVE -> "Active"
         EventStatus.ENDED -> "Completed"
         EventStatus.CANCELLED -> "Cancelled"
+        EventStatus.UNKNOWN -> if (!rawLabel.isNullOrBlank()) "Status: $rawLabel" else "Status not recognized"
     }
 
     /**
      * Parses a raw backend status string, display label, or raw enum name back into an
      * [EventStatus]. Used by screens that receive a status as a string (e.g. the organizer
-     * MVP events) so they can still reuse the centralized styling. Unknown/empty input
-     * defaults to [EventStatus.APPROVED].
+     * MVP events) so they can still reuse the centralized styling. Unknown/empty input is
+     * logged and mapped to [EventStatus.UNKNOWN], which renders as a neutral gray badge
+     * showing the raw value.
      */
     fun fromLabel(label: String?): EventStatus {
         val l = label?.lowercase() ?: ""
         return when {
             l.contains("completed") || l.contains("ended") -> EventStatus.ENDED
             l.contains("active") || l.contains("ongoing") -> EventStatus.ACTIVE
+            l.contains("upcoming") || l.contains("approved") -> EventStatus.APPROVED
             l.contains("draft") -> EventStatus.DRAFT
             l.contains("pending") || l.contains("review") -> EventStatus.PENDING_REVIEW
             l.contains("reject") -> EventStatus.REJECTED
             l.contains("cancel") -> EventStatus.CANCELLED
-            else -> EventStatus.APPROVED
+            else -> {
+                Log.w(TAG, "Unknown event status label: $label")
+                EventStatus.UNKNOWN
+            }
         }
     }
 
@@ -130,6 +142,7 @@ object EventStatusBadgeStyler {
             EventStatus.PENDING_REVIEW,
             EventStatus.REJECTED,
             EventStatus.CANCELLED,
+            EventStatus.UNKNOWN,
             -> effective
             else -> fromDates(startAt, endAt, now)
         }

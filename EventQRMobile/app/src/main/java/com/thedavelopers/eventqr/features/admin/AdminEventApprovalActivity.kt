@@ -174,26 +174,26 @@ class AdminEventApprovalActivity : AppCompatActivity() {
             .ifBlank { "-" },
         shortDate = DateFormatters.formatInstant(startDateTime),
         venue = venue ?: "TBD",
-        status = status.name.lowercase().replaceFirstChar { it.uppercase() },
+        status = statusDisplayLabel(status.name),
         submittedDate = DateFormatters.formatInstant(createdAt),
         adminRemarks = adminRemarks ?: "No remarks yet.",
         additionalOrganizers = emptyList(),
-        registeredCount = capacity,
-        enteredCount = 0,
-        attendedCount = 0,
-        exitedCount = 0,
-        noShowCount = 0,
-        totalTransactions = 0,
-        successfulScans = 0,
-        rejectedScans = 0,
-        benefitClaims = 0,
-        boothSessionVisits = 0,
-        rewardRedemptions = 0,
-        totalPointsAwarded = 0,
+        registeredCount = capacity.toLong(),
+        enteredCount = 0L,
+        attendedCount = 0L,
+        exitedCount = 0L,
+        noShowCount = 0L,
+        totalTransactions = 0L,
+        successfulScans = 0L,
+        rejectedScans = 0L,
+        benefitClaims = 0L,
+        boothSessionVisits = 0L,
+        rewardRedemptions = 0L,
+        totalPointsAwarded = 0L,
         idTemplateStatus = "Pending",
         rewardsStatus = if (requestedFeatures?.contains("Rewards") == true) "Requested" else "Not requested",
-        staffCount = 0,
-        scanPurposesCount = 0
+        staffCount = 0L,
+        scanPurposesCount = 0L
     )
 
     private fun render() {
@@ -259,7 +259,7 @@ class AdminEventApprovalActivity : AppCompatActivity() {
             addView(text("Submitted Date", 12, true, MUTED))
             addView(text(event.submittedDate, 14, false))
             
-            if (event.status == "Pending") {
+            if (isActionableStatus(event.status)) {
                 addView(spacer(16))
                 val actions = row()
                 actions.addView(primaryButton("Approve", SUCCESS) { showApproveDialog(event) }.apply {
@@ -273,9 +273,10 @@ class AdminEventApprovalActivity : AppCompatActivity() {
                 addView(spacer(12))
                 addView(card(10).apply {
                     elevation = 0f
-                    background = rounded(if (event.status == "Approved") Color.parseColor("#DCFCE7") else Color.parseColor("#FEF2F2"), 10)
-                    addView(text("Admin Remarks:", 12, true, if (event.status == "Approved") SUCCESS else ERROR))
-                    addView(text(event.adminRemarks, 14, false, if (event.status == "Approved") SUCCESS else ERROR))
+                    val approved = event.status.equals("Approved", ignoreCase = true)
+                    background = rounded(if (approved) Color.parseColor("#DCFCE7") else Color.parseColor("#FEF2F2"), 10)
+                    addView(text("Admin Remarks:", 12, true, if (approved) SUCCESS else ERROR))
+                    addView(text(event.adminRemarks, 14, false, if (approved) SUCCESS else ERROR))
                 })
             }
         })
@@ -391,18 +392,34 @@ class AdminEventApprovalActivity : AppCompatActivity() {
         }
 
     private fun badge(value: String): TextView {
-        val color = when (value.lowercase()) {
+        val label = statusDisplayLabel(value)
+        val color = when (label.lowercase()) {
             "approved", "active" -> SUCCESS
-            "pending" -> WARNING
+            "pending", "pending review" -> WARNING
             "rejected" -> ERROR
+            "cancelled" -> ERROR
+            "draft" -> PRIMARY
             else -> PRIMARY
         }
-        return text(value, 12, true, color).apply {
+        return text(label, 12, true, color).apply {
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(6), dp(12), dp(6))
             background = rounded(color and 0x11FFFFFF or 0x11000000, 18, null)
         }
     }
+
+    private fun statusDisplayLabel(status: String): String = when (status.lowercase()) {
+        "pending" -> "Pending"
+        "approved" -> "Approved"
+        "rejected" -> "Rejected"
+        "cancelled" -> "Cancelled"
+        "pending_review", "pending review", "pending-review" -> "Pending Review"
+        "draft" -> "Draft"
+        else -> status.ifBlank { "Unknown" }
+    }
+
+    private fun isActionableStatus(status: String): Boolean =
+        status.equals("Pending", ignoreCase = true)
 
     private fun loadingState(message: String): LinearLayout =
         card(20).apply {

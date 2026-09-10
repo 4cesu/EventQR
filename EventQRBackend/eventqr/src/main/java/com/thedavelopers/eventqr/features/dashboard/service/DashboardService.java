@@ -55,8 +55,10 @@ public class DashboardService {
         Instant now = Instant.now();
         List<EventRegistration> registrations = eventRegistrationRepository.findByAttendeeUserId(userId);
 
+        // Registered = registrations excluding CANCELLED and NO_SHOW — canonical count,
+        // shared by OrganizerService and EventReportGenerationService via RegistrationStatus.isCountedAsRegistered()
         long registeredCount = registrations.stream()
-                .filter(this::isRegistered)
+                .filter(reg -> reg.getStatus().isCountedAsRegistered())
                 .count();
         long availableEventsCount = eventRepository.countByStatusIn(PUBLIC_EVENT_STATUSES);
         long pointsCount = attendeePointBalanceRepository.sumPointsByAttendeeUserId(userId);
@@ -65,11 +67,6 @@ public class DashboardService {
 
         return new DashboardSummary(availableEventsCount, registeredCount, transactionLogRepository.countByAttendeeUserId(userId),
                 pointsCount, unreadNotifications, profile.getFullName(), upcomingEvents);
-    }
-
-    private boolean isRegistered(EventRegistration registration) {
-        RegistrationStatus status = registration.getStatus();
-        return status != RegistrationStatus.CANCELLED && status != RegistrationStatus.NO_SHOW;
     }
 
     private List<DashboardUpcomingEvent> loadUpcomingEvents(Instant now) {

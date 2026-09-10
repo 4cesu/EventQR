@@ -83,6 +83,7 @@
     <color name="eventqr_event_status_pending_review">#F59E0B</color>
     <color name="eventqr_event_status_rejected">#DC2626</color>
     <color name="eventqr_event_status_cancelled">#991B1B</color>
+    <color name="eventqr_event_status_unknown">#475569</color>
 
     <color name="eventqr_event_badge_upcoming_bg">#FEF3C7</color>
     <color name="eventqr_event_badge_active_bg">#D1FAE5</color>
@@ -91,5 +92,6 @@
     <color name="eventqr_event_badge_pending_review_bg">#FDF3D0</color>
     <color name="eventqr_event_badge_rejected_bg">#FEE2E2</color>
     <color name="eventqr_event_badge_cancelled_bg">#FBE3E3</color>
+    <color name="eventqr_event_badge_unknown_bg">#CBD5E1</color>
     <color name="eventqr_event_badge_registered_bg">#EEF2FF</color>
 </resources>

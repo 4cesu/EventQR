@@ -640,8 +640,10 @@ internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
 
 internal fun AppCompatActivity.formatCount(value: Int): String = String.format("%,d", value)
 
+internal fun AppCompatActivity.formatCount(value: Long): String = String.format("%,d", value)
+
 internal fun OrganizerMvpEvent.lifecycleStatus(): String =
-    EventStatusBadgeStyler.displayLabel(EventStatusBadgeStyler.fromLabel(status))
+    EventStatusBadgeStyler.displayLabel(EventStatusBadgeStyler.fromLabel(status), status)
 
 internal fun OrganizerMvpEvent.progressRatio(): Float {
     if (capacity <= 0) return if (registeredCount > 0) 1f else 0f
@@ -661,7 +663,7 @@ internal fun AppCompatActivity.dateBadgeParts(shortDate: String): Pair<String, S
 internal fun AppCompatActivity.statusBadge(status: String): TextView {
     val eventStatus = EventStatusBadgeStyler.fromLabel(status)
     val color = EventStatusBadgeStyler.primaryColor(this, eventStatus)
-    return text(EventStatusBadgeStyler.displayLabel(eventStatus), 12, true, color).apply {
+    return text(EventStatusBadgeStyler.displayLabel(eventStatus, status), 12, true, color).apply {
         setPadding(dp(12), dp(6), dp(12), dp(6))
         background = rounded(color and 0x22FFFFFF or 0x22000000, 16, null, density = resources.displayMetrics.density)
     }

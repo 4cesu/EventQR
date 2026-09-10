@@ -29,6 +29,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private var isSwipeRefreshing = false
+    private var isFirstResume = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +77,15 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         setupPortalSwitcher(sessionManager)
 
+        presenter.loadData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
         presenter.loadData()
     }
 

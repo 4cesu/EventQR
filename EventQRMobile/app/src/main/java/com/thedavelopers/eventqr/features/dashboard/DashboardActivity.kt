@@ -245,7 +245,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             event.eventStartAt,
             event.eventEndAt,
         )
-        EventStatusBadgeStyler.bind(statusView, eventStatus)
+        EventStatusBadgeStyler.bind(statusView, eventStatus, event.status)
         applyEventStatusUi(eventStatus, progressBar)
         dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(eventStatus))
 
