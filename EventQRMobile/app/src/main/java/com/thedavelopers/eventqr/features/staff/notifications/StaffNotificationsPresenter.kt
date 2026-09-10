@@ -1,6 +1,7 @@
-package com.thedavelopers.eventqr.features.staff
+package com.thedavelopers.eventqr.features.staff.notifications
 
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.features.staff.StaffRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

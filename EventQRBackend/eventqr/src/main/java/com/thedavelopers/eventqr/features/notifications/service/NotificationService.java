@@ -56,6 +56,17 @@ public class NotificationService {
         return toResponse(notificationRepository.save(notification));
     }
 
+    public NotificationResponse createStaffRemovalNotification(UUID eventId, UUID recipientUserId, String eventTitle, String organizerName) {
+        Notification notification = new Notification();
+        notification.setEventId(eventId);
+        notification.setRecipientUserId(recipientUserId);
+        notification.setNotificationType(NotificationType.STAFF_ASSIGNMENT);
+        notification.setTitle("Removed from " + eventTitle);
+        notification.setMessage("You've been removed as staff for " + eventTitle + " by " + organizerName);
+        notification.setStatus(NotificationStatus.SENT);
+        return toResponse(notificationRepository.save(notification));
+    }
+
     public NotificationResponse findOne(UUID notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));

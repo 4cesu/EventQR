@@ -1,4 +1,4 @@
-package com.thedavelopers.eventqr.features.staff
+package com.thedavelopers.eventqr.features.staff.notifications
 
 import android.os.Bundle
 import android.view.View
@@ -16,6 +16,7 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.notifications.NotificationAdapter
+import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 
 open class StaffNotificationsActivity : AppCompatActivity(), StaffNotificationsContract.View {

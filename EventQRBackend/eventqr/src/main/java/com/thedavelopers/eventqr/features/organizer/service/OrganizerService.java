@@ -437,13 +437,27 @@ public class OrganizerService {
     }
 
     public void removeStaff(UUID organizerUserId, UUID eventId, UUID assignmentId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+        Event event = requireOrganizerEvent(organizerUserId, eventId);
         EventStaffAssignment assignment = staffAssignmentRepository.findById(assignmentId)
                 .filter(item -> item.getEventId().equals(eventId))
                 .or(() -> staffAssignmentRepository.findByEventIdAndStaffUserId(eventId, assignmentId))
                 .orElseThrow(() -> new ResourceNotFoundException("Staff assignment not found for event"));
+
+        boolean wasActive = assignment.isActive();
         assignment.setActive(false);
         staffAssignmentRepository.save(assignment);
+
+        if (wasActive) {
+            UserProfile organizerProfile = userProfileRepository.findById(organizerUserId).orElse(null);
+            String organizerName = organizerProfile == null ? "Organizer" : organizerProfile.getFullName();
+            try {
+                notificationService.createStaffRemovalNotification(
+                        eventId, assignment.getStaffUserId(), event.getTitle(), organizerName);
+                log.debug("Staff removal notification created eventId={} staffUserId={}", eventId, assignment.getStaffUserId());
+            } catch (Exception ex) {
+                log.error("Failed to create staff removal notification eventId={} staffUserId={}", eventId, assignment.getStaffUserId(), ex);
+            }
+        }
     }
 
     @Transactional(readOnly = true)

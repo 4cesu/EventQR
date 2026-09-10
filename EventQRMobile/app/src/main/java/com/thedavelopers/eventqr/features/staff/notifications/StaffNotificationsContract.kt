@@ -1,4 +1,4 @@
-package com.thedavelopers.eventqr.features.staff
+package com.thedavelopers.eventqr.features.staff.notifications
 
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 
