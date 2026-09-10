@@ -91,6 +91,12 @@ public class EventService implements EventLookupPort {
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId)));
     }
 
+    public AttendeeEventResponse findAttendeeEvent(UUID eventId, UUID currentUserId) {
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+        return toAttendeeResponse(event, currentUserId);
+    }
+
     public EventAvailabilityResponse availability(UUID eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
@@ -143,26 +149,26 @@ public class EventService implements EventLookupPort {
         return toResponse(eventRepository.save(event));
     }
 
-    public List<AttendeeEventResponse> findAttendeeVisibleEvents() {
+    public List<AttendeeEventResponse> findAttendeeVisibleEvents(UUID currentUserId) {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(PUBLIC_EVENT_STATUSES).stream()
-            .map(this::toAttendeeResponse)
+            .map(e -> toAttendeeResponse(e, currentUserId))
             .toList();
     }
 
-    @Cacheable(cacheNames = "events", key = "'attendee-visible:' + (#pageable.pageNumber ?: 0) + ':' + (#pageable.pageSize ?: 20)")
-    public Page<AttendeeEventResponse> findAttendeeVisibleEvents(Pageable pageable) {
-        return eventRepository.findByStatusIn(PUBLIC_EVENT_STATUSES, pageable).map(this::toAttendeeResponse);
+    @Cacheable(cacheNames = "events", key = "'attendee-visible:' + #currentUserId + ':' + (#pageable.pageNumber ?: 0) + ':' + (#pageable.pageSize ?: 20)")
+    public Page<AttendeeEventResponse> findAttendeeVisibleEvents(UUID currentUserId, Pageable pageable) {
+        return eventRepository.findByStatusIn(PUBLIC_EVENT_STATUSES, pageable).map(e -> toAttendeeResponse(e, currentUserId));
     }
 
-    public List<AttendeeEventResponse> findAttendeeBrowseEvents() {
+    public List<AttendeeEventResponse> findAttendeeBrowseEvents(UUID currentUserId) {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(ATTENDEE_BROWSE_STATUSES).stream()
-            .map(this::toAttendeeResponse)
+            .map(e -> toAttendeeResponse(e, currentUserId))
             .toList();
     }
 
-    @Cacheable(cacheNames = "events", key = "'attendee-browse:' + (#pageable.pageNumber ?: 0) + ':' + (#pageable.pageSize ?: 20)")
-    public Page<AttendeeEventResponse> findAttendeeBrowseEvents(Pageable pageable) {
-        return eventRepository.findByStatusIn(ATTENDEE_BROWSE_STATUSES, pageable).map(this::toAttendeeResponse);
+    @Cacheable(cacheNames = "events", key = "'attendee-browse:' + #currentUserId + ':' + (#pageable.pageNumber ?: 0) + ':' + (#pageable.pageSize ?: 20)")
+    public Page<AttendeeEventResponse> findAttendeeBrowseEvents(UUID currentUserId, Pageable pageable) {
+        return eventRepository.findByStatusIn(ATTENDEE_BROWSE_STATUSES, pageable).map(e -> toAttendeeResponse(e, currentUserId));
     }
 
     @Override
@@ -206,7 +212,7 @@ public class EventService implements EventLookupPort {
                 event.getRejectionReason());
     }
 
-    private AttendeeEventResponse toAttendeeResponse(Event event) {
+    private AttendeeEventResponse toAttendeeResponse(Event event, UUID currentUserId) {
         return new AttendeeEventResponse(
             event.getId(),
             event.getTitle(),
@@ -220,7 +226,8 @@ public class EventService implements EventLookupPort {
             safeCount(event.getCapacity()),
             safeCount(event.getCurrentAttendeeCount()),
             event.getStatus(),
-            event.getOrganizerUserId()
+            event.getOrganizerUserId(),
+            currentUserId != null && currentUserId.equals(event.getOrganizerUserId())
         );
     }
 
