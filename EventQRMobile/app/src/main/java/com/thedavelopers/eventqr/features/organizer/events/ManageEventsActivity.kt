@@ -150,7 +150,15 @@ open class ManageEventsActivity : AppCompatActivity() {
     private fun getFilteredByStatus(): List<OrganizerMvpEvent> {
         val approved = allEvents.approvedOnly()
         return when (selectedFilter) {
-            "All" -> approved
+            "All" -> {
+                val active = approved.filter { it.lifecycleStatus() == "Active" }
+                    .sortedBy { parseEventStartDateTime(it) }
+                val upcoming = approved.filter { it.lifecycleStatus() == "Upcoming" }
+                    .sortedBy { parseEventStartDateTime(it) }
+                val completed = approved.filter { it.lifecycleStatus() == "Completed" }
+                    .sortedByDescending { parseEventStartDateTime(it) }
+                active + upcoming + completed
+            }
             "Upcoming" -> approved.filter { it.lifecycleStatus() == "Upcoming" }
             "Active" -> approved.filter { it.lifecycleStatus() == "Active" }
             "Completed" -> approved.filter { it.lifecycleStatus() == "Completed" }

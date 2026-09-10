@@ -150,7 +150,11 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                         return@launch
                     }
                     bindEventHeader()
-                    refreshTransactions()
+                    if (selectedEventId == null) {
+                        showPromptState()
+                    } else {
+                        refreshTransactions()
+                    }
                 }
                 is NetworkResult.Error -> {
                     renderTransactions(emptyList())
@@ -163,13 +167,38 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     }
 
     private fun refreshTransactions() {
+        if (selectedEventId == null) {
+            showPromptState()
+            return
+        }
         currentPage = 0
         isLastPage = false
         allItems.clear()
+        setPurposeCardEnabled(true)
         loadPage()
     }
 
+    private fun showPromptState() {
+        skeletonLoading.visibility = View.GONE
+        swipeRefresh.isRefreshing = false
+        txtTotalScans.text = "0"
+        txtSuccessfulScans.text = "0"
+        txtRejectedScans.text = "0"
+        adapter.submitItems(emptyList())
+        txtEmptyState.text = "Select an event to view its transaction logs."
+        txtEmptyState.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+        setPurposeCardEnabled(false)
+    }
+
+    private fun setPurposeCardEnabled(enabled: Boolean) {
+        purposeCard.isClickable = enabled
+        purposeCard.isEnabled = enabled
+        purposeCard.alpha = if (enabled) 1f else 0.5f
+    }
+
     private fun loadPage() {
+        if (selectedEventId == null) return
         MainScope().launch {
             isLoadingMore = currentPage > 0
             if (!isLoadingMore) {
@@ -246,7 +275,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     private fun bindEventHeader() {
         val selected = assignedEvents.firstOrNull { it.eventId.toString() == selectedEventId }
-        eventTitleView.text = selected?.title ?: "All Events"
+        eventTitleView.text = selected?.title ?: "Select Event"
         eventDateView.text = selected?.eventStartAt
             ?.atZone(manilaZone)
             ?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH))
@@ -329,11 +358,13 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         orientation = LinearLayout.VERTICAL
         setBackgroundResource(R.drawable.bg_card)
         val allSelected = selectedEventId == null
-        addView(buildFilterOptionRow("All Events", allSelected) {
+        addView(buildFilterOptionRow("Select Event", allSelected) {
             selectedEventId = null
+            selectedPurposeId = null
             bindEventHeader()
+            bindPurposeHeader()
             closeEventPopup()
-            refreshTransactions()
+            showPromptState()
         }.apply { if (allSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
 
         assignedEvents.forEach { event ->

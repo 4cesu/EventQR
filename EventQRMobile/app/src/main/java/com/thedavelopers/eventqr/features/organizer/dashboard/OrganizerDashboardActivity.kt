@@ -241,7 +241,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtHeaderSubtitle).text = name
 
         val events = load.data.approvedOnly()
-        val activeEvents = events.filter { it.lifecycleStatus() != "Completed" }
+        val activeEvents = events.filter { it.lifecycleStatus() == "Active" }
         val selected = repository.resolveSelectedEvent(events, selectedEventId())
         val totalAttendees = dashboardData?.totalAttendees ?: events.sumOf { it.registeredCount }
         val totalTransactions = dashboardData?.totalTransactions ?: events.sumOf { it.totalTransactions }
