@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="#F3F4F6"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@color/eventqr_bg"
+        android:background="@drawable/bg_header_surface_outline"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="8dp"
@@ -19,7 +19,7 @@
             android:id="@+id/btnBackEventRegistrations"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@color/eventqr_bg"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:padding="8dp"
             android:src="@drawable/ic_back_chevron"
@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="6dp"
-            android:background="@color/eventqr_bg"
+            android:background="@drawable/bg_badge_selection"
             android:gravity="center"
             android:includeFontPadding="false"
             android:minWidth="22dp"
@@ -59,7 +59,7 @@
             android:id="@+id/btnSelectForPrint"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@color/eventqr_bg"
+            android:background="@drawable/bg_circle_light"
             android:contentDescription="Select attendees for batch printing"
             android:padding="8dp"
             android:src="@drawable/ic_select_multiple"
@@ -88,7 +88,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="62dp"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_staff_event_header_card"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="16dp"
@@ -132,7 +132,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:layout_marginTop="16dp"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_staff_search_box"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="16dp"
@@ -149,7 +149,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_bg"
+                        android:background="@android:color/transparent"
                         android:hint="Search attendees..."
                         android:imeOptions="actionSearch"
                         android:inputType="text"
@@ -169,7 +169,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_staff_stat_card"
                         android:orientation="vertical"
                         android:padding="12dp">
 
@@ -182,7 +182,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_staff_stat_card"
                         android:orientation="vertical"
                         android:padding="12dp">
 
@@ -195,7 +195,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_staff_stat_card"
                         android:orientation="vertical"
                         android:padding="12dp">
 
@@ -249,7 +249,7 @@
         android:id="@+id/batchPrintBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/eventqr_bg"
+        android:background="#FFFFFF"
         android:elevation="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
