@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/surface_alt"
     android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="96dp"
-        android:background="@color/eventqr_bg"
+        android:background="@drawable/bg_dashboard_gradient"
         android:paddingHorizontal="16dp"
         android:paddingTop="16dp"
         android:paddingBottom="16dp">
@@ -68,7 +68,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_portal_chip"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
@@ -123,7 +123,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="12dp"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_red_warning"
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:visibility="gone">
@@ -150,7 +150,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_primary_button"
                         android:minHeight="48dp"
                         android:paddingHorizontal="16dp"
                         android:text="Retry"
@@ -189,7 +189,7 @@
                             <FrameLayout
                                 android:layout_width="34dp"
                                 android:layout_height="34dp"
-                                android:background="@color/eventqr_bg">
+                                android:background="@drawable/bg_admin_icon_tile_indigo">
 
                                 <ImageView
                                     android:layout_width="18dp"
@@ -240,7 +240,7 @@
                             <FrameLayout
                                 android:layout_width="34dp"
                                 android:layout_height="34dp"
-                                android:background="@color/eventqr_bg">
+                                android:background="@drawable/bg_admin_icon_tile_blue">
 
                                 <ImageView
                                     android:layout_width="18dp"
@@ -291,7 +291,7 @@
                             <FrameLayout
                                 android:layout_width="34dp"
                                 android:layout_height="34dp"
-                                android:background="@color/eventqr_bg">
+                                android:background="@drawable/bg_admin_icon_tile_green">
 
                                 <ImageView
                                     android:layout_width="18dp"
@@ -342,7 +342,7 @@
                             <FrameLayout
                                 android:layout_width="34dp"
                                 android:layout_height="34dp"
-                                android:background="@color/eventqr_bg">
+                                android:background="@drawable/bg_admin_icon_tile_yellow">
 
                                 <ImageView
                                     android:layout_width="18dp"
@@ -456,7 +456,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:padding="14dp">
@@ -464,7 +464,7 @@
                         <View
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_date_block" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -476,26 +476,26 @@
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:background="@color/eventqr_bg" />
+                                android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View
                                 android:layout_width="140dp"
                                 android:layout_height="10dp"
                                 android:layout_marginTop="8dp"
-                                android:background="@color/eventqr_bg" />
+                                android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="56dp"
                             android:layout_height="10dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_bar" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:padding="14dp">
@@ -503,7 +503,7 @@
                         <View
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_date_block" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -515,26 +515,26 @@
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:background="@color/eventqr_bg" />
+                                android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View
                                 android:layout_width="150dp"
                                 android:layout_height="10dp"
                                 android:layout_marginTop="8dp"
-                                android:background="@color/eventqr_bg" />
+                                android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="52dp"
                             android:layout_height="10dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_bar" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:padding="14dp">
@@ -542,7 +542,7 @@
                         <View
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_date_block" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -554,19 +554,19 @@
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:background="@color/eventqr_bg" />
+                                android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View
                                 android:layout_width="120dp"
                                 android:layout_height="10dp"
                                 android:layout_marginTop="8dp"
-                                android:background="@color/eventqr_bg" />
+                                android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="60dp"
                             android:layout_height="10dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_bar" />
                     </LinearLayout>
                 </LinearLayout>
 

@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/surface_alt"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@color/eventqr_bg"
+        android:background="@drawable/bg_header_surface_outline"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="8dp"
@@ -19,7 +19,7 @@
             android:id="@+id/btnBack"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:background="@color/eventqr_bg"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:padding="8dp"
             android:src="@drawable/ic_back_chevron"
@@ -59,7 +59,7 @@
                 android:id="@+id/layoutAttendeeError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/eventqr_bg"
+                android:background="@drawable/bg_red_warning"
                 android:orientation="vertical"
                 android:padding="16dp"
                 android:visibility="gone">
@@ -86,7 +86,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_primary_button"
                     android:minHeight="48dp"
                     android:paddingHorizontal="16dp"
                     android:text="Retry"
@@ -105,7 +105,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_staff_skeleton_card"
                     android:gravity="center_vertical"
                     android:minHeight="106dp"
                     android:orientation="horizontal"
@@ -114,7 +114,7 @@
                     <View
                         android:layout_width="64dp"
                         android:layout_height="64dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_date_block" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -126,19 +126,19 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="14dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_bar" />
 
                         <View
                             android:layout_width="160dp"
                             android:layout_height="10dp"
                             android:layout_marginTop="8dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_bar" />
 
                         <View
                             android:layout_width="120dp"
                             android:layout_height="10dp"
                             android:layout_marginTop="8dp"
-                            android:background="@color/eventqr_bg" />
+                            android:background="@drawable/bg_staff_skeleton_bar" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -146,64 +146,64 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_staff_skeleton_card"
                     android:orientation="vertical"
                     android:padding="16dp">
 
                     <View
                         android:layout_width="120dp"
                         android:layout_height="14dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="10dp"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="10dp"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="10dp"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
 
                     <View
                         android:layout_width="90dp"
                         android:layout_height="10dp"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:background="@color/eventqr_bg"
+                    android:background="@drawable/bg_staff_skeleton_card"
                     android:orientation="vertical"
                     android:padding="16dp">
 
                     <View
                         android:layout_width="140dp"
                         android:layout_height="14dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="10dp"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="10dp"
                         android:layout_marginTop="12dp"
-                        android:background="@color/eventqr_bg" />
+                        android:background="@drawable/bg_staff_skeleton_bar" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -233,7 +233,7 @@
                         android:id="@+id/txtDetailInitial"
                         android:layout_width="64dp"
                         android:layout_height="64dp"
-                        android:background="@color/eventqr_bg"
+                        android:background="@drawable/bg_organizer_avatar_purple"
                         android:gravity="center"
                         android:textColor="@color/brand_on_primary"
                         android:textSize="24sp"
