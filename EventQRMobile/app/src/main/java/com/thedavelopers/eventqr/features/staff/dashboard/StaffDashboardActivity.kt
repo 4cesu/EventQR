@@ -17,7 +17,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity
+import com.thedavelopers.eventqr.features.staff.notifications.StaffNotificationsActivity
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
@@ -55,7 +55,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         findViewById<TextView>(R.id.txtStaffName).text = sessionManager.getFullName() ?: sessionManager.getEmail() ?: "Staff User"
         findViewById<View>(R.id.btnNotification).setOnClickListener {
-            startActivity(Intent(this, AttendeeNotificationsActivity::class.java))
+            startActivity(Intent(this, StaffNotificationsActivity::class.java))
         }
 
         findViewById<View>(R.id.txtScansToday).setOnClickListener {
@@ -176,8 +176,14 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun showNotificationBadge(hasUnread: Boolean) {
-        findViewById<View>(R.id.viewNotificationDot).visibility = if (hasUnread) View.VISIBLE else View.GONE
+    override fun showNotificationBadge(unreadCount: Int) {
+        val badge = findViewById<TextView>(R.id.txtNotificationBadge)
+        if (unreadCount > 0) {
+            badge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
+            badge.visibility = View.VISIBLE
+        } else {
+            badge.visibility = View.GONE
+        }
     }
 
     override fun showLoading(isLoading: Boolean) {

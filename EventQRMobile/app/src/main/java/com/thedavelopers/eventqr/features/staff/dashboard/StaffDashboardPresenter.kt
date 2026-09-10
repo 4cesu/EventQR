@@ -60,9 +60,9 @@ class StaffDashboardPresenter(
             when (val notifResult = repository.getMyNotifications()) {
                 is NetworkResult.Success -> {
                     val unreadCount = notifResult.data.count { it.status != NotificationStatus.READ && it.readAt == null }
-                    view?.showNotificationBadge(unreadCount > 0)
+                    view?.showNotificationBadge(unreadCount)
                 }
-                is NetworkResult.Error -> view?.showNotificationBadge(false)
+                is NetworkResult.Error -> view?.showNotificationBadge(0)
                 NetworkResult.Loading -> Unit
             }
             view?.showLoading(false)

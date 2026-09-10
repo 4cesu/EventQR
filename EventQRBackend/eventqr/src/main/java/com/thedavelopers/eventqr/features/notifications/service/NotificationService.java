@@ -38,7 +38,22 @@ public class NotificationService {
     }
 
     public List<NotificationResponse> findByRecipient(UUID recipientUserId) {
-        return notificationRepository.findByRecipientUserId(recipientUserId).stream().map(this::toResponse).toList();
+        return notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(recipientUserId).stream().map(this::toResponse).toList();
+    }
+
+    public List<NotificationResponse> findByRecipientAndStatus(UUID recipientUserId, NotificationStatus status) {
+        return notificationRepository.findByRecipientUserIdAndStatusOrderByCreatedAtDesc(recipientUserId, status).stream().map(this::toResponse).toList();
+    }
+
+    public NotificationResponse createStaffAssignmentNotification(UUID eventId, UUID recipientUserId, String eventTitle, String organizerName) {
+        Notification notification = new Notification();
+        notification.setEventId(eventId);
+        notification.setRecipientUserId(recipientUserId);
+        notification.setNotificationType(NotificationType.STAFF_ASSIGNMENT);
+        notification.setTitle("Assigned to " + eventTitle);
+        notification.setMessage("You've been assigned staff for " + eventTitle + " by " + organizerName);
+        notification.setStatus(NotificationStatus.SENT);
+        return toResponse(notificationRepository.save(notification));
     }
 
     public NotificationResponse findOne(UUID notificationId) {

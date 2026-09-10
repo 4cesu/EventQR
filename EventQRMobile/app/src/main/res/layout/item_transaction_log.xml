@@ -3,37 +3,47 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="1dp">
+    android:layout_marginBottom="12dp"
+    android:clipToOutline="true"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="14dp">
+        android:orientation="horizontal">
+
+        <!-- Left accent bar: green APPROVED / red REJECTED -->
+        <View
+            android:id="@+id/viewAccentBar"
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_scan_accent_green" />
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="14dp">
 
+            <!-- Transaction type icon (brand color) -->
             <FrameLayout
                 android:id="@+id/iconContainer"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_transaction_earned_icon">
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_transaction_icon_container">
 
                 <ImageView
-                    android:id="@+id/imgPurposeIcon"
+                    android:id="@+id/imgTypeIcon"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:contentDescription="Status"
-                    android:src="@drawable/ic_staff_check"
-                    app:tint="#10B981" />
+                    android:contentDescription="Transaction type"
+                    android:src="@drawable/ic_qr_scan"
+                    app:tint="@color/brand_primary" />
             </FrameLayout>
 
             <LinearLayout
@@ -43,110 +53,91 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/txtUserName"
+                <!-- Line 1: attendee name + transaction type label -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Attendee"
-                    android:textColor="#111827"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
+                    <TextView
+                        android:id="@+id/txtAttendeeName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Attendee"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtTransactionType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_transaction_type_chip"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="Entry"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Line 2: relative time; tap to expand exact timestamp -->
                 <TextView
-                    android:id="@+id/txtEventName"
-                    android:layout_width="match_parent"
+                    android:id="@+id/txtRelativeTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:drawablePadding="4dp"
+                    android:paddingVertical="2dp"
+                    android:text="5m ago"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <!-- Exact scanned_at timestamp (expandable) -->
+                <TextView
+                    android:id="@+id/txtExactTime"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:text="Sep 10, 2026 • 2:30 PM"
+                    android:textColor="@color/text_disabled"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <!-- Rejection reason (only when REJECTED) -->
+                <TextView
+                    android:id="@+id/txtReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Event Name"
-                    android:textColor="#6B7280"
-                    android:textSize="13sp" />
+                    android:maxLines="2"
+                    android:text="Reason"
+                    android:textColor="@color/error"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
             </LinearLayout>
 
-            <LinearLayout
+            <!-- Points delta badge (only when != 0) -->
+            <TextView
+                android:id="@+id/txtPointsBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="end"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txtPointsDelta"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:text="+50 pts"
-                    android:textColor="#10B981"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/txtTransactionTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="end"
-                    android:text="Aug 31, 08:30"
-                    android:textColor="#9CA3AF"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/txtPurposeName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Event Entry"
-                android:textColor="#4B5563"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/txtStatusBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_success_chip"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="5dp"
-                android:text="Success"
-                android:textColor="#15803D"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_points_chip_green"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="+50 pts"
+                android:textColor="@color/icon_tint_green"
                 android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtTransactionId"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/imgUserAvatar"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/imgFooterIcon"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/txtFooterMessage"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

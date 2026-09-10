@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auditlogs.service.AuditLogService;
@@ -23,6 +24,7 @@ import com.thedavelopers.eventqr.features.notifications.service.NotificationServ
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.users.service.UserService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -69,8 +71,12 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<NotificationResponse>>> mine(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> mine(HttpServletRequest request,
+                                                                        @RequestParam(required = false) NotificationStatus status) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        if (status != null) {
+            return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipientAndStatus(userId, status)));
+        }
         return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipient(userId)));
     }
 

@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.idprinting.repository.IdTemplateRepository;
+import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerAttendeeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerDashboardResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerEventResponse;
@@ -79,6 +80,7 @@ public class OrganizerService {
     private final EventStaffAssignmentRepository staffAssignmentRepository;
     private final UserProfileRepository userProfileRepository;
     private final IdTemplateRepository idTemplateRepository;
+    private final NotificationService notificationService;
 
     public OrganizerService(EventRepository eventRepository,
                             EventRegistrationRepository registrationRepository,
@@ -89,7 +91,8 @@ public class OrganizerService {
                             PointTransactionRepository pointTransactionRepository,
                             EventStaffAssignmentRepository staffAssignmentRepository,
                             UserProfileRepository userProfileRepository,
-                            IdTemplateRepository idTemplateRepository) {
+                            IdTemplateRepository idTemplateRepository,
+                            NotificationService notificationService) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.transactionLogRepository = transactionLogRepository;
@@ -100,6 +103,7 @@ public class OrganizerService {
         this.staffAssignmentRepository = staffAssignmentRepository;
         this.userProfileRepository = userProfileRepository;
         this.idTemplateRepository = idTemplateRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -314,7 +318,7 @@ public class OrganizerService {
     }
 
     public OrganizerStaffResponse addStaff(UUID organizerUserId, UUID eventId, StaffAssignmentRequest request) {
-        requireOrganizerEvent(organizerUserId, eventId);
+        Event event = requireOrganizerEvent(organizerUserId, eventId);
         UserProfile staffUser = resolveStaffUser(request);
         log.debug(
                 "Organizer staff add request eventId={} staffUserId={} email={}",
@@ -385,6 +389,19 @@ public class OrganizerService {
             log.debug("Organizer staff add kept role eventId={} staffUserId={} role={}",
                     eventId, staffUser.getId(), staffUser.getRole());
         }
+
+        if (!reactivatingExisting) {
+            UserProfile organizerProfile = userProfileRepository.findById(organizerUserId).orElse(null);
+            String organizerName = organizerProfile == null ? "Organizer" : organizerProfile.getFullName();
+            try {
+                notificationService.createStaffAssignmentNotification(
+                        eventId, staffUser.getId(), event.getTitle(), organizerName);
+                log.debug("Staff assignment notification created eventId={} staffUserId={}", eventId, staffUser.getId());
+            } catch (Exception ex) {
+                log.error("Failed to create staff assignment notification eventId={} staffUserId={}", eventId, staffUser.getId(), ex);
+            }
+        }
+
         return toStaff(saved);
     }
 
