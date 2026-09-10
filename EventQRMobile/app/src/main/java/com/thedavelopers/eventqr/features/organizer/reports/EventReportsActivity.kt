@@ -28,6 +28,7 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -294,7 +295,7 @@ open class EventReportsActivity : AppCompatActivity() {
 
         generateButton = primaryButton("Generate") {
             if (endDate!!.isBefore(startDate!!)) {
-                dateError.text = "End date must be on or after start date."
+                dateError.text = "End date must be after start date"
                 dateError.visibility = View.VISIBLE
                 return@primaryButton
             }
@@ -429,7 +430,7 @@ open class EventReportsActivity : AppCompatActivity() {
                 })
             })
             setOnClickListener {
-                val today = LocalDate.now()
+                val today = LocalDate.now(ZoneId.of("Asia/Manila"))
                 android.app.DatePickerDialog(
                     this@EventReportsActivity,
                     { _, year, month, dayOfMonth ->

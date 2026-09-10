@@ -99,8 +99,9 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
 
     private fun isOngoingEvent(item: AttendeeEventResponse): Boolean {
         val now = Instant.now()
-        return item.eventStartAt != null && item.eventEndAt != null &&
-                !item.eventStartAt.isAfter(now) && !item.eventEndAt.isBefore(now)
+        return item.eventStartAt != null &&
+                !item.eventStartAt.isAfter(now) &&
+                item.eventEndAt?.isBefore(now) != true
     }
 
     override fun onDestroy() {

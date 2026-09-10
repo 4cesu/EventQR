@@ -248,9 +248,9 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         val totalPoints = if (events.isNotEmpty()) {
             events.sumOf { it.rewardRedemptions }
         } else {
-            dashboardData?.recentEvents?.sumOf { it.rewardRedemptions } ?: 0
+            dashboardData?.recentEvents?.sumOf { it.rewardRedemptions } ?: 0L
         }
-        val totalEvents = dashboardData?.totalEvents ?: events.size
+        val totalEvents = dashboardData?.totalEvents ?: events.size.toLong()
 
         findViewById<TextView>(R.id.txtStatTotalEvents).text = formatCount(totalEvents)
         findViewById<TextView>(R.id.txtStatTotalAttendees).text = formatCount(totalAttendees)

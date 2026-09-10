@@ -16,6 +16,7 @@ enum class AccountStatus {
     SUSPENDED,
 }
 
+// DTO enum fields non-null-no-default — safe only while all statuses NOT NULL in DB. If nullable status introduced, add Gson TypeAdapter.
 enum class EventStatus {
     DRAFT,
     PENDING_REVIEW,
@@ -24,6 +25,7 @@ enum class EventStatus {
     ACTIVE,
     ENDED,
     CANCELLED,
+    UNKNOWN,
 }
 
 enum class EventRequestStatus {

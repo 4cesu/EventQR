@@ -633,12 +633,15 @@ public class OrganizerService {
         long redemptions = rewardRedemptionRepository.findByEventId(eventId).stream()
                 .filter(redemption -> redemption.getStatus() == RedemptionStatus.REDEEMED).count();
         int capacity = event.getCapacity() == null ? 0 : event.getCapacity();
-        int currentAttendeeCount = registrations.size();
+        // Registered = registrations excluding CANCELLED and NO_SHOW — must stay in sync with DashboardService canonical count
+        int currentAttendeeCount = (int) registrations.stream()
+                .filter(reg -> reg.getStatus().isCountedAsRegistered())
+                .count();
         return new OrganizerEventResponse(eventId, event.getTitle(), "Organizer", formatRange(event.getEventStartAt(), event.getEventEndAt()),
                 format(event.getEventStartAt()), event.getLocation(), displayStatus(event.getStatus()),
                 format(event.getRegistrationOpenAt()), event.getRejectionReason(), event.getDescription(),
                 event.getEventStartAt(), event.getEventEndAt(), event.getRegistrationOpenAt(), event.getRegistrationCloseAt(),
-                capacity, currentAttendeeCount, Math.max(0, capacity - currentAttendeeCount), List.of(), registrations.size(),
+                capacity, currentAttendeeCount, Math.max(0, capacity - currentAttendeeCount), List.of(), (long) currentAttendeeCount,
                 registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.ENTERED).count(),
                 transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
                         && tx.getTransactionType() == TransactionType.ATTENDANCE).count(),

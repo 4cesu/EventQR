@@ -86,6 +86,15 @@ class DashboardPresenter(
                     }
                 val upcomingEvents = mappedEvents.filter { it.status.equals("Upcoming", ignoreCase = true) }
 
+                // Compute upcoming card event first so we can exclude it from discover
+                val upcomingCardEvent = upcomingEvents.firstOrNull()
+
+                // Discover = strictly future-starting events, excluding the upcoming card event
+                val discoverEvents = mappedEvents
+                    .filter { it.eventStartAt != null && it.eventStartAt.isAfter(now) }
+                    .filter { it.eventId != upcomingCardEvent?.eventId }
+                    .take(5)
+
                 val registeredCount = if (registrationsResult is NetworkResult.Success) {
                     registeredEventIds.size
                 } else {
@@ -112,7 +121,7 @@ class DashboardPresenter(
                     totalEvents = upcomingCount.toLong(),
                     completedEventsCount = completedCount.toLong(),
                     upcomingEvents = upcomingEvents.take(1),
-                    discoverEvents = mappedEvents.take(5),
+                    discoverEvents = discoverEvents,
                 )
                 view?.showSummary(summary)
 

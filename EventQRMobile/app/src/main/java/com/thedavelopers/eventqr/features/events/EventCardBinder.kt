@@ -49,7 +49,7 @@ object EventCardBinder {
         view.findViewById<TextView>(R.id.txtAttendeeEventTitle).text =
             title.ifBlank { "Untitled event" }
 
-        EventStatusBadgeStyler.bind(view.findViewById(R.id.txtAttendeeEventStatus), eventStatus)
+        EventStatusBadgeStyler.bind(view.findViewById(R.id.txtAttendeeEventStatus), eventStatus, status)
 
         view.findViewById<View>(R.id.layoutEventDate).setBackgroundResource(
             EventStatusBadgeStyler.dateBadgeRes(eventStatus),
