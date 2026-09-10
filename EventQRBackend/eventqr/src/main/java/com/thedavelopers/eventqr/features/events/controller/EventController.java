@@ -74,8 +74,9 @@ public class EventController {
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<ApiResponse<EventResponse>> findOne(@PathVariable UUID eventId) {
-        return ResponseEntity.ok(ApiResponse.success(eventService.findOne(eventId)));
+    public ResponseEntity<ApiResponse<AttendeeEventResponse>> findOne(HttpServletRequest request, @PathVariable UUID eventId) {
+        UUID userId = currentUserId(request);
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeEvent(eventId, userId)));
     }
 
     @GetMapping("/{eventId}/availability")
@@ -92,16 +93,20 @@ public class EventController {
 
     @GetMapping("/attendee-visible")
     public ResponseEntity<ApiResponse<Page<AttendeeEventResponse>>> listAttendeeVisible(
+            HttpServletRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents(PageRequest.of(page, size))));
+        UUID userId = currentUserId(request);
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents(userId, PageRequest.of(page, size))));
     }
 
     @GetMapping("/attendee-browse")
     public ResponseEntity<ApiResponse<Page<AttendeeEventResponse>>> listAttendeeBrowse(
+            HttpServletRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents(PageRequest.of(page, size))));
+        UUID userId = currentUserId(request);
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents(userId, PageRequest.of(page, size))));
     }
 
     private void requireOrganizer(HttpServletRequest request) {

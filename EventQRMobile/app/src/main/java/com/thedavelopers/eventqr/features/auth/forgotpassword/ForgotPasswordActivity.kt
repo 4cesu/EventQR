@@ -44,6 +44,10 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
         findViewById<Button>(R.id.btnBackToSignInConfirmation).setOnClickListener {
             presenter.backToSignIn()
         }
+
+        findViewById<View>(R.id.tvBackToSignIn).setOnClickListener {
+            presenter.backToSignIn()
+        }
     }
 
     override fun onDestroy() {

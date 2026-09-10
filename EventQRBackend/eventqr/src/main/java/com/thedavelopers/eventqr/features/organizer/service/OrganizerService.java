@@ -339,6 +339,7 @@ public class OrganizerService {
         }
 
         boolean reactivatingExisting = existingAssignment.isPresent();
+        boolean wasInactive = reactivatingExisting && !existingAssignment.get().isActive();
         log.debug("Organizer staff add path eventId={} staffUserId={} mode={}",
                 eventId,
                 staffUser.getId(),
@@ -390,7 +391,7 @@ public class OrganizerService {
                     eventId, staffUser.getId(), staffUser.getRole());
         }
 
-        if (!reactivatingExisting) {
+        if (!reactivatingExisting || wasInactive) {
             UserProfile organizerProfile = userProfileRepository.findById(organizerUserId).orElse(null);
             String organizerName = organizerProfile == null ? "Organizer" : organizerProfile.getFullName();
             try {

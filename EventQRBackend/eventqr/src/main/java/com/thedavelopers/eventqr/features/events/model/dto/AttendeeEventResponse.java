@@ -8,5 +8,6 @@ import com.thedavelopers.eventqr.shared.constants.EventStatus;
 public record AttendeeEventResponse(UUID eventId, String title, String description, String location,
                                     String eventLogoUrl, Instant registrationOpenAt, Instant registrationCloseAt,
                                     Instant eventStartAt, Instant eventEndAt, int capacity,
-                                    int currentAttendeeCount, EventStatus status, UUID organizerUserId) {
+                                    int currentAttendeeCount, EventStatus status, UUID organizerUserId,
+                                    boolean isOwnedByCurrentUser) {
 }

@@ -207,23 +207,12 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             return
         }
 
-        findViewById<Button>(R.id.btnRegisterForEvent).apply {
-            isEnabled = false
-            text = "Checking access..."
-            setBackgroundResource(R.drawable.bg_disabled_button)
-        }
-
-        lifecycleScope.launch {
-            val ownedEventId = event.eventId.toString()
-            isOwnedByCurrentOrganizer = when (val result = repository.getOrganizerEvents()) {
-                is NetworkResult.Success -> result.data.any { it.eventId.toString() == ownedEventId }
-                else -> false
-            }
-            if (isOwnedByCurrentOrganizer) {
-                setOwnedEventState()
-            } else {
-                loadEventAvailability(event)
-            }
+        // Backend-derived flag replaces the full organizer-events list fetch.
+        isOwnedByCurrentOrganizer = event.isOwnedByCurrentUser == true
+        if (isOwnedByCurrentOrganizer) {
+            setOwnedEventState()
+        } else {
+            loadEventAvailability(event)
         }
     }
 

@@ -9,127 +9,61 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:padding="14dp">
 
-        <!-- Left accent bar: green APPROVED / red REJECTED -->
-        <View
-            android:id="@+id/viewAccentBar"
-            android:layout_width="5dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_scan_accent_green" />
+        <!-- Transaction type icon (brand color) -->
+        <FrameLayout
+            android:id="@+id/iconContainer"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_transaction_icon_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
+            <ImageView
+                android:id="@+id/imgTypeIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:contentDescription="Transaction type"
+                android:src="@drawable/ic_qr_scan"
+                app:tint="@color/brand_primary" />
+        </FrameLayout>
+
+        <!-- Right column: chip on top, badge on bottom -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/rightColumn"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="14dp">
+            android:orientation="vertical"
+            android:gravity="end"
+            android:layout_marginEnd="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-            <!-- Transaction type icon (brand color) -->
-            <FrameLayout
-                android:id="@+id/iconContainer"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_transaction_icon_container">
-
-                <ImageView
-                    android:id="@+id/imgTypeIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Transaction type"
-                    android:src="@drawable/ic_qr_scan"
-                    app:tint="@color/brand_primary" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <!-- Transaction type chip -->
+            <TextView
+                android:id="@+id/txtTransactionType"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:background="@drawable/bg_transaction_type_chip"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp"
+                android:text="Entry"
+                android:textColor="@color/brand_primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
-                <!-- Line 1: attendee name + transaction type label -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/txtAttendeeName"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="Attendee"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/txtTransactionType"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_transaction_type_chip"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="3dp"
-                        android:text="Entry"
-                        android:textColor="@color/brand_primary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- Line 2: relative time; tap to expand exact timestamp -->
-                <TextView
-                    android:id="@+id/txtRelativeTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:drawablePadding="4dp"
-                    android:paddingVertical="2dp"
-                    android:text="5m ago"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-                <!-- Exact scanned_at timestamp (expandable) -->
-                <TextView
-                    android:id="@+id/txtExactTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Sep 10, 2026 • 2:30 PM"
-                    android:textColor="@color/text_disabled"
-                    android:textSize="12sp"
-                    android:visibility="gone" />
-
-                <!-- Rejection reason (only when REJECTED) -->
-                <TextView
-                    android:id="@+id/txtReason"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:ellipsize="end"
-                    android:maxLines="2"
-                    android:text="Reason"
-                    android:textColor="@color/error"
-                    android:textSize="13sp"
-                    android:visibility="gone" />
-            </LinearLayout>
-
-            <!-- Points delta badge (only when != 0) -->
+            <!-- Points badge -->
             <TextView
                 android:id="@+id/txtPointsBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
                 android:background="@drawable/bg_points_chip_green"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
@@ -139,5 +73,70 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
         </LinearLayout>
-    </LinearLayout>
+
+        <!-- Attendee name -->
+        <TextView
+            android:id="@+id/txtAttendeeName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Attendee"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/rightColumn"
+            app:layout_constraintStart_toEndOf="@id/iconContainer"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Relative time; tap to expand exact timestamp -->
+        <TextView
+            android:id="@+id/txtRelativeTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:drawablePadding="4dp"
+            android:paddingVertical="2dp"
+            android:text="5m ago"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            app:layout_constraintStart_toEndOf="@id/iconContainer"
+            app:layout_constraintTop_toBottomOf="@id/txtAttendeeName" />
+
+        <!-- Exact scanned_at timestamp (expandable) -->
+        <TextView
+            android:id="@+id/txtExactTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:text="Sep 10, 2026 • 2:30 PM"
+            android:textColor="@color/text_disabled"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/iconContainer"
+            app:layout_constraintTop_toBottomOf="@id/txtRelativeTime" />
+
+        <!-- Rejection reason (only when REJECTED) -->
+        <TextView
+            android:id="@+id/txtReason"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="6dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="Reason"
+            android:textColor="@color/error"
+            android:textSize="13sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iconContainer"
+            app:layout_constraintTop_toBottomOf="@id/txtExactTime" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

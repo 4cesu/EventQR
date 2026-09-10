@@ -1,11 +1,15 @@
 package com.thedavelopers.eventqr.features.staff.reward
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.TextUtils
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -59,6 +63,9 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setBackgroundResource(R.drawable.bg_reward_result_screen)
 
+            // Top header bar (mirrors activity_edit_profile.xml lines 9-38)
+            addView(buildHeaderBar("Reward Redemption"))
+
             val scroll = ScrollView(this@RewardRedemptionScanResultActivity).apply {
                 isFillViewport = true
             }
@@ -67,12 +74,6 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
                 setPadding(dp(20), dp(28), dp(20), dp(20))
             }
             scroll.addView(content)
-
-            content.addView(TextView(this@RewardRedemptionScanResultActivity).apply {
-                text = "Reward Redemption"
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
-                setTextColor(getColor(R.color.text_primary))
-            })
 
             content.addView(spacer(dp(20)))
 
@@ -343,6 +344,47 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
 
     private fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun buildHeaderBar(title: String): LinearLayout =
+        LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundResource(R.drawable.bg_header_surface_outline)
+            setPadding(dp(8), 0, dp(16), 0)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(56),
+            )
+
+            addView(ImageButton(this@RewardRedemptionScanResultActivity).apply {
+                setImageResource(R.drawable.ic_back_chevron)
+                imageTintList = ColorStateList.valueOf(getColor(R.color.text_primary))
+                setBackgroundResource(selectableItemBackgroundBorderless())
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                contentDescription = "Back"
+                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
+                setOnClickListener { finish() }
+            })
+
+            addView(TextView(this@RewardRedemptionScanResultActivity).apply {
+                text = title
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
+                setTextColor(getColor(R.color.text_primary))
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f,
+                ).apply { marginStart = dp(12) }
+            })
+        }
+
+    private fun selectableItemBackgroundBorderless(): Int {
+        val outValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
+        return outValue.resourceId
     }
 
     private fun spacer(height: Int): View =
