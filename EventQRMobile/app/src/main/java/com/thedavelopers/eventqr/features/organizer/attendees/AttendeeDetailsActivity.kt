@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
+import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
@@ -9,15 +10,16 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpTransactionEntry
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
+import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.transactions.TransactionLogsActivity
 import com.thedavelopers.eventqr.features.organizer.attendeeInitial
 import com.thedavelopers.eventqr.features.organizer.intentEventId
-import com.thedavelopers.eventqr.features.organizer.openOrganizerPage
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.statusBucket
@@ -54,7 +56,11 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             loadAttendee(eventId, attendeeId)
         }
         findViewById<View>(R.id.btnViewFullLog).setOnClickListener {
-            openOrganizerPage(TransactionLogsActivity::class.java, selectedEvent.id)
+            startActivity(Intent(this, TransactionLogsActivity::class.java).apply {
+                putExtra(EXTRA_EVENT_ID, selectedEvent.id)
+                putExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID, attendee.id)
+            })
+            saveSelectedEventId(selectedEvent.id)
         }
         skeletonLoading = findViewById(R.id.skeletonLoading)
 
@@ -72,8 +78,6 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                 finish()
                 return
             }
-
-        findViewById<TextView>(R.id.txtDetailTitle).text = "Attendee Details"
 
         loadAttendee(eventId, attendeeId)
     }
@@ -108,6 +112,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun renderProfile() {
         skeletonLoading.visibility = View.GONE
+        findViewById<TextView>(R.id.txtDetailTitle).text = "Attendee Details"
         findViewById<TextView>(R.id.txtDetailInitial).text = attendeeInitial(attendee.name)
         findViewById<TextView>(R.id.txtDetailName).text = attendee.name
         findViewById<TextView>(R.id.txtDetailEmail).text = attendee.email

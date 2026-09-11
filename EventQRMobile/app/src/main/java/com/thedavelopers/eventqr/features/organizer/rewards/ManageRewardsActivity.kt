@@ -35,7 +35,6 @@ import com.thedavelopers.eventqr.features.organizer.SUCCESS
 import com.thedavelopers.eventqr.features.organizer.TEXT
 import com.thedavelopers.eventqr.features.organizer.card
 import com.thedavelopers.eventqr.features.organizer.dp
-import com.thedavelopers.eventqr.features.organizer.emptyState
 import com.thedavelopers.eventqr.features.organizer.errorState
 import com.thedavelopers.eventqr.features.organizer.eventSelector
 import com.thedavelopers.eventqr.features.organizer.formatCount
@@ -204,7 +203,23 @@ open class ManageRewardsActivity : AppCompatActivity() {
         rewardHost.removeAllViews()
         val enabled = rewardsEnabled
         if (rewards.isEmpty()) {
-            rewardHost.addView(emptyState("No rewards have been created yet.", "Add Reward") { showRewardDialog(null) })
+            rewardHost.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(0, dp(24), 0, dp(24))
+                addView(text("No rewards have been created yet.", 16, true, TEXT).apply {
+                    gravity = Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    )
+                })
+                addView(text("Add Reward", 14, true, PURPLE).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(dp(8), dp(12), dp(8), dp(12))
+                    setOnClickListener { showRewardDialog(null) }
+                })
+            })
             return
         }
 

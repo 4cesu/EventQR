@@ -78,9 +78,5 @@
     <item name="idt_save_button" type="id" />
 
     <!-- TransactionLogsActivity (tlg_) -->
-    <item name="tlg_search" type="id" />
-    <item name="tlg_summary" type="id" />
     <item name="tlg_list" type="id" />
-    <item name="tlg_detail" type="id" />
-    <item name="tlg_filter_row" type="id" />
 </resources>
