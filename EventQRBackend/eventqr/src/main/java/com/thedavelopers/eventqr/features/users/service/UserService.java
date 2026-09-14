@@ -132,21 +132,13 @@ public class UserService implements AttendeeDirectoryPort {
     public UserResponse updateProfile(UUID userId, String fullName, String phoneNumber) {
         UserProfile userProfile = requireUser(userId);
         if (fullName != null && !fullName.isBlank()) {
-            userProfile.setFullName(fullName.trim());
-        }
-        userProfile.setPhoneNumber(phoneNumber);
-        return toResponse(userProfileRepository.save(userProfile));
-    }
+userProfile.setFullName(fullName.trim());
+         }
+         userProfile.setPhoneNumber(phoneNumber);
+         return toResponse(userProfileRepository.save(userProfile));
+     }
 
-    public UserResponse updateAvatar(UUID userId, String avatarFileId) {
-        UserProfile userProfile = requireUser(userId);
-        String normalizedAvatarFileId = avatarFileId == null || avatarFileId.isBlank() ? null : avatarFileId.trim();
-        userProfile.setAvatarFileId(normalizedAvatarFileId);
-        userProfile.setAvatarPath(normalizedAvatarFileId == null ? null : "files/" + normalizedAvatarFileId + "/content");
-        return toResponse(userProfileRepository.save(userProfile));
-    }
-
-    public UserResponse updateStatus(UUID userId, AccountStatus status) {
+     public UserResponse updateStatus(UUID userId, AccountStatus status) {
         UserProfile userProfile = requireUser(userId);
         userProfile.setStatus(status);
         UserProfile saved = userProfileRepository.save(userProfile);
@@ -284,19 +276,10 @@ public class UserService implements AttendeeDirectoryPort {
 
     private UserResponse toResponse(UserProfile userProfile) {
         return new UserResponse(userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
-                userProfile.getPhoneNumber(), userProfile.getRole(), userProfile.getStatus(), userProfile.getAvatarFileId(),
-                resolveAvatarPath(userProfile));
+                userProfile.getPhoneNumber(), userProfile.getRole(), userProfile.getStatus());
     }
 
-    private String resolveAvatarPath(UserProfile userProfile) {
-        if (userProfile.getAvatarPath() != null && !userProfile.getAvatarPath().isBlank()) {
-            return userProfile.getAvatarPath().trim();
-        }
-        if (userProfile.getAvatarFileId() == null || userProfile.getAvatarFileId().isBlank()) {
-            return null;
-        }
-        return "files/" + userProfile.getAvatarFileId().trim() + "/content";
-    }
+    
 
     private UserProfile requireUser(UUID userId) {
         return userProfileRepository.findById(userId)

@@ -32,16 +32,6 @@ class SessionManager(context: Context) {
             .apply()
     }
 
-    fun saveRole(role: AccountRole?) {
-        sharedPreferences.edit().putString(KEY_ROLE, role?.name).apply()
-    }
-
-    fun saveAvatarFileId(avatarFileId: String?) {
-        sharedPreferences.edit()
-            .putString(KEY_AVATAR_FILE_ID, avatarFileId)
-            .apply()
-    }
-
     fun updateProfile(fullName: String, phone: String?) {
         sharedPreferences.edit()
             .putString(KEY_FULL_NAME, fullName)
@@ -57,11 +47,7 @@ class SessionManager(context: Context) {
             .apply()
     }
 
-    fun setAvatarLocalPath(localPath: String?) {
-        sharedPreferences.edit()
-            .putString(KEY_AVATAR_LOCAL_PATH, localPath)
-            .apply()
-    }
+    
 
     fun clearSession() {
         sharedPreferences.edit().clear().apply()
@@ -79,8 +65,6 @@ class SessionManager(context: Context) {
 
     fun getFullName(): String? = sharedPreferences.getString(KEY_FULL_NAME, null)
 
-    fun getAvatarLocalPath(): String? = sharedPreferences.getString(KEY_AVATAR_LOCAL_PATH, null)
-
     fun getAvatarFileId(): String? = sharedPreferences.getString(KEY_AVATAR_FILE_ID, null)
 
     fun hasUsableToken(): Boolean {
@@ -93,9 +77,8 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_ROLE = "role"
         private const val KEY_EMAIL = "email"
-        private const val KEY_PHONE = "phone"
-        private const val KEY_FULL_NAME = "full_name"
-        private const val KEY_AVATAR_LOCAL_PATH = "avatar_local_path"
-        private const val KEY_AVATAR_FILE_ID = "avatar_file_id"
+private const val KEY_PHONE = "phone"
+    private const val KEY_FULL_NAME = "full_name"
+    private const val KEY_AVATAR_LOCAL_PATH = "avatar_local_path"
     }
 }
