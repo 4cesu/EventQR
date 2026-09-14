@@ -114,16 +114,10 @@ interface ApiService {
     @PATCH("users/me")
     suspend fun updateUsersMe(@Body request: com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest): ApiResponse<UserResponse>
 
-    @Multipart
-    @POST("users/me/avatar")
-    suspend fun uploadAvatar(@Part file: MultipartBody.Part): ApiResponse<StoredFileResponse>
-
     @GET("files/{fileId}")
     suspend fun getStoredFile(@Path("fileId") fileId: String): ApiResponse<StoredFileResponse>
 
-    @Streaming
-    @GET
-    suspend fun downloadAvatar(@Url avatarPath: String): ResponseBody
+    
 
     @POST("users")
     suspend fun createUser(@Body request: UserRequest): ApiResponse<UserResponse>

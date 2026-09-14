@@ -19,8 +19,6 @@ data class UserResponse(
     val phoneNumber: String? = null,
     val role: AccountRole,
     val status: AccountStatus,
-    val avatarFileId: String? = null,
-    val avatarPath: String? = null,
 )
 
 data class ProfileUpdateRequest(

@@ -40,14 +40,13 @@ class DashboardPresenter(
             val eventsDeferred = async { attendeeRepository.getEvents() }
             val registrationsDeferred = async { attendeeRepository.getMyRegistrations() }
 
-            val currentUserResult = currentUserDeferred.await()
-            if (currentUserResult is NetworkResult.Success) {
-                val user = currentUserResult.data
-                sessionManager.saveRole(user.role)
-                sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
-                sessionManager.saveAvatarFileId(user.avatarFileId)
-                view?.updateHeader(user.role.name, user.fullName)
-            }
+val currentUserResult = currentUserDeferred.await()
+             if (currentUserResult is NetworkResult.Success) {
+                 val user = currentUserResult.data
+                 sessionManager.saveRole(user.role)
+                 sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
+                 view?.updateHeader(user.role.name, user.fullName)
+             }
 
             val summaryResult = summaryDeferred.await()
             val eventsResult = eventsDeferred.await()
