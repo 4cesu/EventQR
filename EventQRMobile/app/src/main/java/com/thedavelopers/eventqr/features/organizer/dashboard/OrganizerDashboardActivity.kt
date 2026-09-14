@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
@@ -49,6 +50,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private var isSwipeRefreshing = false
+    private var loadedOnce = false
     private val organizerZone: ZoneId = ZoneId.of("Asia/Manila")
     private val dayFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d", Locale.ENGLISH)
     private val monthFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)
@@ -75,6 +77,16 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             AuthRepository(this@OrganizerDashboardActivity).refreshSessionToken()
             loadDashboard()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (loadedOnce) {
+            lifecycleScope.launch {
+                updateNotificationBadge(repository.getMyNotifications())
+            }
+        }
+        loadedOnce = true
     }
 
     private fun setupNavigation() {
