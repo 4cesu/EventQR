@@ -26,6 +26,8 @@ import com.thedavelopers.eventqr.features.organizer.statusBucket
 import com.thedavelopers.eventqr.features.organizer.statusPalette
 import com.thedavelopers.eventqr.features.organizer.transactionTypeLabel
 import kotlinx.coroutines.MainScope
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -72,14 +74,15 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             return
         }
 
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-            ?: run {
-                Toast.makeText(this, "Selected event not available.", Toast.LENGTH_SHORT).show()
-                finish()
-                return
-            }
-
-        loadAttendee(eventId, attendeeId)
+        lifecycleScope.launch {
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    Toast.makeText(this@AttendeeDetailsActivity, "Selected event not available.", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return@launch
+                }
+            loadAttendee(eventId, attendeeId)
+        }
     }
 
     private fun loadAttendee(eventId: String, attendeeId: String) {

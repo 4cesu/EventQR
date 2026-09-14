@@ -48,21 +48,26 @@ class SearchUserAccountActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
 
-        val eventId = intentEventId() ?: return showMissingEventScreen("Search User Account")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-            ?: return showMissingEventScreen("Search User Account")
+        lifecycleScope.launch {
+            val eventId = intentEventId() ?: return@launch showMissingEventScreen("Search User Account")
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    showMissingEventScreen("Search User Account")
+                    return@launch
+                }
 
-        setContentView(R.layout.activity_search_user_account)
-        activeStaffEmails.addAll(
-            intent.getStringArrayListExtra(EXTRA_ACTIVE_STAFF_EMAILS)
-                .orEmpty()
-                .map { it.trim().lowercase() },
-        )
+            setContentView(R.layout.activity_search_user_account)
+            activeStaffEmails.addAll(
+                intent.getStringArrayListExtra(EXTRA_ACTIVE_STAFF_EMAILS)
+                    .orEmpty()
+                    .map { it.trim().lowercase() },
+            )
 
-        bindViews()
-        setupList()
-        bindActions()
-        loadUsers()
+            bindViews()
+            setupList()
+            bindActions()
+            loadUsers()
+        }
     }
 
     private fun bindViews() {

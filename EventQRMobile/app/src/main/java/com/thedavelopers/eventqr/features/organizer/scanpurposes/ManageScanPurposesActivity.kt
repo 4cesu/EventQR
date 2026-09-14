@@ -21,6 +21,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -51,26 +52,31 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen("Scan Purposes")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Scan Purposes")
+        lifecycleScope.launch {
+            val selectableEvents = repository.getApprovedOrganizerEvents()
+            selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: run {
+                showMissingEventScreen("Scan Purposes")
+                return@launch
+            }
+            Log.d(TAG, "Loading scan purposes for eventId: $eventId")
+            Log.d(persistenceTag, "selectedEventId=$eventId screen=ScanPurposes")
 
-        Log.d(TAG, "Loading scan purposes for eventId: $eventId")
-        Log.d(persistenceTag, "selectedEventId=$eventId screen=ScanPurposes")
+            val shell = organizerRefreshShell(
+                title = "Scan Purposes",
+                showBack = true,
+                topRightLabel = "+ Add",
+                onTopRight = { showAddEditDialog() },
+                onRefresh = { loadPurposes(showInitialLoading = false) }
+            )
+            swipeRefresh = shell.swipeRefreshLayout
+            purposeHost = LinearLayout(this@ManageScanPurposesActivity).apply {
+                id = com.thedavelopers.eventqr.R.id.msp_purpose_host
+                orientation = LinearLayout.VERTICAL
+            }
+            shell.content.addView(purposeHost)
 
-        val shell = organizerRefreshShell(
-            title = "Scan Purposes",
-            showBack = true,
-            topRightLabel = "+ Add",
-            onTopRight = { showAddEditDialog() },
-            onRefresh = { loadPurposes(showInitialLoading = false) }
-        )
-        swipeRefresh = shell.swipeRefreshLayout
-        purposeHost = LinearLayout(this).apply {
-            id = com.thedavelopers.eventqr.R.id.msp_purpose_host
-            orientation = LinearLayout.VERTICAL
+            loadPurposes()
         }
-        shell.content.addView(purposeHost)
-
-        loadPurposes()
     }
 
     private fun loadPurposes(showInitialLoading: Boolean = true) {

@@ -48,15 +48,20 @@ open class ManageUsersActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
 
-        val eventId = intentEventId() ?: return showMissingEventScreen("Staff Assignment")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-            ?: return showMissingEventScreen("Staff Assignment")
+        lifecycleScope.launch {
+            val eventId = intentEventId() ?: return@launch showMissingEventScreen("Staff Assignment")
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    showMissingEventScreen("Staff Assignment")
+                    return@launch
+                }
 
-        setContentView(R.layout.activity_staff_assignment)
-        bindViews()
-        setupList()
-        bindActions()
-        loadAssigned()
+            setContentView(R.layout.activity_staff_assignment)
+            bindViews()
+            setupList()
+            bindActions()
+            loadAssigned()
+        }
     }
 
     private fun bindViews() {

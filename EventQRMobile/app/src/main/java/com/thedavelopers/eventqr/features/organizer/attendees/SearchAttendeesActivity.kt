@@ -11,6 +11,7 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
@@ -45,14 +46,17 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
             ?: return showMissingEventScreen("Search Attendees")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-            ?: return showMissingEventScreen("Search Attendees")
+        lifecycleScope.launch {
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    showMissingEventScreen("Search Attendees")
+                    return@launch
+                }
+            findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+            findViewById<TextView>(R.id.txtSearchTitle).text = "Search Attendees"
+            findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<TextView>(R.id.txtSearchTitle).text = "Search Attendees"
-        findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title
-
-        searchInput = findViewById(R.id.edtSearchAttendees)
+            searchInput = findViewById(R.id.edtSearchAttendees)
         searchInput.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_search, 0)
         searchInput.compoundDrawablePadding = resources.getDimensionPixelSize(R.dimen.organizer_search_icon_padding)
         emptyState = findViewById(R.id.txtSearchEmpty)
@@ -86,7 +90,8 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         })
 
         updateChips()
-        loadAttendees()
+            loadAttendees()
+        }
     }
 
     private fun loadAttendees() {

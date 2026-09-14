@@ -53,6 +53,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.launch
+
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -81,16 +82,20 @@ open class ManageRewardsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
 
-        eventOptions = repository.getApprovedOrganizerEvents()
-        val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-        selectedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
-            ?: return showMissingEventScreen(
-                "Rewards",
-                if (requestedEventId.isNullOrBlank()) "Event ID is missing." else "This screen is only available for approved events.",
-            )
-        rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
+        lifecycleScope.launch {
+            eventOptions = repository.getApprovedOrganizerEvents()
+            val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
+            selectedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
+                ?: run {
+                    showMissingEventScreen(
+                        "Rewards",
+                        if (requestedEventId.isNullOrBlank()) "Event ID is missing." else "This screen is only available for approved events.",
+                    )
+                    return@launch
+                }
+            rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
 
-        val shell = organizerRefreshShell(
+            val shell = organizerRefreshShell(
             title = "Rewards",
             selectedNav = NAV_REWARDS,
             showBack = false,
@@ -103,6 +108,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         buildScreen()
         loadRewards()
         refreshRewardsEnabledFromServer()
+        }
     }
 
     private fun buildScreen() {
@@ -112,7 +118,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         content.addView(card().apply {
             id = com.thedavelopers.eventqr.R.id.mrw_event_selector
             addView(text("Select Event", 13, false, MUTED))
-            addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) { event ->
+            addView(eventSelector(eventOptions, selectedEvent.id) { event ->
                 if (event.id == selectedEvent.id) return@eventSelector
                 selectedEvent = event
                 rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)

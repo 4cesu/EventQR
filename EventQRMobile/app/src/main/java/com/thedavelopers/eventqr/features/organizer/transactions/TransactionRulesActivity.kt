@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerTransactionRuleDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest
@@ -28,12 +29,17 @@ open class TransactionRulesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen("Transaction Rules")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Transaction Rules")
-        
-        Log.d(TAG, "TransactionRulesActivity started for eventId: $eventId")
-        
-        content = organizerShell("Transaction Rules", showBack = true)
-        loadData()
+        lifecycleScope.launch {
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    showMissingEventScreen("Transaction Rules")
+                    return@launch
+                }
+
+            Log.d(TAG, "TransactionRulesActivity started for eventId: $eventId")
+            content = organizerShell("Transaction Rules", showBack = true)
+            loadData()
+        }
     }
 
     private fun loadData() {

@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.R
@@ -46,14 +47,20 @@ open class EventReportsActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
         reportsRepository = OrganizerReportsRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen("Event Reports")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Event Reports")
-        content = organizerShell(
-            title = "Event Reports",
-            selectedNav = NAV_REPORTS,
-        )
-        val report = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(report)
-        loadScreen()
+        lifecycleScope.launch {
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    showMissingEventScreen("Event Reports")
+                    return@launch
+                }
+            content = organizerShell(
+                title = "Event Reports",
+                selectedNav = NAV_REPORTS,
+            )
+            val report = LinearLayout(this@EventReportsActivity).apply { orientation = LinearLayout.VERTICAL }
+            content.addView(report)
+            loadScreen()
+        }
     }
 
     private fun loadScreen() {
@@ -90,12 +97,14 @@ open class EventReportsActivity : AppCompatActivity() {
         container.removeAllViews()
         container.addView(card().apply {
             addView(text("Select Event", 13, false, MUTED))
-            addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) {
-                selectedEvent = it
-                repository.saveSelectedEventId(it.id)
-                saveSelectedEventId(it.id)
-                loadScreen()
-            })
+            lifecycleScope.launch {
+                addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) {
+                    selectedEvent = it
+                    repository.saveSelectedEventId(it.id)
+                    saveSelectedEventId(it.id)
+                    loadScreen()
+                })
+            }
         })
         container.addView(buildSummaryHeaderCard())
         container.addView(sectionHeader("Generate Reports"))
