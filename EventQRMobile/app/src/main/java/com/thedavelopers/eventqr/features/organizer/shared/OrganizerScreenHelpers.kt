@@ -236,18 +236,6 @@ internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: Stri
     startActivity(intent)
 }
 
-internal fun AppCompatActivity.openOrganizerPlaceholder(
-    title: String,
-    message: String,
-    selectedNav: String? = null,
-) {
-    startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.shared.OrganizerPlaceholderActivity::class.java).apply {
-        putExtra(EXTRA_PLACEHOLDER_TITLE, title)
-        putExtra(EXTRA_PLACEHOLDER_MESSAGE, message)
-        selectedNav?.let { putExtra(EXTRA_PLACEHOLDER_NAV, it) }
-    })
-}
-
 internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = "Event ID is missing.") {
     organizerShell(screenTitle, message, showBack = true)
         .addView(emptyState("Open this screen from My Events or the event hub.", "Open My Events") {

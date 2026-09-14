@@ -89,13 +89,14 @@ public class StaffScannerTest extends BaseTest {
     @Test
     @DisplayName("SCN-5: Dedicated camera scanner opens and closes cleanly")
     void cameraScannerOpensAndCloses() {
-        startActivity(STAFF + ".StaffCameraScannerActivity", null);
+        dash.openScanner();
         assertAll(
-                () -> assertTrue(isDisplayed(id("btnCloseCamera")), "Camera scanner close button expected"),
-                () -> assertTrue(isDisplayed(id("surfaceCameraPreview")), "Camera preview expected")
+                () -> assertTrue(isDisplayed(id("surfaceInlineCameraPreview")), "Live scanner surface expected"),
+                () -> assertTrue(isDisplayed(id("btnSubmitScan")), "Submit scan button expected")
         );
-        tap(id("btnCloseCamera"));
-        assertFalse(isDisplayed(id("btnCloseCamera")), "Closing the camera scanner should finish it");
+        // Close via Appium back navigation (matches other staff-flow tests)
+        driver.navigate().back();
+        assertFalse(isDisplayed(id("surfaceInlineCameraPreview")), "Scanner surface should be gone after back");
     }
 
     @Test

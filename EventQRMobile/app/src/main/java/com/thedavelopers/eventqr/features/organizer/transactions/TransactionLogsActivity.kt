@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.attendees.SearchAttendeesActivity
 import kotlinx.coroutines.MainScope
@@ -21,27 +22,32 @@ open class TransactionLogsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen("Event Logs")
-        val selectableEvents = repository.getApprovedOrganizerEvents()
-        selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: return showMissingEventScreen("Event Logs")
-        attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID)
-        val content = organizerShell("Event Logs", null, NAV_LOGS, showBack = true)
+        lifecycleScope.launch {
+            val selectableEvents = repository.getApprovedOrganizerEvents()
+            selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: run {
+                showMissingEventScreen("Event Logs")
+                return@launch
+            }
+            attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID)
+            val content = organizerShell("Event Logs", null, NAV_LOGS, showBack = true)
 
-        if (selectableEvents.isNotEmpty()) {
-            content.addView(eventSelector(selectableEvents, selectedEvent.id) {
-                selectedEvent = it
-                repository.saveSelectedEventId(it.id)
-                saveSelectedEventId(it.id)
-                loadLogs()
-            })
-        }
+            if (selectableEvents.isNotEmpty()) {
+                content.addView(eventSelector(selectableEvents, selectedEvent.id) {
+                    selectedEvent = it
+                    repository.saveSelectedEventId(it.id)
+                    saveSelectedEventId(it.id)
+                    loadLogs()
+                })
+            }
 
-        list = LinearLayout(this).apply {
-            id = com.thedavelopers.eventqr.R.id.tlg_list
-            orientation = LinearLayout.VERTICAL
+            list = LinearLayout(this@TransactionLogsActivity).apply {
+                id = com.thedavelopers.eventqr.R.id.tlg_list
+                orientation = LinearLayout.VERTICAL
+            }
+            content.addView(list)
+            list.addView(loadingState("Loading event logs..."))
+            loadLogs()
         }
-        content.addView(list)
-        list.addView(loadingState("Loading event logs..."))
-        loadLogs()
     }
 
     private fun loadLogs() {

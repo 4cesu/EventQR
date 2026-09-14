@@ -35,7 +35,6 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResp
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import java.io.File
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -52,8 +51,11 @@ enum class OrganizerMvpDataSource {
 }
 
 class OrganizerRepository(private val context: Context) {
-    private val apiService = ApiClient.getService(context)
-    private val sessionManager = SessionManager(context)
+  private val apiService = ApiClient.getService(context)
+  private val sessionManager = SessionManager(context)
+  // Cached in-memory event store (replaces OrganizerMvpPlaceholders cachedEvents)
+  private var cachedEvents: List<OrganizerMvpEvent> = emptyList()
+
     private val selectionPrefs = context.getSharedPreferences("organizer_mvp_selection", Context.MODE_PRIVATE)
 
     private fun List<OrganizerMvpEvent>.manageable(): List<OrganizerMvpEvent> =
@@ -63,21 +65,24 @@ class OrganizerRepository(private val context: Context) {
                 it.status.equals("Completed", ignoreCase = true)
         }
 
-    fun getApprovedOrganizerEvents(): List<OrganizerMvpEvent> =
-        if (OrganizerMvpPlaceholders.cachedEvents.isNotEmpty()) {
-            OrganizerMvpPlaceholders.cachedEvents.manageable()
+    suspend fun getApprovedOrganizerEvents(): List<OrganizerMvpEvent> {
+        val now = System.currentTimeMillis()
+        val ttlExpired = (now - lastCacheTime) > CACHE_TTL_MS
+        return if (cachedEvents.isNotEmpty() && !ttlExpired) {
+            cachedEvents.manageable()
         } else {
-            runBlocking {
-                when (val result = fetchOrganizerEvents()) {
-                    is NetworkResult.Success -> {
-                        val mapped = result.data.map { it.toMvpEvent() }
-                        OrganizerMvpPlaceholders.cachedEvents = mapped
-                        mapped.manageable()
-                    }
-                    else -> emptyList()
+            val result = fetchOrganizerEvents()
+            when (result) {
+                is NetworkResult.Success -> {
+                    val mapped = result.data.map { it.toMvpEvent() }
+                    cachedEvents = mapped
+                    lastCacheTime = System.currentTimeMillis()
+                    mapped.manageable()
                 }
+                else -> emptyList()
             }
         }
+    }
 
     fun getSelectedEventId(): String? = selectionPrefs.getString(KEY_SELECTED_EVENT_ID, null)
 
@@ -98,11 +103,12 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun loadEventsForMvp(): OrganizerMvpLoad<List<OrganizerMvpEvent>> {
         return when (val result = fetchOrganizerEvents()) {
-            is NetworkResult.Success -> {
-                val mapped = result.data.map { it.toMvpEvent() }
-                OrganizerMvpPlaceholders.cachedEvents = mapped
-                OrganizerMvpLoad(mapped, OrganizerMvpDataSource.BACKEND)
-            }
+                    is NetworkResult.Success -> {
+                        val mapped = result.data.map { it.toMvpEvent() }
+                        cachedEvents = mapped
+                        lastCacheTime = System.currentTimeMillis()
+                        OrganizerMvpLoad(mapped, OrganizerMvpDataSource.BACKEND)
+                    }
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
         }
@@ -363,6 +369,8 @@ class OrganizerRepository(private val context: Context) {
     }
 
     companion object {
+    const val CACHE_TTL_MS = 300_000L // 5 minutes
+    private var lastCacheTime = 0L
         private const val KEY_SELECTED_EVENT_ID = "selected_event_id"
     }
 }

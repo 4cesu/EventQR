@@ -9,7 +9,9 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.AttendeeManagementAdapter
@@ -57,63 +59,74 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
             ?: return showMissingEventScreen("Attendee Management")
-        selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-            ?: return showMissingEventScreen("Attendee Management")
+        lifecycleScope.launch {
+            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+                ?: run {
+                    showMissingEventScreen("Attendee Management")
+                    return@launch
+                }
+            // Continue with rest of setup inside launch to preserve synchronous access to selectedEvent
+            findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
+                startActivity(
+                    Intent(this@AttendeeManagementActivity, SearchAttendeesActivity::class.java)
+                        .putExtra(EXTRA_EVENT_ID, selectedEvent.id)
+                        .putExtra(EXTRA_EVENT_TITLE, selectedEvent.title)
+                )
+            }
 
-        findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
-            startActivity(
-                Intent(this, SearchAttendeesActivity::class.java)
-                    .putExtra(EXTRA_EVENT_ID, selectedEvent.id)
-                    .putExtra(EXTRA_EVENT_TITLE, selectedEvent.title)
-            )
-        }
+            txtTotal = findViewById(R.id.txtTotalCount)
+            txtCheckedIn = findViewById(R.id.txtCheckedInCount)
+            txtNoShow = findViewById(R.id.txtNoShowCount)
+            txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
+            swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
+            progressBar = findViewById(R.id.progressAttendees)
+            skeletonLoading = findViewById(R.id.skeletonLoading)
+            emptyState = findViewById(R.id.txtAttendeesEmpty)
+            eventSelectorHost = findViewById(R.id.layoutEventSelectorHost)
+            bottomNavHost = findViewById(R.id.layoutBottomNavHost)
 
-        txtTotal = findViewById(R.id.txtTotalCount)
-        txtCheckedIn = findViewById(R.id.txtCheckedInCount)
-        txtNoShow = findViewById(R.id.txtNoShowCount)
-        txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
-        swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
-        progressBar = findViewById(R.id.progressAttendees)
-        skeletonLoading = findViewById(R.id.skeletonLoading)
-        emptyState = findViewById(R.id.txtAttendeesEmpty)
-        eventSelectorHost = findViewById(R.id.layoutEventSelectorHost)
-        bottomNavHost = findViewById(R.id.layoutBottomNavHost)
+            swipeRefresh.setOnRefreshListener {
+                refreshSelectedEventAttendees()
+            }
 
-        swipeRefresh.setOnRefreshListener {
-            refreshSelectedEventAttendees()
-        }
+            lifecycleScope.launch {
+                val events = repository.getApprovedOrganizerEvents()
+                eventSelectorHost.addView(
+                    eventSelector(events, selectedEvent.id) { event ->
+                        selectedEvent = event
+                        repository.saveSelectedEventId(event.id)
+                        saveSelectedEventId(event.id)
+                        bindEventHeader()
+                        loadAttendees()
+                    }
+                )
+                adapter = AttendeeManagementAdapter { attendee -> openDetails(attendee) }
+                findViewById<RecyclerView>(R.id.recyclerAttendees).apply {
+                    layoutManager = LinearLayoutManager(this@AttendeeManagementActivity)
+                    adapter = this@AttendeeManagementActivity.adapter
+                }
 
-        eventSelectorHost.addView(
-            eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) { event ->
-                selectedEvent = event
-                repository.saveSelectedEventId(event.id)
-                saveSelectedEventId(event.id)
+                bottomNavHost.addView(bottomNav(NAV_ATTENDEES))
                 bindEventHeader()
                 loadAttendees()
             }
-        )
-
-        adapter = AttendeeManagementAdapter { attendee -> openDetails(attendee) }
-        findViewById<RecyclerView>(R.id.recyclerAttendees).apply {
-            layoutManager = LinearLayoutManager(this@AttendeeManagementActivity)
-            adapter = this@AttendeeManagementActivity.adapter
         }
+        
 
-        bottomNavHost.addView(bottomNav(NAV_ATTENDEES))
-        bindEventHeader()
-        loadAttendees()
     }
 
     private fun refreshSelectedEventAttendees() {
-        val currentEventId = selectedEvent.id
-        val latestSelectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), currentEventId)
-        if (latestSelectedEvent != null) {
-            selectedEvent = latestSelectedEvent
-            repository.saveSelectedEventId(latestSelectedEvent.id)
-            saveSelectedEventId(latestSelectedEvent.id)
-            bindEventHeader()
+        lifecycleScope.launch {
+            val currentEventId = selectedEvent.id
+            val latestSelectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), currentEventId)
+            if (latestSelectedEvent != null) {
+                selectedEvent = latestSelectedEvent
+                repository.saveSelectedEventId(latestSelectedEvent.id)
+                saveSelectedEventId(latestSelectedEvent.id)
+                bindEventHeader()
+            }
+            loadAttendees()
         }
-        loadAttendees()
     }
 
     private fun loadAttendees() {

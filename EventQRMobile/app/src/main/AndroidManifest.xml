@@ -38,7 +38,7 @@
         <activity android:name=".features.staff.EventRegistrationsActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffAssignedEventsActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffTransactionsActivity" android:exported="false" />
-        <activity android:name=".features.staff.StaffCameraScannerActivity" android:exported="false" />
+
         <activity android:name=".features.staff.scanner.ScannerActivity" android:exported="false" />
         <activity android:name=".features.staff.details.StaffAttendeeDetailsActivity" android:exported="false" />
         <activity android:name=".features.staff.result.StaffTransactionResultActivity" android:exported="false" />
@@ -59,7 +59,7 @@
         <activity android:name=".features.organizer.staff.ManageUsersActivity" android:exported="false" />
         <activity android:name=".features.organizer.staff.SearchUserAccountActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.ManageEventsActivity" android:exported="false" />
-        <activity android:name=".features.organizer.shared.OrganizerPlaceholderActivity" android:exported="false" />
+
         <activity android:name=".features.organizer.dashboard.OrganizerDashboardActivity" android:exported="false" />
         <activity android:name=".features.organizer.attendees.AttendeeManagementActivity" android:exported="false" />
         <activity android:name=".features.organizer.attendees.AttendeeDetailsActivity" android:exported="false" />
@@ -88,7 +88,7 @@
                     android:pathPrefix="/reset-password" />
             </intent-filter>
         </activity>
-        <activity android:name=".features.common.ComingSoonActivity" android:exported="false" />
+
         <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" />
         <activity android:name=".features.dashboard.DashboardActivity" android:exported="false" />
         <activity android:name=".features.auth.register.RegistrationActivity" android:exported="false" />
