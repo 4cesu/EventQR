@@ -42,33 +42,112 @@ The platform allows:
 
 ```txt
 EventQR/
-├── EventQRBackend/
+├── .serena/                     # Serena AI configuration
+├── EventQRBackend/              # Java Spring Boot backend
 │   └── eventqr/
 │       ├── src/
 │       │   ├── main/
 │       │   │   ├── java/com/thedavelopers/eventqr/
 │       │   │   │   ├── features/
-│       │   │   │   └── shared/
-│       │   │   └── resources/
-│       │   └── test/
+│       │   │   │   │   ├── admin/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── attendance/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── auth/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── events/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── organizer/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── staff/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── notifications/
+│       │   │   │   │   │   ├── controller/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   ├── repository/
+│       │   │   │   │   │   ├── model/
+│       │   │   │   │   │   └── dto/
+│       │   │   │   │   ├── qremail/
+│       │   │   │   │   │   ├── service/
+│       │   │   │   │   │   │   ├── EmailGatewayService.java
+│       │   │   │   │   │   │   ├── EmailTemplateBuilder.java
+│       │   │   │   │   │   │   └── QREmailService.java
+│       │   │   │   │   └── shared/
+│       │   │   │   │       ├── config/
+│       │   │   │   │       ├── security/
+│       │   │   │   │       ├── utils/
+│       │   │   │   │       └── exceptions/
+│       │   │   │   └── resources/
+│       │   │   │       ├── application.yml
+│       │   │   │       ├── application-dev.yml
+│       │   │   │       ├── schema.sql
+│       │   │   │       └── data.sql
+│       │   │   └── test/
+│       │   │       └── java/com/thedavelopers/eventqr/
+│       │   │           └── features/
 │       ├── pom.xml
-│       ├── mvnw
-│       ├── mvnw.cmd
 │       └── Dockerfile
-├── EventQRMobile/
+├── EventQRMobile/               # Kotlin Android mobile client
 │   ├── app/
-│   │   ├── src/main/java/com/thedavelopers/eventqr/
-│   │   ├── src/main/res/
-│   │   └── build.gradle.kts
-│   ├── gradlew
-│   ├── gradlew.bat
-│   ├── settings.gradle.kts
-│   └── gradle/
-├── .git/
-├── .github/
-├── .vscode/
-├── README.md
-└── .idea/
+│   │   ├── src/
+│   │   │   ├── main/
+│   │   │   │   ├── java/com/thedavelopers/eventqr/
+│   │   │   │   │   ├── features/
+│   │   │   │   │   │   ├── auth/
+│   │   │   │   │   │   ├── attendance/
+│   │   │   │   │   │   ├── dashboard/
+│   │   │   │   │   │   ├── events/
+│   │   │   │   │   │   ├── organizers/
+│   │   │   │   │   │   ├── profile/
+│   │   │   │   │   │   ├── rewards/
+│   │   │   │   │   │   ├── staff/
+│   │   │   │   │   │   └── shared/
+│   │   │   │   │   └── res/
+│   │   │   │   │       ├── layout/
+│   │   │   │   │       ├── menu/
+│   │   │   │   │       ├── values/
+│   │   │   │   │       ├── drawable/
+│   │   │   │   │       └── navigation/
+│   │   │   │   └── test/
+│   │   │   │       └── java/com/thedavelopers/eventqr/
+│   │   │   │           └── features/
+│   ├── build.gradle
+│   └── proguard-rules.pro
+├── supabase/                    # Supabase configuration and migrations
+│   ├── migrations/
+│   │   ├── supabase/
+│   │   └── ...
+│   └── ...
+├── .gitignore
+├── AGENTS.md                    # Opencode agent configuration
+├── EVENTQR_DESIGN_SYSTEM.md     # Design system guidelines
+├── FinalFlow.md                 # Project workflow documentation
+├── opencode.json                # Opencode configuration
+└── README.md
 ```
 
 ## Main Functional Areas
