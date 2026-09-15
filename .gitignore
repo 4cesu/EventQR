@@ -11,3 +11,5 @@ AGENTS.md
 build_output.log
 dependency-check-scan*.log
 dependency-check-scan*.err
+server.err
+test_output.txt
