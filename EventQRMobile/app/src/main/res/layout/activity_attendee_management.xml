@@ -49,6 +49,7 @@
         android:paddingEnd="16dp">
 
         <TextView
+            android:id="@+id/txtCurrentEventLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Current Event"
@@ -74,6 +75,7 @@
             android:textSize="12sp" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAttendeeStats"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -203,16 +205,46 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/txtAttendeesEmpty"
+            <LinearLayout
+                android:id="@+id/layoutAttendeesEmpty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
-                android:text="No attendees registered yet."
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/imgAttendeesEmptyIcon"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_group"
+                    android:tint="@color/text_disabled" />
+
+                <TextView
+                    android:id="@+id/txtAttendeesEmptyTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="No attendees registered yet"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtAttendeesEmptySub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="Attendees will appear here once they register for the event."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/skeletonLoading"

@@ -190,13 +190,18 @@ class ReportPreviewActivity : AppCompatActivity() {
         when (report.emptyState) {
             EventReportEmptyState.NO_FILTER_MATCH -> {
                 content.addView(emptyState(
-                    "No records matched your filters.",
-                    "Back to Filters"
-                ) { finish() })
+                    iconRes = R.drawable.ic_organizer_reports,
+                    title = "No matching records",
+                    subtext = "No records matched your filters. Try adjusting your criteria.",
+                    actionLabel = "Back to Filters",
+                    onAction = { finish() },
+                ))
             }
             EventReportEmptyState.NO_EVENT_RECORDS -> {
                 content.addView(emptyState(
-                    "No records exist for this event at all.",
+                    iconRes = R.drawable.ic_organizer_reports,
+                    title = "No records yet",
+                    subtext = "No records exist for this event yet. Data will appear as attendees interact.",
                 ))
             }
             else -> {
@@ -204,7 +209,11 @@ class ReportPreviewActivity : AppCompatActivity() {
                 if (report.rows.isNotEmpty()) {
                     content.addView(buildPaginatedDataTable(report))
                 } else {
-                    content.addView(emptyState("No data to display."))
+                    content.addView(emptyState(
+                        iconRes = R.drawable.ic_organizer_reports,
+                        title = "No data to display",
+                        subtext = "There is no data available for this report.",
+                    ))
                 }
             }
         }

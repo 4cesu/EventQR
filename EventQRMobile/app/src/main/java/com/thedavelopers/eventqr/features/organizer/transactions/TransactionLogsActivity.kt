@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.attendees.SearchAttendeesActivity
 import kotlinx.coroutines.MainScope
@@ -72,8 +73,13 @@ open class TransactionLogsActivity : AppCompatActivity() {
             return
         }
         if (logs.isEmpty()) {
-            val message = if (attendeeId == null) "No event logs for this event yet." else "No event logs for this attendee yet."
-            list.addView(emptyState(message))
+            val title = if (attendeeId == null) "No event logs yet" else "No attendee logs yet"
+            val subtext = if (attendeeId == null) "Transaction logs will appear here once activity occurs." else "No logs found for this attendee."
+            list.addView(emptyState(
+                iconRes = R.drawable.ic_organizer_reports,
+                title = title,
+                subtext = subtext,
+            ))
             return
         }
         logs.forEach { list.addView(logCard(it)) }

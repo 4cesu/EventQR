@@ -31,24 +31,27 @@ import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.statusBucket
-import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 open class AttendeeManagementActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
-    private lateinit var selectedEvent: OrganizerMvpEvent
+    private var selectedEvent: OrganizerMvpEvent? = null
     private lateinit var adapter: AttendeeManagementAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var skeletonLoading: View
-    private lateinit var emptyState: TextView
+    private lateinit var emptyStateLayout: View
+    private lateinit var emptyStateTitle: TextView
+    private lateinit var emptyStateSub: TextView
     private lateinit var txtTotal: TextView
     private lateinit var txtCheckedIn: TextView
     private lateinit var txtNoShow: TextView
     private lateinit var txtEventSelectorDate: TextView
     private lateinit var eventSelectorHost: LinearLayout
     private lateinit var bottomNavHost: LinearLayout
+    private lateinit var currentEventLabel: TextView
+    private lateinit var cardAttendeeStats: View
 
     private var attendees: List<OrganizerMvpAttendee> = emptyList()
 
@@ -57,67 +60,79 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         setContentView(R.layout.activity_attendee_management)
 
         repository = OrganizerRepository(this)
-        val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-            ?: return showMissingEventScreen("Attendee Management")
+
+        txtTotal = findViewById(R.id.txtTotalCount)
+        txtCheckedIn = findViewById(R.id.txtCheckedInCount)
+        txtNoShow = findViewById(R.id.txtNoShowCount)
+        txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
+        swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
+        progressBar = findViewById(R.id.progressAttendees)
+        skeletonLoading = findViewById(R.id.skeletonLoading)
+        emptyStateLayout = findViewById(R.id.layoutAttendeesEmpty)
+        emptyStateTitle = findViewById(R.id.txtAttendeesEmptyTitle)
+        emptyStateSub = findViewById(R.id.txtAttendeesEmptySub)
+        eventSelectorHost = findViewById(R.id.layoutEventSelectorHost)
+        bottomNavHost = findViewById(R.id.layoutBottomNavHost)
+        currentEventLabel = findViewById(R.id.txtCurrentEventLabel)
+        cardAttendeeStats = findViewById(R.id.cardAttendeeStats)
+
+        bottomNavHost.addView(bottomNav(NAV_ATTENDEES))
+
+        swipeRefresh.setOnRefreshListener {
+            refreshSelectedEventAttendees()
+        }
+
         lifecycleScope.launch {
-            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-                ?: run {
-                    showMissingEventScreen("Attendee Management")
-                    return@launch
-                }
-            // Continue with rest of setup inside launch to preserve synchronous access to selectedEvent
-            findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
-                startActivity(
-                    Intent(this@AttendeeManagementActivity, SearchAttendeesActivity::class.java)
-                        .putExtra(EXTRA_EVENT_ID, selectedEvent.id)
-                        .putExtra(EXTRA_EVENT_TITLE, selectedEvent.title)
-                )
+            val events = repository.getApprovedOrganizerEvents()
+
+            if (events.isEmpty()) {
+                showNoEventsAvailableState()
+                return@launch
             }
 
-            txtTotal = findViewById(R.id.txtTotalCount)
-            txtCheckedIn = findViewById(R.id.txtCheckedInCount)
-            txtNoShow = findViewById(R.id.txtNoShowCount)
-            txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
-            swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
-            progressBar = findViewById(R.id.progressAttendees)
-            skeletonLoading = findViewById(R.id.skeletonLoading)
-            emptyState = findViewById(R.id.txtAttendeesEmpty)
-            eventSelectorHost = findViewById(R.id.layoutEventSelectorHost)
-            bottomNavHost = findViewById(R.id.layoutBottomNavHost)
-
-            swipeRefresh.setOnRefreshListener {
-                refreshSelectedEventAttendees()
+            adapter = AttendeeManagementAdapter { attendee -> openDetails(attendee) }
+            findViewById<RecyclerView>(R.id.recyclerAttendees).apply {
+                layoutManager = LinearLayoutManager(this@AttendeeManagementActivity)
+                adapter = this@AttendeeManagementActivity.adapter
             }
 
-            lifecycleScope.launch {
-                val events = repository.getApprovedOrganizerEvents()
-                eventSelectorHost.addView(
-                    eventSelector(events, selectedEvent.id) { event ->
-                        selectedEvent = event
-                        repository.saveSelectedEventId(event.id)
-                        saveSelectedEventId(event.id)
-                        bindEventHeader()
-                        loadAttendees()
-                    }
-                )
-                adapter = AttendeeManagementAdapter { attendee -> openDetails(attendee) }
-                findViewById<RecyclerView>(R.id.recyclerAttendees).apply {
-                    layoutManager = LinearLayoutManager(this@AttendeeManagementActivity)
-                    adapter = this@AttendeeManagementActivity.adapter
+            eventSelectorHost.addView(
+                eventSelector(events, selectedEvent?.id.orEmpty()) { event ->
+                    selectedEvent = event
+                    repository.saveSelectedEventId(event.id)
+                    saveSelectedEventId(event.id)
+                    restoreNormalUi()
+                    bindEventHeader()
+                    loadAttendees()
                 }
+            )
 
-                bottomNavHost.addView(bottomNav(NAV_ATTENDEES))
+            val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
+            val resolvedEvent = if (eventId != null) {
+                resolveSelectedEvent(events, eventId)
+            } else null
+
+            if (resolvedEvent != null) {
+                selectedEvent = resolvedEvent
+                findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
+                    startActivity(
+                        Intent(this@AttendeeManagementActivity, SearchAttendeesActivity::class.java)
+                            .putExtra(EXTRA_EVENT_ID, resolvedEvent.id)
+                            .putExtra(EXTRA_EVENT_TITLE, resolvedEvent.title)
+                    )
+                }
                 bindEventHeader()
                 loadAttendees()
+            } else {
+                showNoEventEmptyState()
             }
         }
-        
-
     }
 
     private fun refreshSelectedEventAttendees() {
+        val event = selectedEvent ?: return
         lifecycleScope.launch {
-            val currentEventId = selectedEvent.id
+            val currentEventId = event.id
             val latestSelectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), currentEventId)
             if (latestSelectedEvent != null) {
                 selectedEvent = latestSelectedEvent
@@ -130,14 +145,15 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     }
 
     private fun loadAttendees() {
+        val event = selectedEvent ?: return
         if (!swipeRefresh.isRefreshing) {
             progressBar.visibility = View.GONE
             skeletonLoading.visibility = View.VISIBLE
         }
         MainScope().launch {
-            val eventIdAtRequestTime = selectedEvent.id
+            val eventIdAtRequestTime = event.id
             val load = repository.loadAttendeesForMvp(eventIdAtRequestTime)
-            if (eventIdAtRequestTime != selectedEvent.id) {
+            if (eventIdAtRequestTime != selectedEvent?.id) {
                 swipeRefresh.isRefreshing = false
                 progressBar.visibility = View.GONE
                 skeletonLoading.visibility = View.GONE
@@ -151,8 +167,41 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     }
 
     private fun bindEventHeader() {
-        val dateLine = organizerEventDateLine(selectedEvent.shortDate, selectedEvent.title, selectedEvent.venue)
-        txtEventSelectorDate.text = if (dateLine.isBlank()) selectedEvent.title else "${selectedEvent.title} · $dateLine"
+        val event = selectedEvent ?: return
+        val dateLine = organizerEventDateLine(event.shortDate, event.title, event.venue)
+        txtEventSelectorDate.text = if (dateLine.isBlank()) event.title else "${event.title} · $dateLine"
+    }
+
+    private fun showNoEventEmptyState() {
+        skeletonLoading.visibility = View.GONE
+        progressBar.visibility = View.GONE
+        swipeRefresh.isEnabled = false
+        currentEventLabel.visibility = View.GONE
+        cardAttendeeStats.visibility = View.GONE
+        emptyStateLayout.visibility = View.VISIBLE
+        emptyStateTitle.text = "No event selected"
+        emptyStateSub.text = "Select an event from the dropdown above to view attendees."
+    }
+
+    private fun showNoEventsAvailableState() {
+        skeletonLoading.visibility = View.GONE
+        progressBar.visibility = View.GONE
+        swipeRefresh.isEnabled = false
+        currentEventLabel.visibility = View.GONE
+        txtEventSelectorDate.visibility = View.GONE
+        cardAttendeeStats.visibility = View.GONE
+        eventSelectorHost.visibility = View.GONE
+        emptyStateLayout.visibility = View.VISIBLE
+        emptyStateTitle.text = "No Events Available"
+        emptyStateSub.text = "Create an event in the Events tab to start managing attendees."
+    }
+
+    private fun restoreNormalUi() {
+        currentEventLabel.visibility = View.VISIBLE
+        cardAttendeeStats.visibility = View.VISIBLE
+        swipeRefresh.isEnabled = true
+        emptyStateLayout.visibility = View.GONE
+        txtEventSelectorDate.visibility = View.VISIBLE
     }
 
     private fun render(load: OrganizerMvpLoad<List<OrganizerMvpAttendee>>) {
@@ -165,19 +214,25 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         txtNoShow.text = noShow.toString()
 
         adapter.submitItems(attendees)
-        emptyState.visibility = if (attendees.isEmpty()) View.VISIBLE else View.GONE
-        emptyState.text = when {
-            load.source == OrganizerMvpDataSource.ERROR -> load.message ?: "Attendees could not be loaded."
-            attendees.isEmpty() -> "No attendees registered yet."
-            else -> ""
+        emptyStateLayout.visibility = if (attendees.isEmpty()) View.VISIBLE else View.GONE
+        when {
+            load.source == OrganizerMvpDataSource.ERROR -> {
+                emptyStateTitle.text = "Unable to load attendees"
+                emptyStateSub.text = load.message ?: "Please try again later."
+            }
+            attendees.isEmpty() -> {
+                emptyStateTitle.text = "No attendees registered yet"
+                emptyStateSub.text = "Attendees will appear here once they register for the event."
+            }
         }
     }
 
     private fun openDetails(attendee: OrganizerMvpAttendee) {
+        val event = selectedEvent ?: return
         startActivity(
             Intent(this, AttendeeDetailsActivity::class.java)
-                .putExtra(EXTRA_EVENT_ID, selectedEvent.id)
-                .putExtra(EXTRA_EVENT_TITLE, selectedEvent.title)
+                .putExtra(EXTRA_EVENT_ID, event.id)
+                .putExtra(EXTRA_EVENT_TITLE, event.title)
                 .putExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID, attendee.id)
         )
     }

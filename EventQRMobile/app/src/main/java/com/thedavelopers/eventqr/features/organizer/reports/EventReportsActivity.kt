@@ -46,20 +46,28 @@ open class EventReportsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         reportsRepository = OrganizerReportsRepository(this)
-        val eventId = intentEventId() ?: return showMissingEventScreen("Event Reports")
+        val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
         lifecycleScope.launch {
-            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
-                ?: run {
-                    showMissingEventScreen("Event Reports")
-                    return@launch
-                }
+            val events = repository.getApprovedOrganizerEvents()
+            val resolvedEvent = if (eventId != null) resolveSelectedEvent(events, eventId) else null
+
             content = organizerShell(
                 title = "Event Reports",
                 selectedNav = NAV_REPORTS,
             )
-            val report = LinearLayout(this@EventReportsActivity).apply { orientation = LinearLayout.VERTICAL }
-            content.addView(report)
-            loadScreen()
+
+            if (resolvedEvent != null) {
+                selectedEvent = resolvedEvent
+                val report = LinearLayout(this@EventReportsActivity).apply { orientation = LinearLayout.VERTICAL }
+                content.addView(report)
+                loadScreen()
+            } else {
+                content.addView(centeredEmptyState(
+                    iconRes = R.drawable.ic_organizer_reports,
+                    title = "No Events Available",
+                    subtext = "Create an event in the Events tab to view and generate reports.",
+                ))
+            }
         }
     }
 
@@ -114,9 +122,8 @@ open class EventReportsActivity : AppCompatActivity() {
                 iconRes = item.iconRes,
                 iconTint = item.iconTint,
                 iconBg = item.iconBg,
-            ) {
-                openFilterSheet(item)
-            })
+                onClick = { openFilterSheet(item) }
+            ))
         }
     }
 
