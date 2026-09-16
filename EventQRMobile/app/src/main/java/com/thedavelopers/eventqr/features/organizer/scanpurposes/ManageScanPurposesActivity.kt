@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
 import androidx.lifecycle.lifecycleScope
@@ -122,7 +123,13 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private fun renderPurposes(purposes: List<OrganizerMvpScanPurpose>) {
         purposeHost.removeAllViews()
         if (purposes.isEmpty()) {
-            purposeHost.addView(emptyState("No scan purposes configured yet. Use '+ Add' to create one."))
+            purposeHost.addView(emptyState(
+                iconRes = R.drawable.ic_scan,
+                title = "No scan purposes yet",
+                subtext = "Create scan purposes to track attendee check-ins and activities.",
+                actionLabel = "+ Add",
+                onAction = { showAddEditDialog() },
+            ))
             return
         }
 

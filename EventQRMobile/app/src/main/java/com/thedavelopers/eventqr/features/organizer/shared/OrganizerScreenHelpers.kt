@@ -24,6 +24,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.TextViewCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import android.util.TypedValue
 import kotlin.math.max
@@ -238,9 +239,13 @@ internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: Stri
 
 internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = "Event ID is missing.") {
     organizerShell(screenTitle, message, showBack = true)
-        .addView(emptyState("Open this screen from My Events or the event hub.", "Open My Events") {
-            openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java)
-        })
+        .addView(emptyState(
+            iconRes = R.drawable.ic_calendar,
+            title = "No event selected",
+            subtext = "Open this screen from My Events or the event hub.",
+            actionLabel = "Open My Events",
+            onAction = { openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java) },
+        ))
 }
 
 internal fun AppCompatActivity.menuCard(
@@ -249,15 +254,19 @@ internal fun AppCompatActivity.menuCard(
     iconTint: Int = PURPLE,
     iconBg: Int = Color.parseColor("#EEF0FF"),
     onClick: () -> Unit,
+    hideBackground: Boolean = false,
+    iconColorOverride: Int? = null,
 ): LinearLayout = card(12).apply {
     setOnClickListener { onClick() }
     val content = row()
     content.addView(ImageView(this@menuCard).apply {
         layoutParams = LinearLayout.LayoutParams(dp(42), dp(42))
-        background = rounded(iconBg, 10, null, density = resources.displayMetrics.density)
+        if (!hideBackground) {
+            background = rounded(iconBg, 10, null, density = resources.displayMetrics.density)
+        }
         setPadding(dp(10), dp(10), dp(10), dp(10))
         setImageResource(iconRes)
-        setColorFilter(iconTint)
+        setColorFilter(iconColorOverride ?: iconTint)
     })
     content.addView(text(label, 16, true).apply {
         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -435,7 +444,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
         layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
     }
     val scroll = ScrollView(this).apply {
-        isFillViewport = false
+        isFillViewport = true
         layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     }
     val content = LinearLayout(this).apply {
@@ -534,7 +543,7 @@ internal fun AppCompatActivity.organizerShell(
     }
 
     val scroll = ScrollView(this).apply {
-        isFillViewport = false
+        isFillViewport = true
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             0,

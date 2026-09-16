@@ -27,27 +27,70 @@ internal fun AppCompatActivity.loadingState(message: String): View {
 }
 
 internal fun AppCompatActivity.emptyState(
-    message: String,
+    iconRes: Int = R.drawable.ic_calendar,
+    title: String,
+    subtext: String,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
 ): View {
-    return card(18).apply {
+    return LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER
-        addView(text(message, 14, false, MUTED).apply {
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+        setPadding(dp(32), dp(24), dp(32), dp(24))
+        addView(ImageView(this@emptyState).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(64), dp(64))
+            setImageResource(iconRes)
+            setColorFilter(resources.getColor(R.color.text_disabled, theme))
+            contentDescription = null
+        })
+        addView(text(title, 16, true, resources.getColor(R.color.text_primary, theme)).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(12), 0, dp(4))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { gravity = Gravity.CENTER_HORIZONTAL }
+        })
+        addView(text(subtext, 14, false, resources.getColor(R.color.text_secondary, theme)).apply {
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { gravity = Gravity.CENTER_HORIZONTAL }
         })
         if (!actionLabel.isNullOrBlank() && onAction != null) {
             addView(primaryButton(actionLabel, onAction).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dp(44),
-                ).apply { setMargins(0, dp(14), 0, 0) }
+                    dp(48),
+                ).apply {
+                    setMargins(0, dp(16), 0, 0)
+                    gravity = Gravity.CENTER_HORIZONTAL
+                }
             })
         }
+    }
+}
+
+internal fun AppCompatActivity.centeredEmptyState(
+    iconRes: Int = R.drawable.ic_calendar,
+    title: String,
+    subtext: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+): View {
+    return LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+        )
+        addView(emptyState(iconRes, title, subtext, actionLabel, onAction))
     }
 }
 

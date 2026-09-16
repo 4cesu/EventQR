@@ -8,12 +8,14 @@ import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
+import com.thedavelopers.eventqr.R
 import com.google.gson.GsonBuilder
 import com.thedavelopers.eventqr.core.api.ApiConfig
 import com.thedavelopers.eventqr.core.api.AuthInterceptor
@@ -34,8 +36,10 @@ import com.thedavelopers.eventqr.features.organizer.PURPLE
 import com.thedavelopers.eventqr.features.organizer.SUCCESS
 import com.thedavelopers.eventqr.features.organizer.TEXT
 import com.thedavelopers.eventqr.features.organizer.card
+import com.thedavelopers.eventqr.features.organizer.centeredEmptyState
 import com.thedavelopers.eventqr.features.organizer.dp
 import com.thedavelopers.eventqr.features.organizer.errorState
+import com.thedavelopers.eventqr.features.organizer.primaryButton
 import com.thedavelopers.eventqr.features.organizer.eventSelector
 import com.thedavelopers.eventqr.features.organizer.formatCount
 import com.thedavelopers.eventqr.features.organizer.intentEventId
@@ -45,7 +49,6 @@ import com.thedavelopers.eventqr.features.organizer.rounded
 import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.section
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
-import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.features.organizer.text
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
@@ -85,29 +88,37 @@ open class ManageRewardsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             eventOptions = repository.getApprovedOrganizerEvents()
             val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-            selectedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
-                ?: run {
-                    showMissingEventScreen(
-                        "Rewards",
-                        if (requestedEventId.isNullOrBlank()) "Event ID is missing." else "This screen is only available for approved events.",
-                    )
-                    return@launch
-                }
-            rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
+            val resolvedEvent = if (requestedEventId != null) {
+                resolveSelectedEvent(eventOptions, requestedEventId)
+            } else null
 
+            val hasEvent = resolvedEvent != null
             val shell = organizerRefreshShell(
-            title = "Rewards",
-            selectedNav = NAV_REWARDS,
-            showBack = false,
-            topRightLabel = "+ Add",
-            onTopRight = { showRewardDialog(null) },
-            onRefresh = { loadRewards(showInitialLoading = false) },
-        )
-        content = shell.content
-        refreshLayout = shell.swipeRefreshLayout
-        buildScreen()
-        loadRewards()
-        refreshRewardsEnabledFromServer()
+                title = "Rewards",
+                selectedNav = NAV_REWARDS,
+                showBack = false,
+                topRightLabel = if (hasEvent) "+ Add" else null,
+                onTopRight = { showRewardDialog(null) },
+                onRefresh = { loadRewards(showInitialLoading = false) },
+            )
+            content = shell.content
+            refreshLayout = shell.swipeRefreshLayout
+            refreshLayout.isEnabled = hasEvent
+
+            if (resolvedEvent != null) {
+                selectedEvent = resolvedEvent
+                rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
+                buildScreen()
+                loadRewards()
+                refreshRewardsEnabledFromServer()
+            } else {
+                content.addView(centeredEmptyState(
+                    iconRes = R.drawable.ic_nav_gift,
+                    title = "No Events Available",
+                    subtext = "Create an event in the Events tab to manage reward redemptions.",
+                ))
+                content.setBackgroundColor(BG)
+            }
         }
     }
 
@@ -212,18 +223,36 @@ open class ManageRewardsActivity : AppCompatActivity() {
             rewardHost.addView(LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(0, dp(24), 0, dp(24))
-                addView(text("No rewards have been created yet.", 16, true, TEXT).apply {
+                setPadding(dp(32), dp(24), dp(32), dp(24))
+                addView(ImageView(this@ManageRewardsActivity).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(64), dp(64))
+                    setImageResource(R.drawable.ic_nav_gift)
+                    setColorFilter(resources.getColor(R.color.text_disabled, theme))
+                    contentDescription = null
+                })
+                addView(text("No rewards created yet", 16, true, resources.getColor(R.color.text_primary, theme)).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(0, dp(12), 0, dp(4))
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply { gravity = Gravity.CENTER_HORIZONTAL }
+                })
+                addView(text("Create rewards to let attendees redeem perks during the event.", 14, false, resources.getColor(R.color.text_secondary, theme)).apply {
                     gravity = Gravity.CENTER
                     layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
-                    )
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply { gravity = Gravity.CENTER_HORIZONTAL }
                 })
-                addView(text("Add Reward", 14, true, PURPLE).apply {
-                    gravity = Gravity.CENTER
-                    setPadding(dp(8), dp(12), dp(8), dp(12))
-                    setOnClickListener { showRewardDialog(null) }
+                addView(primaryButton("Add Reward") { showRewardDialog(null) }.apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        dp(48),
+                    ).apply {
+                        setMargins(0, dp(16), 0, 0)
+                        gravity = Gravity.CENTER_HORIZONTAL
+                    }
                 })
             })
             return

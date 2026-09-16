@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.scanpurposes.ManageScanPurposesActivity
 import com.thedavelopers.eventqr.features.organizer.staff.ManageUsersActivity
@@ -46,9 +47,13 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     if (load.source == OrganizerMvpDataSource.ERROR) {
                         errorState(load.message ?: "Event details could not be loaded.") { recreate() }
                     } else {
-                        emptyState("Event not found or not available for organizer management.", "Open My Events") {
-                            openOrganizerPage(ManageEventsActivity::class.java)
-                        }
+                        emptyState(
+                            iconRes = R.drawable.ic_calendar,
+                            title = "Event not found",
+                            subtext = "This event is not available for organizer management.",
+                            actionLabel = "Open My Events",
+                            onAction = { openOrganizerPage(ManageEventsActivity::class.java) },
+                        )
                     },
                 )
                 return@launch
@@ -143,17 +148,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 add(Triple("ID Display Settings", com.thedavelopers.eventqr.R.drawable.ic_id, com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java))
             }
 
-            // Colors keyed by label, not position: inserting/reordering rows must never
-            // reshuffle the visual identity of the existing entries.
             menuItems.forEachIndexed { index, (label, icon, target) ->
-                val (iconTint, iconBg) = when (label) {
-                    "Edit Event Details", "View Event Details" -> Color.parseColor("#2563EB") to Color.parseColor("#DBEAFE")
-                    "Staff Assignment" -> Color.parseColor("#4F46E5") to Color.parseColor("#E0E7FF")
-                    "Scan Purposes" -> Color.parseColor("#06B6D4") to Color.parseColor("#CFFAFE")
-                    "Transaction Rules" -> Color.parseColor("#F59E0B") to Color.parseColor("#FEF3C7")
-                    "ID Display Settings" -> Color.parseColor("#10B981") to Color.parseColor("#D1FAE5")
-                    else -> error("Unexpected Event Management hub row: $label")
-                }
                 val menuId = when (label) {
                     "Edit Event Details", "View Event Details" -> com.thedavelopers.eventqr.R.id.emh_menu_edit
                     "Staff Assignment" -> com.thedavelopers.eventqr.R.id.emh_menu_staff
@@ -162,16 +157,17 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     "ID Display Settings" -> com.thedavelopers.eventqr.R.id.emh_menu_id
                     else -> View.generateViewId()
                 }
-                body.addView(
-                    menuCard(
-                        label = label,
-                        iconRes = icon,
-                        iconTint = iconTint,
-                        iconBg = iconBg,
-                    ) { openOrganizerPage(target, event.id, event.title, viewOnly = label == "View Event Details") }.apply {
-                        id = menuId
-                    },
-                )
+body.addView(
+                     menuCard(
+                         label = label,
+                         iconRes = icon,
+                         hideBackground = true,
+                         iconColorOverride = Color.parseColor("#111827"),
+                         onClick = { openOrganizerPage(target, event.id, event.title, viewOnly = label == "View Event Details") }
+                     ).apply {
+                         id = menuId
+                     },
+                 )
             }
         }
     }

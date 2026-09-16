@@ -1,0 +1,24 @@
+Files changed:
+1. EventQRMobile\app\src\main\java\com\thedavelopers\eventqr\features\organizer\shared\OrganizerScreenHelpers.kt
+   - Added hideBackground: Boolean = false and iconColorOverride: Int? = null parameters to menuCard()
+   - Made background conditional on !hideBackground
+   - Made icon color use iconColorOverride ?: iconTint
+   - Reordered parameters to put onClick before optional parameters
+
+2. EventQRMobile\app\src\main\java\com\thedavelopers\eventqr\features\organizer\events\EventManagementHubActivity.kt
+   - Removed the when (label) block that mapped labels to iconBg/iconTint colors
+   - Updated menuCard calls to pass hideBackground = true and iconColorOverride = Color.parseColor("#111827")
+   - Kept 42dp icon container geometry and padding
+
+3. EventQRMobile\app\src\main\java\com\thedavelopers\eventqr\features\organizer\reports\EventReportsActivity.kt
+   - Updated menuCard calls to use named parameters matching the new signature
+   - Moved onClick lambda to last parameter position
+
+Build verification:
+- Command: cd EventQRMobile && .\gradlew.bat :app:assembleDebug
+- Result: BUILD SUCCESS
+
+Acceptance criteria:
+- Organizer Event Management hub action-card icons: no rounded square background, black (#111827) icons ✓
+- EventReports rows and Scan Purposes toggles: visually unchanged (still tinted tiles) ✓
+- No build regressions ✓
