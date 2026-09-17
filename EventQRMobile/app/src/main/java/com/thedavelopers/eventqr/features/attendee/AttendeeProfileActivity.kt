@@ -31,6 +31,10 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
     private lateinit var txtProfileName: TextView
     private lateinit var txtProfileRole: TextView
+    private lateinit var txtProfileInitial: TextView
+    private lateinit var txtProfileDetailName: TextView
+    private lateinit var txtProfileDetailEmail: TextView
+    private lateinit var txtProfileDetailPhone: TextView
     private lateinit var skeletonLoading: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var layoutProfileMenu: View
@@ -46,20 +50,26 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileRole = findViewById(R.id.txtProfileRole)
+        txtProfileInitial = findViewById(R.id.txtProfileInitial)
+        txtProfileDetailName = findViewById(R.id.txtProfileDetailName)
+        txtProfileDetailEmail = findViewById(R.id.txtProfileDetailEmail)
+        txtProfileDetailPhone = findViewById(R.id.txtProfileDetailPhone)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefresh = findViewById(R.id.swipeRefreshProfile)
         layoutProfileMenu = findViewById(R.id.layoutProfileMenu)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
 
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefresh.setColorSchemeResources(R.color.accent_signal)
         swipeRefresh.setOnRefreshListener { loadProfile() }
 
         btnProfileRetry.setOnClickListener { loadProfile() }
 
-        findViewById<View>(R.id.cardEditProfile).setOnClickListener {
+        val launchEditProfile = {
             startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
         }
+        findViewById<View>(R.id.cardEditProfile).setOnClickListener { launchEditProfile() }
+        findViewById<View>(R.id.btnEditProfile)?.setOnClickListener { launchEditProfile() }
         findViewById<View>(R.id.cardTransactionHistory).setOnClickListener {
             startActivity(Intent(this, AttendeeTransactionsActivity::class.java))
         }
@@ -71,7 +81,7 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         }
 
         // EventQR - UI safeguard beyond SRS/SDD explicit spec (no confirm-dialog requirement stated for sign out)
-        findViewById<Button>(R.id.btnProfileLogout).setOnClickListener {
+        findViewById<View>(R.id.cardSignOut).setOnClickListener {
             showSignOutConfirmation()
         }
 
@@ -131,21 +141,21 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun renderProfile(user: UserResponse? = null) {
-        txtProfileName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        txtProfileName.text = name.ifBlank { "Attendee" }
         txtProfileRole.text = (user?.role?.name ?: sessionManager.getUserRole())
             ?.takeIf { it.isNotBlank() }
             ?.let { RoleMapper.getDisplayName(it) }
             .orEmpty()
 
         // Initial avatar
-        val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
-        findViewById<TextView>(R.id.txtProfileInitial)?.text =
-            name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+        txtProfileInitial.text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
 
         // Profile detail rows
-        findViewById<TextView>(R.id.txtProfileDetailName)?.text = user?.fullName
-        findViewById<TextView>(R.id.txtProfileDetailEmail)?.text = user?.email
-        findViewById<TextView>(R.id.txtProfileDetailPhone)?.text = user?.phoneNumber ?: "\u2014"
+        txtProfileDetailName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        txtProfileDetailEmail.text = user?.email ?: sessionManager.getEmail().orEmpty()
+        txtProfileDetailPhone.text =
+            (user?.phoneNumber ?: sessionManager.getPhone())?.takeIf { it.isNotBlank() } ?: "\u2014"
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -153,7 +163,9 @@ open class AttendeeProfileActivity : AppCompatActivity() {
             skeletonLoading.visibility = if (loading) View.VISIBLE else View.GONE
         }
         if (loading) {
-            layoutProfileMenu.visibility = View.GONE
+            if (!swipeRefresh.isRefreshing) {
+                layoutProfileMenu.visibility = View.GONE
+            }
             btnProfileRetry.visibility = View.GONE
             txtProfileError.visibility = View.GONE
         } else {
