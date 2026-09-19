@@ -53,7 +53,6 @@
                 android:id="@+id/headerApproved"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_result_success_header"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="24dp">
@@ -61,7 +60,7 @@
                 <FrameLayout
                     android:layout_width="88dp"
                     android:layout_height="88dp"
-                    android:background="@drawable/bg_staff_success_circle">
+                    android:background="@drawable/bg_check_circle">
 
                     <ImageView
                         android:layout_width="40dp"
@@ -77,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="QR Code Valid"
-                    android:textColor="@android:color/white"
+                    android:textColor="@android:color/black"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -88,7 +87,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="Attendee verified successfully"
-                    android:textColor="#D1D5FF"
+                    android:textColor="#111827"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -97,7 +96,6 @@
                 android:id="@+id/headerRejected"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_result_rejected_header"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="24dp"
@@ -132,8 +130,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:text="Backend verification rejected the scan."
-                    android:textColor="#9F1239"
+                    android:text="This scan could not be completed"
+                    android:textColor="#4B5563"
                     android:textSize="14sp" />
             </LinearLayout>
 
