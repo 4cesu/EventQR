@@ -53,7 +53,6 @@
                 android:id="@+id/headerApproved"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_result_success_header"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="24dp">
@@ -61,7 +60,7 @@
                 <FrameLayout
                     android:layout_width="88dp"
                     android:layout_height="88dp"
-                    android:background="@drawable/bg_staff_success_circle">
+                    android:background="@drawable/bg_check_circle">
 
                     <ImageView
                         android:layout_width="40dp"
@@ -77,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Transaction Successful"
-                    android:textColor="@android:color/white"
+                    android:textColor="@android:color/black"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -88,7 +87,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="Points awarded to attendee"
-                    android:textColor="#D1D5FF"
+                    android:textColor="#111827"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -97,7 +96,6 @@
                 android:id="@+id/headerRejected"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_result_rejected_header"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="24dp"
@@ -122,7 +120,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Transaction Rejected"
-                    android:textColor="@android:color/white"
+                    android:textColor="@android:color/black"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -133,7 +131,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="Transaction was not recorded"
-                    android:textColor="#D1D5FF"
+                    android:textColor="#111827"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -302,18 +300,19 @@
                 android:background="@drawable/bg_reward_points"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="18dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="12dp"
                 android:visibility="gone">
 
                 <LinearLayout
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_icon_tile_gray"
                     android:gravity="center">
 
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:contentDescription="Points"
                         android:src="@drawable/ic_row_star" />
                 </LinearLayout>
@@ -321,25 +320,25 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="POINTS"
+                        android:text="POINTS AWARDED"
                         android:textColor="#C7D2FE"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/txtTransactionPoints"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="1dp"
                         android:textColor="@android:color/white"
-                        android:textSize="24sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
