@@ -497,14 +497,14 @@
             android:id="@+id/btnViewAttendeeDetails"
             app:icon="@drawable/ic_visibility_on"
             app:iconGravity="textStart"
-            app:iconTint="#4F46E5"
+            app:iconTint="@color/eventqr_indigo"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_staff_outline_button"
             android:text="View Attendee Details"
             android:textAllCaps="false"
-            android:textColor="#4F46E5"
+            android:textColor="@color/eventqr_indigo"
             android:textSize="16sp"
             android:textStyle="bold"
             app:backgroundTint="@null"/>
@@ -518,12 +518,12 @@
             android:layout_marginTop="12dp"
             android:textAllCaps="false"
             android:textColor="#34343C"
-            android:textSize="15sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:text="Scan Another"
             app:icon="@drawable/ic_staff_scan"
             app:iconPadding="8dp"
-            app:iconSize="25dp"
+            app:iconSize="30dp"
             app:iconTint="#34343C" />
 
     </LinearLayout>
