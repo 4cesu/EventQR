@@ -51,7 +51,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_staff_scan_result)
         repository = StaffRepository(this)
-
+        
         val isValid = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)
         bindStaticFields(isValid)
         applyActionLabels()
@@ -92,10 +92,19 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<View>(R.id.headerRejected).visibility = View.GONE
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.VISIBLE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.GONE
+            findViewById<View>(R.id.cardVerificationDetails).visibility = View.VISIBLE
+            
             findViewById<TextView>(R.id.txtScanResultAttendeeName).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown()
             findViewById<TextView>(R.id.txtScanResultAttendeeEmail).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL).orUnknown()
             findViewById<TextView>(R.id.txtScanResultRegistrationStatus).text = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS).orUnknown()
             findViewById<TextView>(R.id.txtScanResultStatusHint).text = "Attendee verified successfully"
+            findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
+            findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
+            
+            // New UI fields binding
+            val verifiedAt = intent.getStringExtra(StaffScreenExtras.EXTRA_VERIFIED_AT)
+            findViewById<TextView>(R.id.txtScanResultVerifiedAt).text = formatVerifiedAt(verifiedAt)
+
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
         } else {
@@ -105,6 +114,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = "Backend verification rejected the scan."
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
+            findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.GONE
         }
@@ -114,9 +124,11 @@ open class StaffScanResultActivity : AppCompatActivity() {
         findViewById<View>(R.id.headerApproved).visibility = View.GONE
         findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
         findViewById<TextView>(R.id.txtScanResultStateRejected).text = "Verification Rejected"
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = "Transaction could not be completed."
         findViewById<TextView>(R.id.txtScanResultReason).text = message
         findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
+        findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
         findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
     }
 
@@ -311,6 +323,16 @@ open class StaffScanResultActivity : AppCompatActivity() {
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun formatVerifiedAt(raw: String?): String {
+        if (raw.isNullOrBlank()) return "Just now"
+        val instant = runCatching { java.time.Instant.parse(raw) }.getOrNull()
+        return if (instant != null) {
+            com.thedavelopers.eventqr.core.util.DateFormatters.formatInstant(instant)
+        } else {
+            "Just now"
+        }
+    }
 
     private fun openTransactionResult(result: TransactionResponse) {
         startActivity(Intent(this, StaffTransactionResultActivity::class.java).apply {
