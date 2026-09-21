@@ -58,16 +58,38 @@
                 android:padding="24dp">
 
                 <FrameLayout
-                    android:layout_width="88dp"
-                    android:layout_height="88dp"
-                    android:background="@drawable/bg_check_circle">
+                    android:layout_width="100dp"
+                    android:layout_height="100dp">
+
+                    <View
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_circle_green"
+                        android:alpha="0.1" />
+
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_circle_green" />
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_gravity="center"
-                        android:contentDescription="Approved"
-                        android:src="@drawable/ic_staff_check_white" />
+                        android:contentDescription="Valid"
+                        android:src="@drawable/ic_qr_success_check"
+                        app:tint="@android:color/white" />
+
+                    <!-- Decorative burst lines placeholder (approximate design) -->
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@android:drawable/ic_menu_add"
+                        android:alpha="0.2"
+                        android:visibility="gone" />
                 </FrameLayout>
 
                 <TextView
@@ -102,16 +124,28 @@
                 android:visibility="gone">
 
                 <FrameLayout
-                    android:layout_width="88dp"
-                    android:layout_height="88dp"
-                    android:background="@drawable/bg_staff_rejected_circle">
+                    android:layout_width="100dp"
+                    android:layout_height="100dp">
+
+                    <View
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_staff_rejected_circle"
+                        android:alpha="0.1" />
+
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_staff_rejected_circle" />
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_gravity="center"
-                        android:contentDescription="Rejected"
-                        android:src="@drawable/ic_close_white" />
+                        android:src="@drawable/ic_staff_close"
+                        app:tint="@android:color/white" />
                 </FrameLayout>
 
                 <TextView
@@ -204,14 +238,16 @@
                     <LinearLayout
                         android:layout_width="42dp"
                         android:layout_height="42dp"
-                        android:background="@drawable/bg_icon_tile_green"
+                        android:background="@drawable/bg_circle_indigo"
+                        android:backgroundTint="#EEF2FF"
                         android:gravity="center">
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:contentDescription="Attendee"
-                            android:src="@drawable/ic_row_user" />
+                            android:src="@drawable/ic_row_user"
+                            app:tint="#4F46E5" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -255,14 +291,15 @@
                         android:layout_width="42dp"
                         android:layout_height="42dp"
                         android:background="@drawable/bg_icon_tile_gray"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:backgroundTint="#EEF2FF">
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:contentDescription="Time"
                             android:src="@drawable/ic_row_clock"
-                            android:tint="@color/text_secondary" />
+                            app:tint="#4F46E5"  />
                     </LinearLayout>
 
                     <LinearLayout
@@ -286,7 +323,8 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:textColor="#111827"
-                            android:textSize="15sp" />
+                            android:textSize="15sp"
+                            />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -393,7 +431,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Actions -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnViewTransactionAttendee"
                 android:layout_width="match_parent"
@@ -402,10 +439,13 @@
                 android:background="@drawable/bg_staff_outline_button"
                 android:text="View Attendee Details"
                 android:textAllCaps="false"
-                android:textColor="#4F46E5"
+                android:textColor="@color/eventqr_indigo"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null"
+                app:icon="@drawable/ic_visibility_on"
+                app:iconGravity="textStart"
+                app:iconTint="@color/eventqr_indigo"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnTransactionScanAgain"
@@ -418,20 +458,30 @@
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null"
+                app:icon="@drawable/ic_staff_scan"
+                app:iconPadding="8dp"
+                app:iconSize="35dp"
+                app:iconTint="#FFFFFF"
+                app:iconGravity="textStart"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnTransactionDashboard"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="54dp"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_soft_gray_pill"
                 android:text="Back to Dashboard"
                 android:textAllCaps="false"
-                android:textColor="#4B5563"
-                android:textSize="16sp"
+                android:textColor="@color/eventqr_indigo"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                app:backgroundTint="@null" />
+                app:icon="@drawable/ic_back_chevron"
+                app:iconPadding="8dp"
+                app:iconSize="26dp"
+                app:iconTint="@color/eventqr_indigo"
+                app:iconGravity="textStart"
+                style="@style/Widget.MaterialComponents.Button.TextButton"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
