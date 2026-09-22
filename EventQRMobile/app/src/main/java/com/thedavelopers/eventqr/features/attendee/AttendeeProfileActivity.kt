@@ -9,10 +9,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import com.google.android.material.appbar.MaterialToolbar
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import com.google.android.material.textfield.TextInputLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -31,10 +31,6 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
     private lateinit var txtProfileName: TextView
     private lateinit var txtProfileRole: TextView
-    private lateinit var txtProfileInitial: TextView
-    private lateinit var txtProfileDetailName: TextView
-    private lateinit var txtProfileDetailEmail: TextView
-    private lateinit var txtProfileDetailPhone: TextView
     private lateinit var skeletonLoading: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var layoutProfileMenu: View
@@ -50,26 +46,20 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileRole = findViewById(R.id.txtProfileRole)
-        txtProfileInitial = findViewById(R.id.txtProfileInitial)
-        txtProfileDetailName = findViewById(R.id.txtProfileDetailName)
-        txtProfileDetailEmail = findViewById(R.id.txtProfileDetailEmail)
-        txtProfileDetailPhone = findViewById(R.id.txtProfileDetailPhone)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefresh = findViewById(R.id.swipeRefreshProfile)
         layoutProfileMenu = findViewById(R.id.layoutProfileMenu)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
 
-        swipeRefresh.setColorSchemeResources(R.color.accent_signal)
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadProfile() }
 
         btnProfileRetry.setOnClickListener { loadProfile() }
 
-        val launchEditProfile = {
+        findViewById<View>(R.id.cardEditProfile).setOnClickListener {
             startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
         }
-        findViewById<View>(R.id.cardEditProfile).setOnClickListener { launchEditProfile() }
-        findViewById<View>(R.id.btnEditProfile)?.setOnClickListener { launchEditProfile() }
         findViewById<View>(R.id.cardTransactionHistory).setOnClickListener {
             startActivity(Intent(this, AttendeeTransactionsActivity::class.java))
         }
@@ -141,21 +131,21 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun renderProfile(user: UserResponse? = null) {
-        val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
-        txtProfileName.text = name.ifBlank { "Attendee" }
+        txtProfileName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
         txtProfileRole.text = (user?.role?.name ?: sessionManager.getUserRole())
             ?.takeIf { it.isNotBlank() }
             ?.let { RoleMapper.getDisplayName(it) }
             .orEmpty()
 
         // Initial avatar
-        txtProfileInitial.text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+        val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        findViewById<TextView>(R.id.txtProfileInitial)?.text =
+            name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
 
         // Profile detail rows
-        txtProfileDetailName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
-        txtProfileDetailEmail.text = user?.email ?: sessionManager.getEmail().orEmpty()
-        txtProfileDetailPhone.text =
-            (user?.phoneNumber ?: sessionManager.getPhone())?.takeIf { it.isNotBlank() } ?: "\u2014"
+        findViewById<TextView>(R.id.txtProfileDetailName)?.text = user?.fullName
+        findViewById<TextView>(R.id.txtProfileDetailEmail)?.text = user?.email
+        findViewById<TextView>(R.id.txtProfileDetailPhone)?.text = user?.phoneNumber ?: "\u2014"
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -163,9 +153,7 @@ open class AttendeeProfileActivity : AppCompatActivity() {
             skeletonLoading.visibility = if (loading) View.VISIBLE else View.GONE
         }
         if (loading) {
-            if (!swipeRefresh.isRefreshing) {
-                layoutProfileMenu.visibility = View.GONE
-            }
+            layoutProfileMenu.visibility = View.GONE
             btnProfileRetry.visibility = View.GONE
             txtProfileError.visibility = View.GONE
         } else {
@@ -192,12 +180,11 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
 
-    private lateinit var btnBack: MaterialToolbar
+    private lateinit var btnBack: ImageButton
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
-    private lateinit var layoutPhoneField: View
-    private lateinit var txtPhoneError: TextView
+    private lateinit var tilPhone: TextInputLayout
     private lateinit var cardError: View
     private lateinit var txtApiError: TextView
     private lateinit var btnRetryProfileLoad: Button
@@ -232,8 +219,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)
-        layoutPhoneField = findViewById(R.id.layoutPhoneField)
-        txtPhoneError = findViewById(R.id.txtPhoneError)
+        tilPhone = findViewById(R.id.tilPhone)
         cardError = findViewById(R.id.cardError)
         txtApiError = findViewById(R.id.txtApiError)
         btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
@@ -243,12 +229,12 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         btnSaveChanges = findViewById(R.id.btnSaveChanges)
         txtEmptyHint = findViewById(R.id.txtEmptyHint)
 
-        swipeRefresh.setColorSchemeResources(R.color.accent_signal)
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadCurrentProfile() }
     }
 
     private fun bindActions() {
-        btnBack.setNavigationOnClickListener { finish() }
+        btnBack.setOnClickListener { finish() }
         btnRetryProfileLoad.setOnClickListener { loadCurrentProfile() }
 
         btnSaveChanges.setOnClickListener { attemptSave() }
@@ -356,15 +342,11 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun validateForm(): Boolean {
         val phone = sanitizePhone()
         if (phone.isBlank()) {
-            layoutPhoneField.background = ContextCompat.getDrawable(this, R.drawable.bg_phone_input_error)
-            txtPhoneError.text = "Phone number is required."
-            txtPhoneError.visibility = View.VISIBLE
+            edtPhone.error = "Phone number is required."
             return false
         }
         if (phone.length != 10 || !phone.all { it.isDigit() }) {
-            layoutPhoneField.background = ContextCompat.getDrawable(this, R.drawable.bg_phone_input_error)
-            txtPhoneError.text = "Enter a valid 10-digit mobile number"
-            txtPhoneError.visibility = View.VISIBLE
+            edtPhone.error = "Enter a valid 10-digit mobile number"
             return false
         }
         return true
@@ -392,8 +374,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                 val normalized = normalizePhoneDigits(current.toString())
                 if (normalized != current.toString()) {
                     current.replace(0, current.length, normalized)
-                    layoutPhoneField.background = ContextCompat.getDrawable(this@AttendeeEditProfileActivity, R.drawable.bg_phone_input)
-                    txtPhoneError.visibility = View.GONE
+                    edtPhone.error = null
                 }
             }
         })
@@ -422,8 +403,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun clearFieldErrors() {
         edtFullName.error = null
         edtEmail.error = null
-        layoutPhoneField.background = ContextCompat.getDrawable(this@AttendeeEditProfileActivity, R.drawable.bg_phone_input)
-        txtPhoneError.visibility = View.GONE
+        edtPhone.error = null
     }
 
     private fun showApiError(message: String) {

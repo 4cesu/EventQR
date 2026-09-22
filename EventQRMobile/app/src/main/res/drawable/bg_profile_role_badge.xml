@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EventQR v2.0 — Canonical Status/Role Indicator (DESIGN.md §2.2, §7.4) -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="3dp"
-        android:gravity="start">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/accent_signal_light" />
-        </shape>
-    </item>
-</layer-list>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#33FFFFFF" />
+    <corners android:radius="20dp" />
+</shape>
