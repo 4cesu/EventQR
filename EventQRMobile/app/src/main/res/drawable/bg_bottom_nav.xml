@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EventQR v2.0 — Bottom Nav Flat Chrome (DESIGN.md §7.6) -->
+<!-- EventQR — Bottom Nav Flat Chrome (DESIGN.md §7.6) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">

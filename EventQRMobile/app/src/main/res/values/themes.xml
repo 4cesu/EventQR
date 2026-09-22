@@ -81,7 +81,7 @@
     </style>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- EventQR v2.0 Type Scale (DESIGN.md §3.2)      -->
+    <!-- EventQR Type Scale (DESIGN.md §3.2)          -->
     <!-- ═══════════════════════════════════════════════ -->
 
     <style name="TextAppearance.EventQR.TextTitle" parent="">
