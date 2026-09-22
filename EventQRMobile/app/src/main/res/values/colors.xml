@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- EventQR v2.0 — Core Palette (DESIGN.md §2.1) -->
+    <!-- EventQR — Core Palette (DESIGN.md §2.1)      -->
     <!-- ═══════════════════════════════════════════════ -->
     <color name="ink">#111111</color>
     <color name="paper">#FAF9F6</color>
@@ -11,19 +11,19 @@
     <color name="ink_muted">#6B6B6B</color>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- v2.0 Accent family (§2.1)                      -->
+    <!-- Accent family (§2.1)                          -->
     <!-- ═══════════════════════════════════════════════ -->
     <color name="accent_signal_dark">#1E1B5E</color>
     <color name="accent_signal_light">#4A46A8</color>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- v2.0 Status (§2.2)                             -->
+    <!-- Status (§2.2)                                 -->
     <!-- ═══════════════════════════════════════════════ -->
     <color name="status_live">#1C7C3E</color>
     <color name="status_rejected">#C62828</color>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- v2.0 Text Tokens (§2.3)                        -->
+    <!-- Text Tokens (§2.3)                            -->
     <!-- ═══════════════════════════════════════════════ -->
     <color name="text_on_paper">#111111</color>
     <color name="text_on_paper_muted">#6B6B6B</color>
@@ -33,14 +33,14 @@
     <color name="text_on_accent_muted">#D7D4F8</color>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- v2.0 Button States (§7.1)                      -->
+    <!-- Button States (§7.1)                          -->
     <!-- ═══════════════════════════════════════════════ -->
     <color name="accent_signal_pressed">#1E1B5E</color>
     <color name="accent_signal_disabled">#26111111</color>
     <color name="text_on_accent_disabled">#4D111111</color>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- v1.0 Legacy Tokens (other screens still use)   -->
+    <!-- Legacy Tokens (other screens still use)      -->
     <!-- ═══════════════════════════════════════════════ -->
     <!-- Design System Tokens -->
     <color name="brand_primary">#2D2A7C</color>
