@@ -36,7 +36,7 @@ open class StaffProfileActivity : AppCompatActivity() {
             return
         }
 
-        setContentView(R.layout.activity_profile)
+        setContentView(R.layout.activity_staff_profile)
 
         setupStaffBottomNav()
 
