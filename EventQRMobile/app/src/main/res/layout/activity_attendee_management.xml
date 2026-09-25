@@ -48,31 +48,53 @@
         android:paddingTop="16dp"
         android:paddingEnd="16dp">
 
-        <TextView
-            android:id="@+id/txtCurrentEventLabel"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCurrentEvent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Current Event"
-            android:textColor="#6B7280"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            app:cardBackgroundColor="@color/surface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/outline"
+            app:strokeWidth="1dp">
 
-        <LinearLayout
-            android:id="@+id/layoutEventSelectorHost"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <TextView
-            android:id="@+id/txtEventSelectorDate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#6B7280"
-            android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/txtCurrentEventLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Current Event"
+                    android:textColor="#6B7280"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/layoutEventSelectorHost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/txtEventSelectorDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:drawablePadding="6dp"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:textColor="#6B7280"
+                    android:textSize="12sp"
+                    app:drawableStartCompat="@drawable/ic_calendar"
+                    app:drawableTint="#6B7280" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardAttendeeStats"
@@ -80,7 +102,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="12dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
             app:strokeColor="@color/outline"
             app:strokeWidth="1dp">
@@ -100,6 +122,21 @@
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
 
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@drawable/bg_stat_circle_purple">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_group"
+                            app:tint="#6366F1" />
+                    </FrameLayout>
+
                     <TextView
                         android:id="@+id/txtTotalCount"
                         android:layout_width="wrap_content"
@@ -112,7 +149,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
                         android:text="Total"
@@ -120,12 +157,33 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@color/outline" />
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@drawable/bg_stat_circle_green">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_check_circle_green"
+                            app:tint="#10B981" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/txtCheckedInCount"
@@ -139,7 +197,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
                         android:text="Checked In"
@@ -147,12 +205,33 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@color/outline" />
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@drawable/bg_stat_circle_slate">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/outline_block_24"
+                            app:tint="#64748B" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/txtNoShowCount"
@@ -166,7 +245,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
                         android:text="No Show"
@@ -187,7 +266,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingStart="16dp"
-            android:paddingTop="18dp"
+            android:paddingTop="16dp"
             android:paddingEnd="16dp">
 
             <androidx.recyclerview.widget.RecyclerView
@@ -222,7 +301,7 @@
                     android:layout_height="64dp"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_group"
-                    android:tint="@color/text_disabled" />
+                    app:tint="@color/text_disabled" />
 
                 <TextView
                     android:id="@+id/txtAttendeesEmptyTitle"
