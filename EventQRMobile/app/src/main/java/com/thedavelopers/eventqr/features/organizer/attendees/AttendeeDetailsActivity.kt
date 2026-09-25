@@ -27,7 +27,6 @@ import com.thedavelopers.eventqr.features.organizer.statusPalette
 import com.thedavelopers.eventqr.features.organizer.transactionTypeLabel
 import kotlinx.coroutines.MainScope
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -162,24 +161,90 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             attendee.recentTransactions
                 .sortedWith(compareByDescending<OrganizerMvpTransactionEntry> { parseToLocalDateTime(it.timestamp.orEmpty()) ?: LocalDateTime.MIN })
                 .forEach { entry ->
-                    container.addView(LinearLayout(this).apply {
+                    val itemBox = LinearLayout(this).apply {
                         orientation = LinearLayout.HORIZONTAL
                         gravity = android.view.Gravity.CENTER_VERTICAL
-                        setPadding(0, dp(8), 0, dp(8))
-                        val label = transactionTypeLabel(entry.type)
-                        val time = formatEntryTimestamp(entry.timestamp)
-                        addView(TextView(this@AttendeeDetailsActivity).apply {
+                        setPadding(dp(12), dp(12), dp(12), dp(12))
+                        background = GradientDrawable().apply {
+                            setColor(0xFFF8FAFC.toInt())
+                            cornerRadius = dp(12).toFloat()
+                        }
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(0, dp(4), 0, dp(4))
+                        }
+
+                        // Timeline Dot + Line
+                        val timelineLayout = LinearLayout(this@AttendeeDetailsActivity).apply {
+                            orientation = LinearLayout.VERTICAL
+                            gravity = android.view.Gravity.CENTER_HORIZONTAL
+                            layoutParams = LinearLayout.LayoutParams(dp(12), dp(36)).apply {
+                                marginEnd = dp(12)
+                            }
+                            addView(View(this@AttendeeDetailsActivity).apply {
+                                layoutParams = LinearLayout.LayoutParams(dp(8), dp(8))
+                                background = GradientDrawable().apply {
+                                    shape = GradientDrawable.OVAL
+                                    setColor(0xFF635BFF.toInt())
+                                }
+                            })
+                            addView(View(this@AttendeeDetailsActivity).apply {
+                                layoutParams = LinearLayout.LayoutParams(dp(2), 0, 1f).apply {
+                                    topMargin = dp(2)
+                                }
+                                background = GradientDrawable().apply {
+                                    setColor(0xFFCBD5E1.toInt())
+                                }
+                            })
+                        }
+                        addView(timelineLayout)
+
+                        // Icon Box
+                        val iconBox = android.widget.FrameLayout(this@AttendeeDetailsActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply {
+                                marginEnd = dp(12)
+                            }
+                            background = GradientDrawable().apply {
+                                setColor(0xFFEEF2FF.toInt())
+                                cornerRadius = dp(10).toFloat()
+                            }
+                            addView(android.widget.ImageView(this@AttendeeDetailsActivity).apply {
+                                layoutParams = android.widget.FrameLayout.LayoutParams(dp(20), dp(20), android.view.Gravity.CENTER)
+                                setImageResource(R.drawable.ic_calendar)
+                                imageTintList = android.content.res.ColorStateList.valueOf(0xFF635BFF.toInt())
+                            })
+                        }
+                        addView(iconBox)
+
+                        // Text Stack
+                        val textStack = LinearLayout(this@AttendeeDetailsActivity).apply {
+                            orientation = LinearLayout.VERTICAL
                             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                            text = label
-                            setTextColor(getColor(R.color.text_primary))
-                            textSize = 14f
-                        })
-                        addView(TextView(this@AttendeeDetailsActivity).apply {
-                            text = time ?: "-"
-                            setTextColor(getColor(R.color.text_secondary))
-                            textSize = 12f
-                        })
-                    })
+                            val label = transactionTypeLabel(entry.type)
+                            val time = formatEntryTimestamp(entry.timestamp)
+                            addView(TextView(this@AttendeeDetailsActivity).apply {
+                                text = label
+                                setTextColor(getColor(R.color.text_primary))
+                                textSize = 14f
+                                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                            })
+                            addView(TextView(this@AttendeeDetailsActivity).apply {
+                                text = time ?: "-"
+                                setTextColor(getColor(R.color.text_secondary))
+                                textSize = 12f
+                                layoutParams = LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                ).apply {
+                                    topMargin = dp(2)
+                                }
+                            })
+                        }
+                        addView(textStack)
+                    }
+                    container.addView(itemBox)
                 }
         }
         findViewById<View>(R.id.cardTransactionHistory).visibility = View.VISIBLE
