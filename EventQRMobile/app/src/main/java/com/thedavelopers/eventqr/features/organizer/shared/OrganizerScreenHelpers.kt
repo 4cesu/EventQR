@@ -596,8 +596,7 @@ internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
             }
         }),
         Triple(NAV_REPORTS, com.thedavelopers.eventqr.R.drawable.ic_organizer_reports, {
-            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity &&
-                this@bottomNav !is com.thedavelopers.eventqr.features.organizer.reports.ReportsActivity) {
+            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity) {
                 openOrganizerPage(com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity::class.java, currentEventId)
             }
         }),
