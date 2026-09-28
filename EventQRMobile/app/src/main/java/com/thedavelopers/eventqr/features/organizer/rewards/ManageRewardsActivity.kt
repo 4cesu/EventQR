@@ -85,6 +85,17 @@ open class ManageRewardsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
 
+        val shell = organizerRefreshShell(
+            title = "Rewards",
+            selectedNav = NAV_REWARDS,
+            showBack = false,
+            topRightLabel = null,
+            onTopRight = { showRewardDialog(null) },
+            onRefresh = { loadRewards(showInitialLoading = false) },
+        )
+        content = shell.content
+        refreshLayout = shell.swipeRefreshLayout
+
         lifecycleScope.launch {
             eventOptions = repository.getApprovedOrganizerEvents()
             val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
@@ -93,16 +104,6 @@ open class ManageRewardsActivity : AppCompatActivity() {
             } else null
 
             val hasEvent = resolvedEvent != null
-            val shell = organizerRefreshShell(
-                title = "Rewards",
-                selectedNav = NAV_REWARDS,
-                showBack = false,
-                topRightLabel = if (hasEvent) "+ Add" else null,
-                onTopRight = { showRewardDialog(null) },
-                onRefresh = { loadRewards(showInitialLoading = false) },
-            )
-            content = shell.content
-            refreshLayout = shell.swipeRefreshLayout
             refreshLayout.isEnabled = hasEvent
 
             if (resolvedEvent != null) {
@@ -112,6 +113,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 loadRewards()
                 refreshRewardsEnabledFromServer()
             } else {
+                content.removeAllViews()
                 content.addView(centeredEmptyState(
                     iconRes = R.drawable.ic_nav_gift,
                     title = "No Events Available",

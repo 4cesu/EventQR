@@ -226,8 +226,12 @@ internal fun AppCompatActivity.resolveSelectedEvent(events: List<OrganizerMvpEve
     return selected
 }
 
+@Suppress("DEPRECATION")
 internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: String? = null, eventTitle: String? = null, viewOnly: Boolean = false) {
-    val intent = Intent(this, target)
+    if (this::class.java == target) return
+    val intent = Intent(this, target).apply {
+        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    }
     eventId?.let {
         saveSelectedEventId(it)
         intent.putExtra(EXTRA_EVENT_ID, it)
@@ -235,6 +239,7 @@ internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: Stri
     eventTitle?.takeIf { it.isNotBlank() }?.let { intent.putExtra(EXTRA_EVENT_TITLE, it) }
     if (viewOnly) intent.putExtra(EXTRA_EVENT_VIEW_ONLY, true)
     startActivity(intent)
+    overridePendingTransition(0, 0)
 }
 
 internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = "Event ID is missing.") {
