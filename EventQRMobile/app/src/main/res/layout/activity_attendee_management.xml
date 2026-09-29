@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="44dp"
             android:layout_gravity="center_vertical"
-            android:background="@drawable/bg_event_filter_chip_selected"
+            android:background="@drawable/bg_current_event_selector"
             android:contentDescription="Filter"
             android:minWidth="44dp"
             android:padding="10dp"
@@ -77,22 +77,80 @@
                     android:id="@+id/layoutEventSelectorHost"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="vertical" />
-
-                <TextView
-                    android:id="@+id/txtEventSelectorDate"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:drawablePadding="6dp"
-                    android:ellipsize="end"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_current_event_selector"
                     android:gravity="center_vertical"
-                    android:maxLines="1"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp"
-                    app:drawableStartCompat="@drawable/ic_calendar"
-                    app:drawableTint="#6B7280" />
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp">
+
+                    <FrameLayout
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_stat_circle_purple">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_calendar"
+                            app:tint="#6366F1" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/txtEventTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="Choose an Event"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_calendar"
+                                app:tint="#6B7280" />
+
+                            <TextView
+                                android:id="@+id/txtEventSelectorDate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:text="2026-09-22"
+                                android:textColor="#6B7280"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_arrow_drop_down"
+                        app:tint="#6B7280" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -478,6 +536,7 @@
     <LinearLayout
         android:id="@+id/layoutBottomNavHost"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
 
 </LinearLayout>
