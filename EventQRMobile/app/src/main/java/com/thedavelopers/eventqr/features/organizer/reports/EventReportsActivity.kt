@@ -665,6 +665,8 @@ open class EventReportsActivity : AppCompatActivity() {
         }
 
         return container
+
+
     }
 
     private fun openFilterSheet(item: EventReportCatalogItem) {

@@ -1,17 +1,23 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.launch
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.AttendeeManagementAdapter
@@ -24,9 +30,7 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpLoad
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.bottomNav
-import com.thedavelopers.eventqr.features.organizer.eventSelector
 import com.thedavelopers.eventqr.features.organizer.intentEventId
-import com.thedavelopers.eventqr.features.organizer.organizerEventDateLine
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
@@ -47,6 +51,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     private lateinit var txtTotal: TextView
     private lateinit var txtCheckedIn: TextView
     private lateinit var txtNoShow: TextView
+    private lateinit var txtEventTitle: TextView
     private lateinit var txtEventSelectorDate: TextView
     private lateinit var eventSelectorHost: LinearLayout
     private lateinit var bottomNavHost: LinearLayout
@@ -64,6 +69,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         txtTotal = findViewById(R.id.txtTotalCount)
         txtCheckedIn = findViewById(R.id.txtCheckedInCount)
         txtNoShow = findViewById(R.id.txtNoShowCount)
+        txtEventTitle = findViewById(R.id.txtEventTitle)
         txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
         swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
         progressBar = findViewById(R.id.progressAttendees)
@@ -96,16 +102,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
                 adapter = this@AttendeeManagementActivity.adapter
             }
 
-            eventSelectorHost.addView(
-                eventSelector(events, selectedEvent?.id.orEmpty()) { event ->
-                    selectedEvent = event
-                    repository.saveSelectedEventId(event.id)
-                    saveSelectedEventId(event.id)
-                    restoreNormalUi()
-                    bindEventHeader()
-                    loadAttendees()
-                }
-            )
+            setupEventSelector(events)
 
             val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
             val resolvedEvent = if (eventId != null) {
@@ -127,6 +124,108 @@ open class AttendeeManagementActivity : AppCompatActivity() {
                 showNoEventEmptyState()
             }
         }
+    }
+
+    private fun formatDateOnly(rawDate: String): String {
+        if (rawDate.isBlank()) return "2026-09-22"
+        val cleaned = rawDate
+            .replace(Regex("T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z?"), "")
+            .trim()
+        val datePart = cleaned
+            .substringBefore(" ")
+            .substringBefore("T")
+            .substringBefore("·")
+            .trim()
+        return datePart.ifBlank { "2026-09-22" }
+    }
+
+    private fun setupEventSelector(events: List<OrganizerMvpEvent>) {
+        val approvedEvents = events.filter { it.status.equals("APPROVED", ignoreCase = true) || it.status.isBlank() }
+        val selectableEvents = approvedEvents.ifEmpty { events }
+
+        eventSelectorHost.isClickable = selectableEvents.isNotEmpty()
+        eventSelectorHost.isFocusable = selectableEvents.isNotEmpty()
+
+        eventSelectorHost.setOnClickListener { anchor ->
+            if (selectableEvents.isEmpty()) return@setOnClickListener
+            showEventDropdownPopup(anchor, selectableEvents)
+        }
+    }
+
+    private fun showEventDropdownPopup(anchor: View, events: List<OrganizerMvpEvent>) {
+        val density = resources.displayMetrics.density
+        val dp = { px: Int -> (px * density).toInt() }
+
+        var popup: PopupWindow? = null
+        val dropdownView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), Color.parseColor("#E2E8F0"))
+            }
+            elevation = dp(8).toFloat()
+
+            events.forEach { event ->
+                val isSelected = event.id == selectedEvent?.id
+                val itemLayout = LinearLayout(this@AttendeeManagementActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(16), dp(12), dp(16), dp(12))
+                    setBackgroundColor(if (isSelected) Color.parseColor("#EEF2FF") else Color.WHITE)
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        popup?.dismiss()
+                        selectedEvent = event
+                        repository.saveSelectedEventId(event.id)
+                        saveSelectedEventId(event.id)
+                        restoreNormalUi()
+                        bindEventHeader()
+                        loadAttendees()
+                    }
+                }
+
+                val textLayout = LinearLayout(this@AttendeeManagementActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val titleTv = TextView(this@AttendeeManagementActivity).apply {
+                    text = event.title.ifBlank { "Untitled Event" }
+                    setTextColor(if (isSelected) Color.parseColor("#4F46E5") else Color.parseColor("#1E293B"))
+                    textSize = 14f
+                    setTypeface(null, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
+                }
+                textLayout.addView(titleTv)
+
+                val dateFormatted = formatDateOnly(event.shortDate)
+                if (dateFormatted.isNotBlank()) {
+                    val dateTv = TextView(this@AttendeeManagementActivity).apply {
+                        text = dateFormatted
+                        setTextColor(Color.parseColor("#64748B"))
+                        textSize = 12f
+                    }
+                    textLayout.addView(dateTv)
+                }
+
+                itemLayout.addView(textLayout)
+                addView(itemLayout)
+            }
+        }
+
+        popup = PopupWindow(
+            dropdownView,
+            anchor.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply {
+            isOutsideTouchable = true
+            elevation = dp(8).toFloat()
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+
+        popup.showAsDropDown(anchor, 0, dp(4))
     }
 
     private fun refreshSelectedEventAttendees() {
@@ -168,8 +267,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
     private fun bindEventHeader() {
         val event = selectedEvent ?: return
-        val dateLine = organizerEventDateLine(event.shortDate, event.title, event.venue)
-        txtEventSelectorDate.text = if (dateLine.isBlank()) event.title else "${event.title} · $dateLine"
+        txtEventTitle.text = event.title.ifBlank { "Choose an Event" }
+        txtEventSelectorDate.text = formatDateOnly(event.shortDate)
     }
 
     private fun showNoEventEmptyState() {
@@ -181,6 +280,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         emptyStateLayout.visibility = View.VISIBLE
         emptyStateTitle.text = "No event selected"
         emptyStateSub.text = "Select an event from the dropdown above to view attendees."
+        txtEventTitle.text = "Choose an Event"
+        txtEventSelectorDate.text = "2026-09-22"
     }
 
     private fun showNoEventsAvailableState() {
