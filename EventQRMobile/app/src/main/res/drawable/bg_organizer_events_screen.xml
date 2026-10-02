@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base background color -->
+    <item>
+        <color android:color="#F6F7FC" />
+    </item>
+    <!-- Top-right soft purple gradient glow -->
+    <item
+        android:width="280dp"
+        android:height="280dp"
+        android:gravity="top|end"
+        android:top="-60dp"
+        android:end="-60dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="200dp"
+                android:startColor="#1F5B25C9"
+                android:endColor="#00F6F7FC" />
+        </shape>
+    </item>
+</layer-list>
