@@ -88,6 +88,15 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             refreshSelectedEventAttendees()
         }
 
+        findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
+            val current = selectedEvent ?: return@setOnClickListener
+            startActivity(
+                Intent(this@AttendeeManagementActivity, SearchAttendeesActivity::class.java)
+                    .putExtra(EXTRA_EVENT_ID, current.id)
+                    .putExtra(EXTRA_EVENT_TITLE, current.title)
+            )
+        }
+
         lifecycleScope.launch {
             val events = repository.getApprovedOrganizerEvents()
 
@@ -111,13 +120,6 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
             if (resolvedEvent != null) {
                 selectedEvent = resolvedEvent
-                findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
-                    startActivity(
-                        Intent(this@AttendeeManagementActivity, SearchAttendeesActivity::class.java)
-                            .putExtra(EXTRA_EVENT_ID, resolvedEvent.id)
-                            .putExtra(EXTRA_EVENT_TITLE, resolvedEvent.title)
-                    )
-                }
                 bindEventHeader()
                 loadAttendees()
             } else {
@@ -162,7 +164,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             background = GradientDrawable().apply {
                 setColor(Color.WHITE)
                 cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), Color.parseColor("#E2E8F0"))
+                setStroke(dp(1), Color.parseColor("#EAEBF0"))
             }
             elevation = dp(8).toFloat()
 
@@ -193,7 +195,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
                 val titleTv = TextView(this@AttendeeManagementActivity).apply {
                     text = event.title.ifBlank { "Untitled Event" }
-                    setTextColor(if (isSelected) Color.parseColor("#4F46E5") else Color.parseColor("#1E293B"))
+                    setTextColor(if (isSelected) Color.parseColor("#5B25C9") else Color.parseColor("#121735"))
                     textSize = 14f
                     setTypeface(null, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
                 }
@@ -203,7 +205,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
                 if (dateFormatted.isNotBlank()) {
                     val dateTv = TextView(this@AttendeeManagementActivity).apply {
                         text = dateFormatted
-                        setTextColor(Color.parseColor("#64748B"))
+                        setTextColor(Color.parseColor("#7E84A3"))
                         textSize = 12f
                     }
                     textLayout.addView(dateTv)

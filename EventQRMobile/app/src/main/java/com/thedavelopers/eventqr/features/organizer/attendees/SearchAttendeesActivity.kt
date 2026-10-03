@@ -21,6 +21,7 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.intentEventId
+import com.thedavelopers.eventqr.features.organizer.intentEventTitle
 import com.thedavelopers.eventqr.features.organizer.matchesOrganizerAttendeeQuery
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
@@ -44,52 +45,63 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         setContentView(R.layout.activity_search_attendees)
 
         repository = OrganizerRepository(this)
+
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<TextView>(R.id.txtSearchTitle).text = "Search Attendees"
+
+        // Set initial dynamic title from Intent while fetching the full event object
+        val initialTitle = intentEventTitle()?.takeIf { it.isNotBlank() }
+        if (!initialTitle.isNullOrBlank()) {
+            findViewById<TextView>(R.id.txtSearchSubtitle).text = initialTitle
+        }
+
         val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
             ?: return showMissingEventScreen("Search Attendees")
+
         lifecycleScope.launch {
             selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
                 ?: run {
                     showMissingEventScreen("Search Attendees")
                     return@launch
                 }
-            findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-            findViewById<TextView>(R.id.txtSearchTitle).text = "Search Attendees"
-            findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title
+
+            // Always dynamically display the chosen event's title
+            findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title.ifBlank { "Selected Event" }
 
             searchInput = findViewById(R.id.edtSearchAttendees)
-        searchInput.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_search, 0)
-        searchInput.compoundDrawablePadding = resources.getDimensionPixelSize(R.dimen.organizer_search_icon_padding)
-        emptyState = findViewById(R.id.txtSearchEmpty)
-        progressBar = findViewById(R.id.progressSearchAttendees)
+            searchInput.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_search, 0)
+            searchInput.compoundDrawablePadding = resources.getDimensionPixelSize(R.dimen.organizer_search_icon_padding)
+            emptyState = findViewById(R.id.txtSearchEmpty)
+            progressBar = findViewById(R.id.progressSearchAttendees)
 
-        adapter = SearchAttendeesAdapter { openDetails(it) }
-        findViewById<RecyclerView>(R.id.recyclerSearchAttendees).apply {
-            layoutManager = LinearLayoutManager(this@SearchAttendeesActivity)
-            adapter = this@SearchAttendeesActivity.adapter
-        }
-
-        filterChips = mapOf(
-            "All" to findViewById(R.id.chipAll),
-            "Registered" to findViewById(R.id.chipRegistered),
-            "Checked In" to findViewById(R.id.chipCheckedIn),
-            "Exited" to findViewById(R.id.chipExited),
-            "No Show" to findViewById(R.id.chipNoShow),
-        )
-        filterChips.forEach { (label, chip) ->
-            chip.setOnClickListener {
-                currentFilter = label
-                updateChips()
-                render()
+            adapter = SearchAttendeesAdapter { openDetails(it) }
+            findViewById<RecyclerView>(R.id.recyclerSearchAttendees).apply {
+                layoutManager = LinearLayoutManager(this@SearchAttendeesActivity)
+                adapter = this@SearchAttendeesActivity.adapter
             }
-        }
 
-        searchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = render()
-            override fun afterTextChanged(s: Editable?) = Unit
-        })
+            filterChips = mapOf(
+                "All" to findViewById(R.id.chipAll),
+                "Registered" to findViewById(R.id.chipRegistered),
+                "Checked In" to findViewById(R.id.chipCheckedIn),
+                "Exited" to findViewById(R.id.chipExited),
+                "No Show" to findViewById(R.id.chipNoShow),
+            )
+            filterChips.forEach { (label, chip) ->
+                chip.setOnClickListener {
+                    currentFilter = label
+                    updateChips()
+                    render()
+                }
+            }
 
-        updateChips()
+            searchInput.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = render()
+                override fun afterTextChanged(s: Editable?) = Unit
+            })
+
+            updateChips()
             loadAttendees()
         }
     }
