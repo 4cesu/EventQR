@@ -1,33 +1,38 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.util.Base64
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
-import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.organizer.BORDER
 import com.thedavelopers.eventqr.features.organizer.ERROR
 import com.thedavelopers.eventqr.features.organizer.MUTED
+import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.card
 import com.thedavelopers.eventqr.features.organizer.dp
 import com.thedavelopers.eventqr.features.organizer.ghostButton
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.intentEventTitle
 import com.thedavelopers.eventqr.features.organizer.intentEventViewOnly
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.organizer.organizerShell
 import com.thedavelopers.eventqr.features.organizer.primaryButton
 import com.thedavelopers.eventqr.features.organizer.rounded
@@ -43,18 +48,6 @@ import java.time.format.DateTimeFormatter
 
 /**
  * SDD 3.5 (UC-20) — Manage Approved Event Details.
- *
- * Deviation notes (capstone defense):
- * - Built with the programmatic View toolkit used by every other organizer screen (team
- *   decision), not Compose as the module text implies; no ViewModel — repositories plus
- *   coroutine launches inside activities, matching the rest of this codebase.
- * - The full event schedule (registration windows + event start/end) is locked and shown in
- *   a read-only "Schedule (Locked)" section; only title/description/venue/capacity are
- *   editable. The backend rejects a changed start date (409) as a backstop.
- * - SCOPE ADDITION (beyond SRS/SDD UC-16 / SDD 3.1 - event creation poster): the event banner
- *   (poster) is editable post-approval here. It is cropped to 16:9 and uploaded via the shared
- *   /uploads/event-logo endpoint, storing a fileId on events.eventLogoUrl. The backend persists
- *   eventLogoUrl on update (OrganizerService.updateEvent); flag for the capstone deviation log.
  */
 class EditEventDetailsActivity : AppCompatActivity() {
 
@@ -63,6 +56,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private lateinit var content: LinearLayout
     private lateinit var statusView: TextView
     private lateinit var saveButton: Button
+    private lateinit var eventHeaderTitleView: TextView
     private var screenTitle: String = EDIT_LABEL
 
     private lateinit var titleInput: EditText
@@ -90,8 +84,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
         uri?.let { launchBannerCrop(it) }
     }
 
-    // SCOPE ADDITION (banner edit post-approval, flagged for capstone deviation log):
-    // mirror the 16:9 crop-before-upload flow used at event creation so banners stay landscape.
     private val bannerCropLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             when {
@@ -120,9 +112,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
         screenTitle = if (intentEventViewOnly()) VIEW_LABEL else EDIT_LABEL
         content = organizerShell(
             title = screenTitle,
-            subtitle = intentEventTitle()?.takeIf { it.isNotBlank() },
+            subtitle = null,
             showBack = true,
         )
+        content.addView(buildEventHeaderCard())
         content.addView(buildLockedSchedule())
         content.addView(buildForm())
         statusView = text("", 13, false).apply {
@@ -142,43 +135,154 @@ class EditEventDetailsActivity : AppCompatActivity() {
         loadEvent()
     }
 
+    private fun buildEventHeaderCard(): LinearLayout = card(16).apply {
+        id = com.thedavelopers.eventqr.R.id.eed_event_header_card
+        background = rounded(Color.parseColor("#F5F4FE"), 16, Color.parseColor("#EAEBF0"), density = resources.displayMetrics.density)
+        elevation = dp(2).toFloat()
+
+        val row = LinearLayout(this@EditEventDetailsActivity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+
+        val iconBox = FrameLayout(this@EditEventDetailsActivity).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginEnd = dp(12) }
+            background = rounded(Color.parseColor("#EDE9FE"), 12, null, density = resources.displayMetrics.density)
+            addView(ImageView(this@EditEventDetailsActivity).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER)
+                setImageResource(R.drawable.ic_calendar)
+                setColorFilter(Color.parseColor("#5B25C9"))
+            })
+        }
+        row.addView(iconBox)
+
+        val textStack = LinearLayout(this@EditEventDetailsActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+
+            addView(text("EVENT NAME", 11, true, Color.parseColor("#8E8EA9")).apply {
+                setPadding(0, 0, 0, dp(2))
+            })
+
+            eventHeaderTitleView = text(intentEventTitle()?.takeIf { it.isNotBlank() } ?: "-", 20, true, Color.parseColor("#121735")).apply {
+                id = com.thedavelopers.eventqr.R.id.eed_event_header_title
+            }
+            addView(eventHeaderTitleView)
+        }
+        row.addView(textStack)
+
+        addView(row)
+    }
+
     private fun buildForm(): LinearLayout {
         val formCard = card(16).apply {
             id = com.thedavelopers.eventqr.R.id.eed_form_card
         }
-        formCard.addView(text("Editable details", 15, true, TEXT_COLOR).apply {
+
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(12))
+        }
+
+        val iconBox = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(38), dp(38)).apply { marginEnd = dp(10) }
+            background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = resources.displayMetrics.density)
+            addView(ImageView(this@EditEventDetailsActivity).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(20), dp(20), android.view.Gravity.CENTER)
+                setImageResource(R.drawable.ic_edit_pencil)
+                setColorFilter(Color.parseColor("#5B25C9"))
+            })
+        }
+        headerRow.addView(iconBox)
+
+        headerRow.addView(text("Editable details", 16, true, TEXT_COLOR).apply {
             id = com.thedavelopers.eventqr.R.id.eed_form_title
-            setPadding(0, 0, 0, dp(4))
         })
 
-        titleInput = addInput(formCard, "Title", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES).apply {
+        formCard.addView(headerRow)
+
+        titleInput = addInputRow(
+            formCard,
+            "Title",
+            R.drawable.ic_edit_note,
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
+        ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_title_input
+            addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val newTitle = s?.toString()?.trim().orEmpty()
+                    if (newTitle.isNotBlank()) {
+                        eventHeaderTitleView.text = newTitle
+                    }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            })
         }
-        descriptionInput = addInput(formCard, "Description", inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE, singleLine = false, minLines = 3).apply {
+
+        descriptionInput = addInputRow(
+            formCard,
+            "Description",
+            R.drawable.ic_file,
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE,
+            singleLine = false,
+            minLines = 3,
+        ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_description_input
         }
-        venueInput = addInput(formCard, "Venue").apply {
+
+        venueInput = addInputRow(
+            formCard,
+            "Venue",
+            R.drawable.ic_location,
+        ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_venue_input
         }
-        capacityInput = addInput(formCard, "Capacity", inputType = InputType.TYPE_CLASS_NUMBER).apply {
+
+        capacityInput = addInputRow(
+            formCard,
+            "Capacity",
+            R.drawable.ic_group,
+            inputType = InputType.TYPE_CLASS_NUMBER,
+        ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_capacity_input
         }
 
-        formCard.addView(text("Event Banner", 15, true, TEXT_COLOR).apply { setPadding(0, dp(18), 0, dp(6)) })
+        val bannerHeaderRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, dp(16), 0, dp(8))
+        }
+        val bannerIconBox = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginEnd = dp(10) }
+            background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = resources.displayMetrics.density)
+            addView(ImageView(this@EditEventDetailsActivity).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(18), dp(18), android.view.Gravity.CENTER)
+                setImageResource(R.drawable.ic_camera)
+                setColorFilter(Color.parseColor("#5B25C9"))
+            })
+        }
+        bannerHeaderRow.addView(bannerIconBox)
+        bannerHeaderRow.addView(text("Event Banner", 15, true, TEXT_COLOR))
+        formCard.addView(bannerHeaderRow)
+
         bannerPreview = ImageView(this).apply {
             id = com.thedavelopers.eventqr.R.id.eed_banner_preview
             adjustViewBounds = true
             scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(android.graphics.Color.parseColor("#F3F4F6"), 10, BORDER, density = resources.displayMetrics.density)
+            background = rounded(Color.parseColor("#F3F4F6"), 12, BORDER, density = resources.displayMetrics.density)
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(180))
         }
         formCard.addView(bannerPreview)
+
         formCard.addView(
             text("No banner set. Tap below to choose a 16:9 landscape image.", 12, false, MUTED).apply {
                 id = com.thedavelopers.eventqr.R.id.eed_banner_status
                 setPadding(0, dp(8), 0, 0)
             }.also { bannerStatus = it },
         )
+
         formCard.addView(ghostButton("Choose new banner") { bannerPicker.launch("image/*") }.apply {
             id = com.thedavelopers.eventqr.R.id.eed_banner_pick_button
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44)).apply {
@@ -189,7 +293,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         formCard.addView(
             text("Locked: eventId, organizer, approval status, registration windows, start date, end date and rewards stay unchanged.", 12, false, MUTED).apply {
                 id = com.thedavelopers.eventqr.R.id.eed_locked_note
-                setPadding(0, dp(12), 0, 0)
+                setPadding(0, dp(14), 0, 0)
             },
         )
         return formCard
@@ -199,54 +303,135 @@ class EditEventDetailsActivity : AppCompatActivity() {
         val scheduleCard = card(16).apply {
             id = com.thedavelopers.eventqr.R.id.eed_schedule_card
         }
-        scheduleCard.addView(text("Schedule (Locked)", 15, true, TEXT_COLOR).apply {
+
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(12))
+        }
+
+        val iconBox = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(38), dp(38)).apply { marginEnd = dp(10) }
+            background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = resources.displayMetrics.density)
+            addView(ImageView(this@EditEventDetailsActivity).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(20), dp(20), android.view.Gravity.CENTER)
+                setImageResource(R.drawable.ic_calendar)
+                setColorFilter(Color.parseColor("#5B25C9"))
+            })
+        }
+        headerRow.addView(iconBox)
+
+        headerRow.addView(text("Schedule (Locked)", 16, true, TEXT_COLOR).apply {
             id = com.thedavelopers.eventqr.R.id.eed_schedule_title
-            setPadding(0, 0, 0, dp(4))
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         })
 
-        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time").apply {
+        headerRow.addView(text("🔒 Locked", 11, true, Color.parseColor("#5B25C9")).apply {
+            setPadding(dp(10), dp(4), dp(10), dp(4))
+            background = rounded(Color.parseColor("#EDE9FE"), 12, null, density = resources.displayMetrics.density)
+        })
+
+        scheduleCard.addView(headerRow)
+
+        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time", R.drawable.ic_row_clock)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_reg_open_value
         }
-        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time").apply {
+        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time", R.drawable.ic_row_clock)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_reg_close_value
         }
-        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time").apply {
+        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time", R.drawable.ic_calendar)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_event_start_value
         }
-        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time").apply {
+        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time", R.drawable.ic_calendar)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_event_end_value
         }
         return scheduleCard
     }
 
-    private fun addLockedRow(parent: LinearLayout, label: String): TextView {
-        parent.addView(text(label, 14, true, TEXT_COLOR).apply { setPadding(0, dp(12), 0, dp(6)) })
-        val value = text("-", 14, false, TEXT_COLOR).apply {
-            background = rounded(android.graphics.Color.parseColor("#F3F4F6"), 10, BORDER, density = resources.displayMetrics.density)
-            setPadding(dp(16), dp(14), dp(16), dp(14))
-            isEnabled = false
+    private fun addLockedRow(parent: LinearLayout, label: String, iconRes: Int): TextView? {
+        val rowContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, dp(8), 0, dp(8))
         }
-        parent.addView(value)
-        return value
+
+        val iconBox = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginEnd = dp(10) }
+            background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = resources.displayMetrics.density)
+            addView(ImageView(this@EditEventDetailsActivity).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(18), dp(18), android.view.Gravity.CENTER)
+                setImageResource(iconRes)
+                setColorFilter(Color.parseColor("#5B25C9"))
+            })
+        }
+        rowContainer.addView(iconBox)
+
+        val rightStack = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            addView(text(label, 13, true, TEXT_COLOR).apply { setPadding(0, 0, 0, dp(4)) })
+
+            val value = text("-", 13, false, Color.parseColor("#6B7280")).apply {
+                background = rounded(Color.parseColor("#F3F4F6"), 10, BORDER, density = resources.displayMetrics.density)
+                setPadding(dp(14), dp(10), dp(14), dp(10))
+                isEnabled = false
+            }
+            addView(value)
+        }
+        rowContainer.addView(rightStack)
+        parent.addView(rowContainer)
+
+        return rightStack.getChildAt(1) as? TextView
     }
 
-    private fun addInput(
+    private fun addInputRow(
         parent: LinearLayout,
         label: String,
+        iconRes: Int,
         inputType: Int = InputType.TYPE_CLASS_TEXT,
         singleLine: Boolean = true,
         minLines: Int = 1,
     ): EditText {
-        parent.addView(text(label, 14, true, TEXT_COLOR).apply { setPadding(0, dp(12), 0, dp(6)) })
-        val editText = EditText(this).apply {
-            this.inputType = inputType
-            isSingleLine = singleLine
-            this.minLines = minLines
-            background = rounded(android.graphics.Color.parseColor("#F9FAFB"), 10, BORDER, density = resources.displayMetrics.density)
-            setPadding(dp(16), dp(14), dp(16), dp(14))
+        val rowContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = if (singleLine) android.view.Gravity.CENTER_VERTICAL else android.view.Gravity.TOP
+            setPadding(0, dp(8), 0, dp(8))
         }
-        parent.addView(editText)
-        return editText
+
+        val iconBox = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(36), dp(36)).apply {
+                marginEnd = dp(10)
+                if (!singleLine) topMargin = dp(4)
+            }
+            background = rounded(Color.parseColor("#EDE9FE"), 10, null, density = resources.displayMetrics.density)
+            addView(ImageView(this@EditEventDetailsActivity).apply {
+                layoutParams = FrameLayout.LayoutParams(dp(18), dp(18), android.view.Gravity.CENTER)
+                setImageResource(iconRes)
+                setColorFilter(Color.parseColor("#5B25C9"))
+            })
+        }
+        rowContainer.addView(iconBox)
+
+        val rightStack = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            addView(text(label, 13, true, TEXT_COLOR).apply { setPadding(0, 0, 0, dp(4)) })
+
+            val editText = EditText(this@EditEventDetailsActivity).apply {
+                this.inputType = inputType
+                isSingleLine = singleLine
+                this.minLines = minLines
+                textSize = 14f
+                setTextColor(TEXT_COLOR)
+                background = rounded(Color.parseColor("#F9FAFB"), 10, BORDER, density = resources.displayMetrics.density)
+                setPadding(dp(14), dp(10), dp(14), dp(10))
+            }
+            addView(editText)
+        }
+        rowContainer.addView(rightStack)
+        parent.addView(rowContainer)
+
+        return rightStack.getChildAt(1) as EditText
     }
 
     private fun launchBannerCrop(sourceUri: Uri) {
@@ -342,7 +527,9 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     private fun populate(event: OrganizerEventDto) {
         loadedEvent = event
-        titleInput.setText(event.title.orEmpty())
+        val titleText = event.title.orEmpty()
+        eventHeaderTitleView.text = titleText.ifBlank { "-" }
+        titleInput.setText(titleText)
         descriptionInput.setText(event.description.orEmpty())
         venueInput.setText(event.venue.orEmpty())
         capacityInput.setText(event.capacity.coerceAtLeast(0).toString())
@@ -357,9 +544,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private fun formatLockedInstant(instant: java.time.Instant): String =
         java.time.LocalDateTime.ofInstant(instant, zoneId).format(displayFormatter)
 
-    // UC-20 edit lock: details are editable only while the event is Upcoming (Approved).
-    // Once it is Active (ongoing) or Completed the whole form is read-only; the backend
-    // enforces the same rule (409) as a backstop for stale clients.
     private fun isEditLocked(event: OrganizerEventDto): Boolean =
         event.status.equals("Active", ignoreCase = true) ||
             event.status.equals("Completed", ignoreCase = true)
@@ -370,15 +554,11 @@ class EditEventDetailsActivity : AppCompatActivity() {
         statusView.setTextColor(ERROR)
         screenTitle = VIEW_LABEL
         updateHeaderTitle(VIEW_LABEL)
-        // All fields, including the banner picker, are read-only in this state.
         listOf(titleInput, descriptionInput, venueInput, capacityInput).forEach { it.isEnabled = false }
         bannerPickButton.isEnabled = false
-        // No Save button in view-only mode: hide it entirely rather than showing an inert state.
         saveButton.visibility = View.GONE
     }
 
-    // Finds the shell header title (created by organizerShell) and relabels it, so the screen
-    // reads "View Event Details" even when opened directly on a locked event.
     private fun updateHeaderTitle(label: String) {
         var parent: android.view.ViewParent? = content.parent
         while (parent is ViewGroup && parent.parent is ViewGroup) parent = parent.parent
@@ -410,8 +590,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
             Toast.makeText(this, "Event not loaded yet", Toast.LENGTH_SHORT).show()
             return
         }
-        // EventRequest.organizerUserId is required by the API; older backends that predate
-        // UC-20 don't echo it, so fail softly instead of crashing.
         val organizerId = current.organizerUserId ?: run {
             statusView.text = "Backend does not report this event's organizer; update the app server."
             statusView.setTextColor(ERROR)
@@ -421,8 +599,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
         saveButton.isEnabled = false
         statusView.text = ""
         MainScope().launch {
-            // SCOPE ADDITION (banner edit post-approval): if the organizer picked a new banner,
-            // upload it first to obtain a fresh fileId, then send the update with that fileId.
             val uploadResult = selectedBannerFile?.let { file ->
                 when (val result = repository.uploadEventBanner(file)) {
                     is NetworkResult.Success -> result.data?.fileId?.toString()
@@ -443,9 +619,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
                     finish()
                 }
                 is NetworkResult.Error -> {
-                    // Backend messages surface verbatim through safeApiCall: field validation
-                    // details on 400, permission denial ("Organizer is not assigned to this
-                    // event") on 403, approved-only gating on 403 as well.
                     statusView.text = result.message
                     statusView.setTextColor(ERROR)
                     saveButton.isEnabled = true
@@ -455,9 +628,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }
     }
 
-    // Echoes every untouched value back exactly as loaded so the PATCH never alters
-    // registration windows, end date, rewards state, or organizer ownership. The banner
-    // (eventLogoUrl) reflects any newly chosen/uploaded poster else the loaded value.
     private fun buildRequest(current: OrganizerEventDto, organizerId: java.util.UUID, bannerFileId: String?): EventRequest = EventRequest(
         title = titleInput.text.toString().trim(),
         description = descriptionInput.text.toString().trim().ifBlank { null },

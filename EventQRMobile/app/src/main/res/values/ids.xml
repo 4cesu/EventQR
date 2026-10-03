@@ -21,6 +21,8 @@
     <item name="emh_menu_id" type="id" />
 
     <!-- EditEventDetailsActivity (eed_) -->
+    <item name="eed_event_header_card" type="id" />
+    <item name="eed_event_header_title" type="id" />
     <item name="eed_schedule_card" type="id" />
     <item name="eed_schedule_title" type="id" />
     <item name="eed_reg_open_value" type="id" />
