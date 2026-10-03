@@ -52,59 +52,71 @@ class NotificationAdapter(
             messageView.text = item.message
             dateTimeView.text = RelativeTimeUtils.formatRelative(item.createdAt ?: item.readAt)
 
-            iconContainer.setBackgroundResource(R.drawable.bg_notification_icon_box)
             when {
                 item.notificationType == NotificationType.STAFF_ASSIGNMENT -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_group)
                     iconView.setColorFilter(0xFF4F46E5.toInt())
                 }
                 item.notificationType == NotificationType.REGISTRATION_NEW -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
                 item.notificationType == NotificationType.CAPACITY_WARNING || item.notificationType == NotificationType.CAPACITY_FULL -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_admin_users)
                     iconView.setColorFilter(0xFFB8860B.toInt())
                 }
                 item.notificationType == NotificationType.REWARD_EXHAUSTED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_icon_tile_red)
                     iconView.setImageResource(R.drawable.ic_gift)
                     iconView.setColorFilter(0xFFEF4444.toInt())
                 }
                 item.notificationType == NotificationType.REWARD_REDEEMED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_gift)
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
                 item.notificationType == NotificationType.POINTS_ADJUSTED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF4F46E5.toInt())
                 }
                 item.notificationType == NotificationType.EVENT_APPROVED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
                 item.notificationType == NotificationType.EVENT_REJECTED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_icon_tile_red)
                     iconView.setImageResource(R.drawable.ic_error_circle)
                     iconView.setColorFilter(0xFFEF4444.toInt())
                 }
                 item.notificationType == NotificationType.EVENT_STARTING_SOON -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_row_clock)
                     iconView.setColorFilter(0xFF4F46E5.toInt())
                 }
                 item.notificationType == NotificationType.EVENT_COMPLETED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
                 item.notificationType == NotificationType.SCAN_REJECTED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_icon_tile_red)
                     iconView.setImageResource(R.drawable.ic_error_circle)
                     iconView.setColorFilter(0xFFEF4444.toInt())
                 }
 
                 item.notificationType == NotificationType.SCAN_APPROVED -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
 
                 else -> {
+                    iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
