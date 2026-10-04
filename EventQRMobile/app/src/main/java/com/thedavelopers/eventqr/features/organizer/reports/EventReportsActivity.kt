@@ -271,7 +271,7 @@ open class EventReportsActivity : AppCompatActivity() {
                 })
 
                 addView(TextView(this@EventReportsActivity).apply {
-                    text = "${selectedEvent.title} • Overview"
+                    text = selectedEvent.title
                     textSize = 17f
                     setTypeface(typeface, Typeface.BOLD)
                     setTextColor(Color.WHITE)
