@@ -33,7 +33,12 @@ public class StoredFile extends BaseEntity {
     @Column(nullable = false)
     private Instant storedAt;
 
+    /** Object key when the bytes live in S3-compatible storage; null while they are in the database. */
+    @Column(name = "storage_key", length = 512)
+    private String storageKey;
+
+    /** The bytes for database-stored files; null once a file lives in object storage. */
     @Basic(fetch = FetchType.LAZY)
-    @Column(nullable = false, columnDefinition = "bytea")
+    @Column(columnDefinition = "bytea")
     private byte[] content;
 }
