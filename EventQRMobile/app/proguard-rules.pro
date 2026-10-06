@@ -1,21 +1,17 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# R8 rules for the release build.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep line numbers so crash stack traces stay readable; hide the source file name.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Gson maps JSON to these classes by field name through reflection, so their names
+# and fields must survive shrinking and obfuscation. Every API request/response model
+# lives in a `dto` package.
+-keepattributes Signature,*Annotation*,EnclosingMethod,InnerClasses
+-keep class com.thedavelopers.eventqr.**.dto.** { *; }
+-keep class com.thedavelopers.eventqr.features.organizer.rewards.RewardSettingsRequest { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# uCrop (image cropper) inflates its views by reflection.
+-dontwarn com.yalantis.ucrop.**
+-keep class com.yalantis.ucrop.** { *; }
+-keep interface com.yalantis.ucrop.** { *; }

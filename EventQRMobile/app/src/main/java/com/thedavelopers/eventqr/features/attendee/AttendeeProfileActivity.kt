@@ -18,9 +18,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.session.SessionLogout
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import kotlinx.coroutines.launch
 
@@ -93,13 +93,15 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun performSignOut() {
-        RegistrationsCache.clear()
-        sessionManager.clearSession()
-        startActivity(
-            Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        )
-        finish()
+        findViewById<View>(R.id.cardSignOut).isEnabled = false
+        lifecycleScope.launch {
+            SessionLogout.signOut(this@AttendeeProfileActivity)
+            startActivity(
+                Intent(this@AttendeeProfileActivity, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            )
+            finish()
+        }
     }
 
     override fun onResume() {
