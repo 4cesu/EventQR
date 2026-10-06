@@ -59,10 +59,10 @@ class OrganizerNotificationsViewModel(private val repo: OrganizerRepository) : V
     fun markRead(item: NotificationResponse, onRequest: suspend (NotificationResponse) -> Unit) {
         viewModelScope.launch {
             onRequest(item)
-            val current = _list.value ?: return@launch
-            _list.value = current.map {
+            val updated = (_list.value ?: emptyList()).map {
                 if (it.notificationId == item.notificationId) it.copy(status = NotificationStatus.READ, readAt = null) else it
             }
+            _list.value = updated
         }
     }
 

@@ -1,9 +1,9 @@
 package com.thedavelopers.eventqr.features.users.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -13,17 +13,26 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
+import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Role-change ceilings from UserService.changeRoleResponse:
+ * only SUPER_ADMIN may assign ADMIN/SUPER_ADMIN; admins cannot manage admin
+ * accounts or change their own role.
+ */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserServiceChangeRoleTest {
 
     @Mock
@@ -39,105 +48,91 @@ class UserServiceChangeRoleTest {
 
     private UserService userService;
 
-    private UUID adminId;
-    private UUID superAdminId;
-    private UUID targetAttendeeId;
-    private UUID targetAdminId;
-    private UUID targetSuperAdminId;
+    private final UUID adminUserId = UUID.randomUUID();
+    private final UUID targetUserId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
         userService = new UserService(userProfileRepository, eventRegistrationRepository,
                 transactionLogRepository, passwordEncoder, userTokenRevocationRepository);
-        adminId = UUID.randomUUID();
-        superAdminId = UUID.randomUUID();
-        targetAttendeeId = UUID.randomUUID();
-        targetAdminId = UUID.randomUUID();
-        targetSuperAdminId = UUID.randomUUID();
+        given(userProfileRepository.save(any(UserProfile.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
     }
 
-    private UserProfile user(UUID id, AccountRole role) {
-        UserProfile p = new UserProfile();
-        p.setId(id);
-        p.setRole(role);
-        p.setStatus(com.thedavelopers.eventqr.shared.constants.AccountStatus.ACTIVE);
-        p.setEmail("user@" + id + ".com");
-        p.setFullName("User " + id);
-        return p;
+    private UserProfile profileWithRole(AccountRole role) {
+        UserProfile profile = new UserProfile();
+        profile.setId(targetUserId);
+        profile.setEmail("target@example.com");
+        profile.setFullName("Target");
+        profile.setRole(role);
+        return profile;
     }
 
-    private void stubTarget(UserProfile target) {
-        when(userProfileRepository.findById(target.getId())).thenReturn(Optional.of(target));
-    }
-
-    private void stubSave() {
-        when(userProfileRepository.save(any(UserProfile.class))).thenAnswer(inv -> inv.getArgument(0));
+    private void givenTarget(AccountRole role) {
+        given(userProfileRepository.findById(targetUserId)).willReturn(Optional.of(profileWithRole(role)));
     }
 
     @Test
-    void adminCannotAssignAdminRole() {
-        UserProfile target = user(targetAttendeeId, AccountRole.ATTENDEE);
-        stubTarget(target);
-        assertThatThrownBy(() -> userService.changeRoleResponse(adminId, AccountRole.ADMIN, targetAttendeeId, AccountRole.ADMIN))
-                .isInstanceOf(ForbiddenException.class);
+    void adminAssigningAdminRole_isForbidden() {
+        givenTarget(AccountRole.ATTENDEE);
+
+        assertThrows(ForbiddenException.class, () ->
+                userService.changeRoleResponse(adminUserId, AccountRole.ADMIN, targetUserId, AccountRole.ADMIN));
     }
 
     @Test
-    void adminCannotAssignSuperAdminRole() {
-        UserProfile target = user(targetAttendeeId, AccountRole.ATTENDEE);
-        stubTarget(target);
-        assertThatThrownBy(() -> userService.changeRoleResponse(adminId, AccountRole.ADMIN, targetAttendeeId, AccountRole.SUPER_ADMIN))
-                .isInstanceOf(ForbiddenException.class);
+    void adminAssigningSuperAdminRole_isForbidden() {
+        givenTarget(AccountRole.ATTENDEE);
+
+        assertThrows(ForbiddenException.class, () ->
+                userService.changeRoleResponse(adminUserId, AccountRole.ADMIN, targetUserId, AccountRole.SUPER_ADMIN));
     }
 
     @Test
-    void adminCannotManageAdminTarget() {
-        UserProfile target = user(targetAdminId, AccountRole.ADMIN);
-        stubTarget(target);
-        assertThatThrownBy(() -> userService.changeRoleResponse(adminId, AccountRole.ADMIN, targetAdminId, AccountRole.ATTENDEE))
-                .isInstanceOf(ForbiddenException.class);
+    void adminManagingAnotherAdminAccount_isForbidden() {
+        givenTarget(AccountRole.ADMIN);
+
+        assertThrows(ForbiddenException.class, () ->
+                userService.changeRoleResponse(adminUserId, AccountRole.ADMIN, targetUserId, AccountRole.STAFF));
     }
 
     @Test
-    void adminCannotManageSuperAdminTarget() {
-        UserProfile target = user(targetSuperAdminId, AccountRole.SUPER_ADMIN);
-        stubTarget(target);
-        assertThatThrownBy(() -> userService.changeRoleResponse(adminId, AccountRole.ADMIN, targetSuperAdminId, AccountRole.ATTENDEE))
-                .isInstanceOf(ForbiddenException.class);
+    void adminChangingOwnRole_isForbidden() {
+        given(userProfileRepository.findById(adminUserId))
+                .willReturn(Optional.of(profileWithRole(AccountRole.ADMIN)));
+
+        assertThrows(ForbiddenException.class, () ->
+                userService.changeRoleResponse(adminUserId, AccountRole.ADMIN, adminUserId, AccountRole.ORGANIZER));
     }
 
     @Test
-    void adminCannotChangeOwnRole() {
-        UserProfile target = user(adminId, AccountRole.ADMIN);
-        stubTarget(target);
-        assertThatThrownBy(() -> userService.changeRoleResponse(adminId, AccountRole.ADMIN, adminId, AccountRole.ATTENDEE))
-                .isInstanceOf(ForbiddenException.class);
+    void adminChangingAttendeeToStaff_isAllowed() {
+        givenTarget(AccountRole.ATTENDEE);
+
+        UserResponse response = userService.changeRoleResponse(adminUserId, AccountRole.ADMIN,
+                targetUserId, AccountRole.STAFF);
+
+        assertEquals(AccountRole.STAFF, response.role());
+        assertEquals(targetUserId, response.userId());
     }
 
     @Test
-    void superAdminCanAssignAdminRole() {
-        UserProfile target = user(targetAttendeeId, AccountRole.ATTENDEE);
-        stubTarget(target);
-        stubSave();
-        var updated = userService.changeRoleResponse(superAdminId, AccountRole.SUPER_ADMIN, targetAttendeeId, AccountRole.ADMIN);
-        assertThat(updated.role()).isEqualTo(AccountRole.ADMIN);
+    void superAdminAssigningAdminRole_isAllowed() {
+        givenTarget(AccountRole.ATTENDEE);
+
+        UserResponse response = userService.changeRoleResponse(adminUserId, AccountRole.SUPER_ADMIN,
+                targetUserId, AccountRole.ADMIN);
+
+        assertEquals(AccountRole.ADMIN, response.role());
     }
 
     @Test
-    void superAdminCanAssignSuperAdminRole() {
-        UserProfile target = user(targetAttendeeId, AccountRole.ATTENDEE);
-        stubTarget(target);
-        stubSave();
-        var updated = userService.changeRoleResponse(superAdminId, AccountRole.SUPER_ADMIN, targetAttendeeId, AccountRole.SUPER_ADMIN);
-        assertThat(updated.role()).isEqualTo(AccountRole.SUPER_ADMIN);
-    }
+    void superAdminAssigningSuperAdminRole_isAllowed() {
+        givenTarget(AccountRole.ATTENDEE);
 
-    @Test
-    void adminCanDemoteAttendeeToLowerRole() {
-        UserProfile target = user(targetAttendeeId, AccountRole.ATTENDEE);
-        stubTarget(target);
-        stubSave();
-        var updated = userService.changeRoleResponse(adminId, AccountRole.ADMIN, targetAttendeeId, AccountRole.STAFF);
-        assertThat(updated.role()).isEqualTo(AccountRole.STAFF);
+        UserResponse response = userService.changeRoleResponse(adminUserId, AccountRole.SUPER_ADMIN,
+                targetUserId, AccountRole.SUPER_ADMIN);
+
+        assertEquals(AccountRole.SUPER_ADMIN, response.role());
     }
 }

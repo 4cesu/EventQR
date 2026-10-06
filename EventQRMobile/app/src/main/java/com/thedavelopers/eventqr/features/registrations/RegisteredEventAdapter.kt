@@ -1,21 +1,56 @@
 package com.thedavelopers.eventqr.features.registrations
 
+import android.content.Context
 import android.content.Intent
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.font.FontWeight
 import androidx.recyclerview.widget.RecyclerView
-import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.EventCardPresenter
+import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_ID
+import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
+import com.thedavelopers.eventqr.features.attendee.EXTRA_QR_CREDENTIAL_ID
 import com.thedavelopers.eventqr.features.attendee.EXTRA_REGISTRATION_ID
+import com.thedavelopers.eventqr.features.attendee.EventDetailActivity
 import com.thedavelopers.eventqr.features.attendee.QrDisplayActivity
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
+import com.thedavelopers.eventqr.ui.components.EventCard
+import com.thedavelopers.eventqr.ui.components.parseBadgeStatus
+import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+
+data class RegisteredEventCardState(
+    val title: String = "",
+    val badgeLabel: String = "",
+    val badgeStatusRaw: String = "",
+    val day: String = EventCardPresenter.UNKNOWN_DAY,
+    val month: String = EventCardPresenter.UNKNOWN_MONTH,
+    val time: String = EventCardPresenter.UNKNOWN_TIME,
+    val location: String = EventCardPresenter.UNKNOWN_LOCATION,
+    val eventId: String = "",
+    val registrationId: String = "",
+    val qrCredentialId: String = "",
+)
 
 class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewHolder>() {
 
@@ -28,8 +63,13 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_registered_event, parent, false)
-        return ViewHolder(view)
+        val composeView = ComposeView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
+        }
+        return ViewHolder(composeView)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -38,54 +78,98 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
 
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleView: TextView = itemView.findViewById(R.id.txtAttendeeEventTitle)
-        private val statusView: TextView = itemView.findViewById(R.id.txtAttendeeEventStatus)
-        private val dateTimeView: TextView = itemView.findViewById(R.id.txtAttendeeEventDateTime)
-        private val locationView: TextView = itemView.findViewById(R.id.txtAttendeeEventLocation)
-        private val dayView: TextView = itemView.findViewById(R.id.txtEventDay)
-        private val monthView: TextView = itemView.findViewById(R.id.txtEventMonth)
-        private val dateBadgeView: View = itemView.findViewById(R.id.layoutEventDate)
-        private val btnQR: Button = itemView.findViewById(R.id.btnTransactionHistory)
-        private val btnDetails: Button = itemView.findViewById(R.id.btnEventDetails)
+    inner class ViewHolder(private val composeView: ComposeView) :
+        RecyclerView.ViewHolder(composeView) {
+
+        private val state = mutableStateOf(RegisteredEventCardState())
+
+        init {
+            composeView.setContent {
+                EventQrRowTheme {
+                    RegisteredEventCard(state.value, composeView.context)
+                }
+            }
+        }
 
         fun bind(registration: RegistrationResponse) {
-            val status = EventStatusBadgeStyler.resolve(null, registration.eventStartAt, registration.eventEndAt)
+            val status = EventStatusBadgeStyler.resolve(
+                null,
+                registration.eventStartAt,
+                registration.eventEndAt,
+            )
+            val date = EventCardPresenter.dateParts(registration.eventStartAt)
 
-            titleView.text = registration.eventTitle ?: "Registered event"
+            state.value = RegisteredEventCardState(
+                title = registration.eventTitle.orEmpty(),
+                badgeLabel = EventStatusBadgeStyler.displayLabel(status),
+                badgeStatusRaw = status.name,
+                day = date.day,
+                month = date.month,
+                time = date.time,
+                location = EventCardPresenter.location(registration.eventLocation),
+                eventId = registration.eventId.toString(),
+                registrationId = registration.registrationId.toString(),
+                qrCredentialId = registration.qrCredentialId?.toString().orEmpty(),
+            )
+        }
+    }
+}
 
-            EventStatusBadgeStyler.bind(statusView, status)
-            dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(status))
+@Composable
+private fun RegisteredEventCard(state: RegisteredEventCardState, context: Context) {
+    val spacing = LocalSpacing.current
 
-            if (registration.eventStartAt != null) {
-                val zonedDateTime = registration.eventStartAt.atZone(ZoneId.of("Asia/Manila"))
-                dayView.text = zonedDateTime.dayOfMonth.toString()
-                monthView.text = zonedDateTime.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase()
-                dateTimeView.text = zonedDateTime.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH))
-            } else {
-                dayView.text = "--"
-                monthView.text = "---"
-                dateTimeView.text = "-"
-            }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = spacing.mediumSmall),
+    ) {
+        EventCard(
+            title = state.title,
+            status = parseBadgeStatus(state.badgeStatusRaw),
+            statusLabel = state.badgeLabel,
+            day = state.day,
+            month = state.month,
+            time = state.time,
+            location = state.location,
+            onClick = {
+                context.startActivity(
+                    Intent(context, EventDetailActivity::class.java).apply {
+                        putExtra(EXTRA_EVENT_ID, state.eventId)
+                        putExtra(EXTRA_EVENT_TITLE, state.title)
+                    },
+                )
+            },
+        )
 
-            locationView.text = registration.eventLocation?.takeIf { it.isNotBlank() } ?: "Location not set"
+        Spacer(modifier = Modifier.height(spacing.micro))
 
-            btnQR.setOnClickListener {
-                val context = itemView.context
-                val intent = Intent(context, QrDisplayActivity::class.java).apply {
-                    putExtra(EXTRA_REGISTRATION_ID, registration.registrationId.toString())
-                    putExtra(com.thedavelopers.eventqr.features.attendee.EXTRA_QR_CREDENTIAL_ID, registration.qrCredentialId?.toString().orEmpty())
-                }
-                context.startActivity(intent)
-            }
-
-            btnDetails.setOnClickListener {
-                val context = itemView.context
-                val intent = Intent(context, com.thedavelopers.eventqr.features.attendee.EventDetailActivity::class.java).apply {
-                    putExtra(com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_ID, registration.eventId.toString())
-                    putExtra(com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE, registration.eventTitle.orEmpty())
-                }
-                context.startActivity(intent)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.small),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(
+                onClick = {
+                    context.startActivity(
+                        Intent(context, QrDisplayActivity::class.java).apply {
+                            putExtra(EXTRA_REGISTRATION_ID, state.registrationId)
+                            putExtra(EXTRA_QR_CREDENTIAL_ID, state.qrCredentialId)
+                        },
+                    )
+                },
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(
+                    Icons.Default.QrCode,
+                    contentDescription = null,
+                    modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
+                )
+                Spacer(modifier = Modifier.width(spacing.micro))
+                Text(
+                    text = "Show QR",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                )
             }
         }
     }
