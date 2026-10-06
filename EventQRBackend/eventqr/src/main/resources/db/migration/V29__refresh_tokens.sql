@@ -23,3 +23,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_refresh_token_hash ON refresh_token (token_
 CREATE INDEX IF NOT EXISTS idx_refresh_token_user ON refresh_token (user_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_token_family ON refresh_token (family_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_token_expires_at ON refresh_token (expires_at);
+
+-- Supabase exposes every table in the public schema through its REST API to the anon and
+-- authenticated roles unless row level security is on. The backend connects as the table owner
+-- (which bypasses RLS), so enabling RLS with no policies locks the tables to the backend only.
+-- revoked_token was created by V27 without this; it is closed here rather than editing V27,
+-- whose checksum is already recorded in deployed databases.
+ALTER TABLE refresh_token ENABLE ROW LEVEL SECURITY;
+ALTER TABLE revoked_token ENABLE ROW LEVEL SECURITY;
