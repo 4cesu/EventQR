@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.firstNameOnly
@@ -31,9 +32,10 @@ import com.thedavelopers.eventqr.features.organizer.bottomNav
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.notifications.NotificationManagementActivity
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import com.thedavelopers.eventqr.ui.components.EventCardHolder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlin.math.min
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -59,6 +61,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_organizer_dashboard)
+        applyEventQrSystemBarAppearance()
         repository = OrganizerRepository(this)
         sessionManager = SessionManager(this)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
@@ -90,7 +93,9 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupNavigation() {
-        setupOrganizerNotificationBell()
+        findViewById<View>(R.id.btnOrganizerNotifications)?.setOnClickListener {
+            startActivity(Intent(this@OrganizerDashboardActivity, NotificationManagementActivity::class.java))
+        }
 
         findViewById<View>(R.id.btnSeeAllEvents).setOnClickListener {
             openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
@@ -102,74 +107,8 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         setupPortalSwitcher()
     }
 
-    private fun setupOrganizerNotificationBell() {
-        val contentRoot = findViewById<ViewGroup>(android.R.id.content)
-        val appRoot = contentRoot.getChildAt(0) as? LinearLayout ?: return
-        val header = appRoot.getChildAt(0) as? RelativeLayout ?: return
-        if (header.findViewWithTag<View>("organizer_notification_bell") != null) return
-
-        val headerContent = header.getChildAt(0) as? LinearLayout
-        val headerParams = headerContent?.layoutParams as? RelativeLayout.LayoutParams
-        if (headerContent != null && headerParams != null) {
-            headerParams.marginEnd = dp(56)
-            headerContent.layoutParams = headerParams
-        }
-
-        val bellContainer = FrameLayout(this).apply {
-            tag = "organizer_notification_bell"
-            setBackgroundResource(R.drawable.bg_header_icon_circle)
-            isClickable = true
-            isFocusable = true
-            contentDescription = "Notifications"
-            setOnClickListener {
-                startActivity(Intent(this@OrganizerDashboardActivity, NotificationManagementActivity::class.java))
-            }
-            layoutParams = RelativeLayout.LayoutParams(dp(48), dp(48)).apply {
-                addRule(RelativeLayout.ALIGN_PARENT_END)
-                addRule(RelativeLayout.CENTER_VERTICAL)
-            }
-        }
-
-        bellContainer.addView(ImageView(this).apply {
-            setImageResource(R.drawable.notification_bell)
-            setColorFilter(getColor(R.color.brand_on_primary))
-            importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            layoutParams = FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER)
-        })
-
-        bellContainer.addView(TextView(this).apply {
-            tag = "organizer_notification_badge"
-            setBackgroundResource(R.drawable.bg_notification_badge_count)
-            setTextColor(getColor(android.R.color.white))
-            gravity = android.view.Gravity.CENTER
-            textSize = 9f
-            typeface = Typeface.DEFAULT_BOLD
-            minWidth = dp(16)
-            setPadding(dp(4), dp(1), dp(4), dp(1))
-            text = "0"
-            visibility = View.GONE
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                android.view.Gravity.TOP or android.view.Gravity.END,
-            ).apply {
-                topMargin = dp(1)
-                marginEnd = dp(1)
-            }
-        })
-
-        header.addView(bellContainer)
-    }
-
-    private fun notificationBadge(): TextView? {
-        val contentRoot = findViewById<ViewGroup>(android.R.id.content)
-        val appRoot = contentRoot.getChildAt(0) as? LinearLayout ?: return null
-        val header = appRoot.getChildAt(0) as? RelativeLayout ?: return null
-        return header.findViewWithTag<TextView>("organizer_notification_badge")
-    }
-
     private fun updateNotificationBadge(notifResult: NetworkResult<List<NotificationResponse>>) {
-        val badge = notificationBadge() ?: return
+        val badge = findViewById<TextView>(R.id.txtOrganizerNotificationBadge) ?: return
         val unreadCount = when (notifResult) {
             is NetworkResult.Success -> notifResult.data.count { it.status != NotificationStatus.READ && it.readAt == null }
             else -> 0
@@ -335,29 +274,20 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     ): View {
         val parsedStart = parseEventStartDateTime(event)
         val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
-        val day = parsedDate?.format(dayFormatter) ?: "--"
-        val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: "---"
-        val time = parsedStart?.format(timeFormatter) ?: "-"
-        val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: "Location not set"
 
-        val capacity = event.capacity.coerceAtLeast(1)
-        val count = event.currentAttendeeCount.coerceAtLeast(0)
-        val percent = if (capacity > 0) min((count.toFloat() / capacity.toFloat() * 100f).toInt(), 100) else 0
-
-        return com.thedavelopers.eventqr.features.events.EventCardBinder.inflate(
-            context = this,
-            parent = null,
+        val holder = EventCardHolder(this)
+        holder.update(
             title = event.title,
             status = event.lifecycleStatus(),
-            day = day,
-            month = month,
-            time = time,
-            location = location,
-            count = count,
-            capacity = capacity,
-            percent = percent,
-            onClick = { onClick() },
+            day = parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY,
+            month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH,
+            time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME,
+            location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: EventCardPresenter.UNKNOWN_LOCATION,
+            count = event.currentAttendeeCount.coerceAtLeast(0),
+            capacity = EventCardPresenter.capacity(event.capacity),
+            onClick = onClick,
         )
+        return holder.view
     }
 
     private fun parseEventStartDateTime(event: OrganizerMvpEvent): LocalDateTime? {
