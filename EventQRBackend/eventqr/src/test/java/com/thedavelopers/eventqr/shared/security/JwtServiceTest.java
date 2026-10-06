@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.shared.security;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.UnauthorizedException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -171,8 +172,11 @@ class JwtServiceTest {
         // exercise the claims-based overload directly.
         UUID userId = UUID.randomUUID();
         String token = jwtService.createToken(userId, "user@example.com", AccountRole.ATTENDEE);
-        Claims claims = jwtService.extractClaimsFromBearer("Bearer " + token);
-        claims.remove("role");
+        Claims parsed = jwtService.extractClaimsFromBearer("Bearer " + token);
+        java.util.Map<String, Object> withoutRole = new java.util.HashMap<>(parsed);
+        withoutRole.remove("role");
+        // Parsed claims are immutable in jjwt 0.12, so build a modified copy.
+        Claims claims = Jwts.claims().add(withoutRole).build();
 
         assertThatThrownBy(() -> jwtService.extractRoleFrom(claims))
                 .isInstanceOf(UnauthorizedException.class)
@@ -183,8 +187,8 @@ class JwtServiceTest {
     void extractRoleFrom_unknownRoleValue_throwsUnauthorized() {
         UUID userId = UUID.randomUUID();
         String token = jwtService.createToken(userId, "user@example.com", AccountRole.ATTENDEE);
-        Claims claims = jwtService.extractClaimsFromBearer("Bearer " + token);
-        claims.put("role", "NOT_A_ROLE");
+        Claims parsed = jwtService.extractClaimsFromBearer("Bearer " + token);
+        Claims claims = Jwts.claims().add(parsed).add("role", "NOT_A_ROLE").build();
 
         assertThatThrownBy(() -> jwtService.extractRoleFrom(claims))
                 .isInstanceOf(UnauthorizedException.class)

@@ -35,7 +35,7 @@ import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [35], shadows = [ShadowMasterKeyBuilder::class, ShadowEncryptedSharedPreferences::class])
+@Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
 class RoleGuardMatrixTest {
 
     private lateinit var sessionManager: SessionManager

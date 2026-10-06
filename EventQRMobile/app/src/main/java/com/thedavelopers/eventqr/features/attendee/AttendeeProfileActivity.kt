@@ -9,10 +9,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.session.SessionLogout
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
-import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.ui.components.AttendeeNavItems
 import com.thedavelopers.eventqr.ui.components.EventQrBottomNavBar
@@ -136,13 +136,19 @@ class AttendeeProfileActivity : AppCompatActivity() {
         }
     }
 
+    private var signingOut = false
+
     private fun performSignOut() {
-        RegistrationsCache.clear()
-        sessionManager.clearSession()
-        startActivity(
-            Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
-        )
-        finish()
+        if (signingOut) return
+        signingOut = true
+        lifecycleScope.launch {
+            // Revokes the token on the server first, then clears local session state.
+            SessionLogout.signOut(this@AttendeeProfileActivity)
+            startActivity(
+                Intent(this@AttendeeProfileActivity, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+            )
+            finish()
+        }
     }
 }

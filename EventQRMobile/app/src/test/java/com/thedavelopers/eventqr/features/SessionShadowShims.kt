@@ -3,7 +3,7 @@ package com.thedavelopers.eventqr.features
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import androidx.security.crypto.MasterKeys
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 
@@ -13,10 +13,11 @@ import org.robolectric.annotation.Implements
  * in plain SharedPreferences with the same file name so guard tests can exercise the
  * real activities. Test-only: production code is untouched.
  */
-@Implements(MasterKey.Builder::class)
-class ShadowMasterKeyBuilder {
+@Implements(MasterKeys::class)
+object ShadowMasterKeys {
+    @JvmStatic
     @Implementation
-    fun build(): MasterKey = allocateMasterKey()
+    fun getOrCreate(keyGenParameterSpec: android.security.keystore.KeyGenParameterSpec): String = "test-master-key"
 }
 
 @Implements(EncryptedSharedPreferences::class)
@@ -24,19 +25,10 @@ object ShadowEncryptedSharedPreferences {
     @JvmStatic
     @Implementation
     fun create(
-        context: Context,
         fileName: String,
-        masterKey: MasterKey,
+        masterKeyAlias: String,
+        context: Context,
         keyEncryptionScheme: EncryptedSharedPreferences.PrefKeyEncryptionScheme,
         valueEncryptionScheme: EncryptedSharedPreferences.PrefValueEncryptionScheme,
     ): SharedPreferences = context.getSharedPreferences(fileName, Context.MODE_PRIVATE)
-}
-
-private fun allocateMasterKey(): MasterKey {
-    val unsafe = Class.forName("sun.misc.Unsafe")
-        .getDeclaredField("theUnsafe")
-        .apply { isAccessible = true }
-        .get(null)
-    val allocate = unsafe.javaClass.getMethod("allocateInstance", Class::class.java)
-    return allocate.invoke(unsafe, MasterKey::class.java) as MasterKey
 }
