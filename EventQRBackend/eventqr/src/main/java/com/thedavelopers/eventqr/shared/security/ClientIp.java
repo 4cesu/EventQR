@@ -5,33 +5,50 @@ import jakarta.servlet.http.HttpServletRequest;
 /**
  * Resolves the real client IP for rate limiting and auditing.
  *
- * <p>The service runs behind Render's reverse proxy. A client can spoof its own
- * {@code X-Forwarded-For} value; a proxy that blindly trusts the leftmost entry would
- * let an attacker rotate the header per request to defeat IP-based rate limiting. To
- * close that bypass we take the <b>rightmost</b> syntactically valid entry in the
- * {@code X-Forwarded-For} list: each upstream hop appends the previous peer to the
- * right, so the rightmost client-visible entry is the one appended by the outermost
- * trusted proxy (Render) and is not client-controllable once we only trust the proxy.
+ * <p>Resolution order:
+ * <ol>
+ *   <li><b>A trusted single-value header</b>, when one is configured
+ *       ({@code app.client-ip.trusted-header}, {@code CF-Connecting-IP} on Render). Render's edge
+ *       (Cloudflare) writes that header on every request and overwrites whatever the caller
+ *       sent, so it is accurate and the client cannot forge it. Only use this where the platform
+ *       really guarantees that; on a host without such an edge a caller could set it themselves,
+ *       so it can be turned off by setting the property empty.</li>
+ *   <li>The <b>rightmost</b> valid entry of {@code X-Forwarded-For}. A client can spoof its own
+ *       value, and every hop appends on the right, so the leftmost entries must never be
+ *       trusted; the rightmost is the peer seen by the outermost proxy.</li>
+ *   <li>{@code getRemoteAddr()} when there is no valid forwarded address (e.g. local
+ *       development).</li>
+ * </ol>
  *
- * <p><b>Trust model:</b> we rely on the servlet container being configured with
- * {@code server.tomcat.remoteip.internal-proxies} (see {@code application.properties})
- * so that only Render's egress IPs are treated as trusted proxies whose
- * {@code X-Forwarded-For} we honor. If that list is empty the container trusts nothing
- * as a proxy; our header parsing alone must not blindly trust an arbitrary client.
- * This resolver is therefore defense in depth: it extracts the rightmost entry that a
- * trusted proxy appended, and falls back to {@code getRemoteAddr()} when there is no
- * valid forwarded address (e.g. direct local requests during development). Only
- * well-formed IPv4/IPv6 literals are accepted so a spoofed header value cannot produce
- * an arbitrary bucket key.
+ * <p>Only well-formed IPv4/IPv6 literals are accepted at every step, so a spoofed header value
+ * cannot produce an arbitrary rate-limit bucket key.
+ *
+ * <p>This replaces the need for {@code server.tomcat.remoteip.internal-proxies}: Render does not
+ * publish its inbound proxy ranges, so there is no list to configure.
  */
 public final class ClientIp {
 
     private static final int MAX_XFF_LENGTH = 512;
 
+    /** Name of the header the platform guarantees to be the real client IP; null/blank = not used. */
+    private static volatile String trustedHeader;
+
     private ClientIp() {
     }
 
+    /** Set once at startup from {@code app.client-ip.trusted-header}; blank disables it. */
+    public static void configureTrustedHeader(String headerName) {
+        trustedHeader = (headerName == null || headerName.isBlank()) ? null : headerName.trim();
+    }
+
     public static String from(HttpServletRequest request) {
+        String header = trustedHeader;
+        if (header != null) {
+            String value = request.getHeader(header);
+            if (value != null && isValidIp(value.trim())) {
+                return value.trim();
+            }
+        }
         String forwarded = request.getHeader("X-Forwarded-For");
         String candidate = rightmostValidAddress(forwarded);
         if (candidate != null) {
