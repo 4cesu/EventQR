@@ -61,9 +61,15 @@ class ScannerPresenter(
 
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString)
+            val eventUuid = parseUuid(eventId)
+            val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(::parseUuid)
+            if (eventUuid == null || (!staffUserId.isNullOrBlank() && staffUuid == null)) {
+                view?.showLoading(false)
+                view?.showScanError("Scan setup is invalid. Go back and select the event again.")
+                return@launch
+            }
             val request = RewardRedemptionScanRequest(
-                eventId = UUID.fromString(eventId),
+                eventId = eventUuid,
                 scanPurposeId = purpose.scanPurposeId,
                 qrValue = if (isShortId) null else trimmed,
                 shortId = if (isShortId) trimmed else null,
@@ -109,10 +115,16 @@ class ScannerPresenter(
 
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString)
+            val eventUuid = parseUuid(eventId)
+            val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(::parseUuid)
+            if (eventUuid == null || (!staffUserId.isNullOrBlank() && staffUuid == null)) {
+                view?.showLoading(false)
+                view?.showScanError("Scan setup is invalid. Go back and select the event again.")
+                return@launch
+            }
             val request = if (isShortId) {
                 TransactionRequest(
-                    eventId = UUID.fromString(eventId),
+                    eventId = eventUuid,
                     scanPurposeId = purpose.scanPurposeId,
                     shortId = trimmed,
                     staffUserId = staffUuid,
@@ -120,7 +132,7 @@ class ScannerPresenter(
                 )
             } else {
                 TransactionRequest(
-                    eventId = UUID.fromString(eventId),
+                    eventId = eventUuid,
                     scanPurposeId = purpose.scanPurposeId,
                     qrValue = trimmed,
                     staffUserId = staffUuid,
@@ -144,4 +156,6 @@ class ScannerPresenter(
             view?.showLoading(false)
         }
     }
+
+    private fun parseUuid(value: String): UUID? = runCatching { UUID.fromString(value) }.getOrNull()
 }

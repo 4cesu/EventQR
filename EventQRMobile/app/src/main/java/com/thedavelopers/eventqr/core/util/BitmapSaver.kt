@@ -13,7 +13,20 @@ import java.io.OutputStream
 
 object BitmapSaver {
 
+    /**
+     * Saves the bitmap and returns its Uri, or null if it could not be saved. Never throws:
+     * on Android 8-9 the legacy write needs WRITE_EXTERNAL_STORAGE at runtime, and a denied
+     * permission or a full disk used to crash the app from the download button.
+     */
     fun saveBitmapToGallery(context: Context, bitmap: Bitmap, fileName: String): Uri? {
+        return try {
+            writeBitmap(context, bitmap, fileName)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun writeBitmap(context: Context, bitmap: Bitmap, fileName: String): Uri? {
         val imageOutStream: OutputStream?
         var uri: Uri? = null
 
@@ -31,7 +44,7 @@ object BitmapSaver {
             val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + File.separator + "EventQR"
             val file = File(imagesDir)
             if (!file.exists()) {
-                file.mkdir()
+                file.mkdirs()
             }
             val image = File(imagesDir, "$fileName.png")
             imageOutStream = FileOutputStream(image)

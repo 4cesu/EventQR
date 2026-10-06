@@ -6,7 +6,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record TransactionRequest(@NotNull UUID eventId, @NotNull UUID scanPurposeId, String qrValue,
-                                 String shortId, UUID staffUserId, String notes) {
+                                 String shortId, UUID staffUserId, String notes,
+                                 UUID clientRequestId) {
+
+    /** Backward-compatible constructor for callers that predate the idempotency key. */
+    public TransactionRequest(UUID eventId, UUID scanPurposeId, String qrValue, String shortId,
+                              UUID staffUserId, String notes) {
+        this(eventId, scanPurposeId, qrValue, shortId, staffUserId, notes, null);
+    }
 
     /** Normalize short ID input: strip "#" prefix and leading zeros, parse to integer. Returns null if invalid. */
     public Integer parsedShortId() {
