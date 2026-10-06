@@ -7,7 +7,7 @@ import androidx.security.crypto.MasterKeys
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
 
-class SessionManager(context: Context) {
+class SessionManager(context: Context) : TokenStore {
     private val sharedPreferences: SharedPreferences = run {
         // Stable security-crypto 1.0.0 API. getOrCreate(AES256_GCM_SPEC) uses the same
         // Keystore alias as the alpha MasterKey.Builder default, so sessions saved by
@@ -25,6 +25,7 @@ class SessionManager(context: Context) {
     fun saveLoginResponse(loginResponse: LoginResponse) {
         sharedPreferences.edit()
             .putString(KEY_AUTH_TOKEN, loginResponse.accessToken)
+            .apply { loginResponse.refreshToken?.let { putString(KEY_REFRESH_TOKEN, it) } }
             .putString(KEY_USER_ID, loginResponse.userId.toString())
             .putString(KEY_EMAIL, loginResponse.email)
             .putString(KEY_PHONE, loginResponse.phone)
@@ -60,6 +61,19 @@ class SessionManager(context: Context) {
 
     fun getAuthToken(): String? = sharedPreferences.getString(KEY_AUTH_TOKEN, null)
 
+    override fun getAccessToken(): String? = getAuthToken()
+
+    override fun getRefreshToken(): String? = sharedPreferences.getString(KEY_REFRESH_TOKEN, null)
+
+    override fun saveTokens(accessToken: String, refreshToken: String?) {
+        sharedPreferences.edit()
+            .putString(KEY_AUTH_TOKEN, accessToken)
+            .apply { refreshToken?.let { putString(KEY_REFRESH_TOKEN, it) } }
+            .apply()
+    }
+
+    override fun clear() = clearSession()
+
     fun getUserId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
 
     fun getUserRole(): String? = sharedPreferences.getString(KEY_ROLE, null)
@@ -77,6 +91,7 @@ class SessionManager(context: Context) {
     companion object {
         const val PREFS_NAME = "eventqr_session"
         private const val KEY_AUTH_TOKEN = "auth_token"
+        private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_ROLE = "role"
         private const val KEY_EMAIL = "email"

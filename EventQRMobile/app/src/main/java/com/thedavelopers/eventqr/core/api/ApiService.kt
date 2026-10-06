@@ -4,6 +4,7 @@ import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import com.thedavelopers.eventqr.core.api.dto.PageResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
+import com.thedavelopers.eventqr.features.auth.model.dto.LogoutRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
@@ -97,7 +98,7 @@ interface ApiService {
     suspend fun resetPassword(@Body request: ResetPasswordRequest): ApiResponse<Unit>
 
     @POST("auth/logout")
-    suspend fun logout(): ApiResponse<Unit>
+    suspend fun logout(@Body request: LogoutRequest): ApiResponse<Unit>
 
     @POST("auth/refresh-token")
     suspend fun refreshToken(): ApiResponse<LoginResponse>

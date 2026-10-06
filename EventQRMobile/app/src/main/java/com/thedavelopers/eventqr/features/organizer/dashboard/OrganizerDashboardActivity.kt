@@ -164,6 +164,11 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             container.addView(portalView)
         }
         
+        view.findViewById<View>(R.id.btnPortalSignOut).setOnClickListener {
+            dialog.dismiss()
+            com.thedavelopers.eventqr.core.session.SignOutFlow.confirmAndSignOut(this)
+        }
+
         dialog.setContentView(view)
         dialog.show()
     }

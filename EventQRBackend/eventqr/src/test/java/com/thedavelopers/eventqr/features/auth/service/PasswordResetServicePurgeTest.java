@@ -25,7 +25,8 @@ class PasswordResetServicePurgeTest {
         when(tokenRepository.deleteByExpiresAtBefore(any(Instant.class))).thenReturn(3);
 
         PasswordResetService service = new PasswordResetService(
-                tokenRepository, userRepository, passwordEncoder, emailGatewayService, "https://eventqr.app");
+                tokenRepository, userRepository, passwordEncoder, emailGatewayService,
+                mock(RefreshTokenService.class), "https://eventqr.app");
 
         service.purgeExpiredTokens();
 

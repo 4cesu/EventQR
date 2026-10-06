@@ -16,7 +16,12 @@ data class LoginResponse(
     val fullName: String,
     val role: AccountRole?,
     val message: String? = null,
+    val refreshToken: String? = null,
 )
+
+data class RefreshRequest(val refreshToken: String)
+
+data class LogoutRequest(val refreshToken: String? = null)
 
 data class RegisterRequest(
     val email: String,

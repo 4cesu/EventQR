@@ -1,0 +1,244 @@
+package com.thedavelopers.eventqr.features.auth.controller;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse;
+import com.thedavelopers.eventqr.features.auth.service.AuthService;
+import com.thedavelopers.eventqr.features.auth.service.ChangePasswordService;
+import com.thedavelopers.eventqr.features.auth.service.PasswordResetService;
+import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
+import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
+import com.thedavelopers.eventqr.features.users.service.UserService;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountStatus;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.exceptions.GlobalExceptionHandler;
+import com.thedavelopers.eventqr.shared.exceptions.UnauthorizedException;
+import com.thedavelopers.eventqr.shared.security.ForgotPasswordRateLimiter;
+import com.thedavelopers.eventqr.shared.security.JwtService;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class AuthControllerTest {
+
+    @Mock private AuthService authService;
+    @Mock private UserService userService;
+    @Mock private JwtService jwtService;
+    @Mock private PasswordResetService passwordResetService;
+    @Mock private ChangePasswordService changePasswordService;
+    @Mock private ForgotPasswordRateLimiter forgotPasswordRateLimiter;
+
+    private MockMvc mvc;
+    private final UUID userId = UUID.randomUUID();
+
+    @BeforeEach
+    void setUp() {
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(authService, userService, jwtService,
+                        passwordResetService, changePasswordService, forgotPasswordRateLimiter))
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
+
+    private LoginResponse session(String refresh) {
+        return new LoginResponse("access-token", userId, "jane@example.com", "Jane Doe", AccountRole.ATTENDEE,
+                "Login successful", refresh);
+    }
+
+    private static String json(String body) {
+        return body.replace('\'', '"');
+    }
+
+    // ----- login -----
+
+    @Test
+    void loginReturnsTheAccessAndRefreshTokens() throws Exception {
+        when(authService.login(any())).thenReturn(session("refresh-1"));
+
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','password':'Passw0rd!!'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("access-token"))
+                .andExpect(jsonPath("$.data.refreshToken").value("refresh-1"))
+                .andExpect(jsonPath("$.data.role").value("ATTENDEE"));
+    }
+
+    @Test
+    void wrongCredentialsAre401() throws Exception {
+        when(authService.login(any())).thenThrow(new UnauthorizedException("Invalid email or password"));
+
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','password':'nope'}")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+    }
+
+    @Test
+    void aMalformedLoginIsRejectedBeforeTheServiceIsCalled() throws Exception {
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'not-an-email','password':''}")))
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).login(any());
+    }
+
+    // ----- register -----
+
+    @Test
+    void registeringAlwaysCreatesAnAttendeeEvenIfTheClientAsksForMore() throws Exception {
+        when(userService.create(any())).thenReturn(new UserResponse(userId, "jane@example.com", "Jane Doe", null,
+                AccountRole.ATTENDEE, AccountStatus.ACTIVE));
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'Jane Doe','password':'Passw0rd!!','role':'SUPER_ADMIN'}")))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<UserRequest> captured = ArgumentCaptor.forClass(UserRequest.class);
+        verify(userService).create(captured.capture());
+        org.assertj.core.api.Assertions.assertThat(captured.getValue().role()).isEqualTo(AccountRole.ATTENDEE);
+    }
+
+    @Test
+    void aTooShortPasswordIsRejectedOnRegistration() throws Exception {
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'Jane Doe','password':'short'}")))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).create(any());
+    }
+
+    // ----- refresh -----
+
+    @Test
+    void refreshReturnsANewTokenPair() throws Exception {
+        when(authService.refresh("refresh-1")).thenReturn(session("refresh-2"));
+
+        mvc.perform(post("/api/v1/auth/refresh").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'refreshToken':'refresh-1'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.refreshToken").value("refresh-2"));
+    }
+
+    @Test
+    void anInvalidRefreshTokenIs401() throws Exception {
+        when(authService.refresh("stolen")).thenThrow(new UnauthorizedException("Invalid or expired session"));
+
+        mvc.perform(post("/api/v1/auth/refresh").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'refreshToken':'stolen'}")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshWithoutATokenIs400() throws Exception {
+        mvc.perform(post("/api/v1/auth/refresh").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).refresh(any());
+    }
+
+    // ----- logout -----
+
+    @Test
+    void logoutRevokesTheAccessTokenAndEndsTheRefreshFamily() throws Exception {
+        mvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer access-token")
+                        .contentType(MediaType.APPLICATION_JSON).content(json("{'refreshToken':'refresh-1'}")))
+                .andExpect(status().isOk());
+
+        verify(jwtService).revoke("Bearer access-token");
+        verify(authService).endSession("refresh-1");
+    }
+
+    @Test
+    void logoutWithoutABodyStillRevokesTheAccessToken() throws Exception {
+        mvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer access-token"))
+                .andExpect(status().isOk());
+
+        verify(jwtService).revoke("Bearer access-token");
+        verify(authService, never()).endSession(any());
+    }
+
+    // ----- forgot / reset password -----
+
+    @Test
+    void forgotPasswordGivesTheSameNeutralAnswerWhetherOrNotTheAccountExists() throws Exception {
+        when(forgotPasswordRateLimiter.allow(any(), eq("jane@example.com"))).thenReturn(true);
+
+        mvc.perform(post("/api/v1/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("If an account with that email exists, a reset link has been sent"));
+
+        verify(passwordResetService).requestReset("jane@example.com");
+    }
+
+    @Test
+    void forgotPasswordIsRateLimitedAndDoesNotSendAnEmail() throws Exception {
+        when(forgotPasswordRateLimiter.allow(any(), any())).thenReturn(false);
+
+        mvc.perform(post("/api/v1/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com'}")))
+                .andExpect(status().isTooManyRequests());
+
+        verify(passwordResetService, never()).requestReset(any());
+    }
+
+    @Test
+    void anInvalidResetTokenIsReportedAs400() throws Exception {
+        when(passwordResetService.validateToken("bad")).thenReturn(false);
+
+        mvc.perform(get("/api/v1/auth/reset-password/validate").param("token", "bad"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.data.valid").value(false));
+    }
+
+    @Test
+    void aValidResetTokenIsReportedAsValid() throws Exception {
+        when(passwordResetService.validateToken("good")).thenReturn(true);
+
+        mvc.perform(get("/api/v1/auth/reset-password/validate").param("token", "good"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.valid").value(true));
+    }
+
+    @Test
+    void aWeakNewPasswordIsRejectedBeforeTheServiceIsCalled() throws Exception {
+        mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'token':'t','newPassword':'alllowercase1','confirmPassword':'alllowercase1'}")))
+                .andExpect(status().isBadRequest());
+
+        verify(passwordResetService, never()).resetPassword(any(), any(), any());
+    }
+
+    @Test
+    void mismatchedResetPasswordsFromTheServiceAre400() throws Exception {
+        org.mockito.Mockito.doThrow(new BadRequestException("Passwords do not match"))
+                .when(passwordResetService).resetPassword(any(), any(), any());
+
+        mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'token':'t','newPassword':'Passw0rd!!','confirmPassword':'Different1!'}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Passwords do not match"));
+    }
+}
