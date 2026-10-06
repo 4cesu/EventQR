@@ -10,6 +10,9 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,12 +27,12 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 @Transactional
 public class FileStorageService {
 
-    // TODO(production): migrate file storage from the bytea column to S3 (or Render Disk)
-    // before launch. Short-term mitigations in place: uploads are capped at 5 MB with the
-    // size check before any full content read, and /content is streamed with a Content-Length
-    // so responses never double-copy through the JSON/base64 envelope. The metadata GET still
-    // returns base64 content because the mobile clients decode it directly (EventDetail /
-    // EditEventDetails banner previews) — that contract stays until the clients move to /content.
+    // Bytes live in Postgres by default. With app.storage.type=s3 new uploads go to an S3-compatible
+    // bucket instead (see S3FileContentStore); files already in the database keep being served from
+    // there. Uploads are capped at 5 MB with the size check before any full content read, and
+    // /content is streamed with a Content-Length. The metadata GET still returns base64 content
+    // because the mobile clients decode it directly (EventDetail / EditEventDetails banner
+    // previews) - that contract stays until the clients move to /content.
     private static final double EVENT_POSTER_MIN_RATIO = 1.55;
     private static final double EVENT_POSTER_MAX_RATIO = 1.90;
 
@@ -38,10 +41,22 @@ public class FileStorageService {
 
     private static final long MAX_IMAGE_BYTES = 5L * 1024L * 1024L;
 
+    private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
+
     private final StoredFileRepository storedFileRepository;
 
+    /** Present only when app.storage.type=s3; otherwise bytes stay in the database as before. */
+    private final FileContentStore contentStore;
+
     public FileStorageService(StoredFileRepository storedFileRepository) {
+        this(storedFileRepository, null);
+    }
+
+    @Autowired
+    public FileStorageService(StoredFileRepository storedFileRepository,
+                              @Autowired(required = false) FileContentStore contentStore) {
         this.storedFileRepository = storedFileRepository;
+        this.contentStore = contentStore;
     }
 
     public StoredFileResponse store(UUID ownerId, String purpose, MultipartFile file) {
@@ -55,8 +70,21 @@ public class FileStorageService {
             storedFile.setContentType(normalizeContentType(file.getContentType(), content));
             storedFile.setSize(content.length);
             storedFile.setStoredAt(Instant.now());
-            storedFile.setContent(content);
-            return toResponse(storedFileRepository.save(storedFile), "STORED", true);
+            if (contentStore == null) {
+                storedFile.setContent(content);
+                return toResponse(storedFileRepository.save(storedFile), "STORED", true);
+            }
+            String key = storedFile.getPurpose() + "/" + UUID.randomUUID();
+            contentStore.put(key, storedFile.getContentType(), content);
+            storedFile.setStorageKey(key);
+            try {
+                StoredFile saved = storedFileRepository.save(storedFile);
+                return new StoredFileResponse(saved.getId(), saved.getOwnerId(), saved.getPurpose(), saved.getFileName(),
+                        saved.getContentType(), saved.getSize(), "STORED", saved.getStoredAt(), encode(content));
+            } catch (RuntimeException exception) {
+                deleteQuietly(key); // don't leave an orphaned object behind a failed insert
+                throw exception;
+            }
         } catch (IOException exception) {
             throw new BadRequestException("Unable to read uploaded file");
         }
@@ -73,15 +101,18 @@ public class FileStorageService {
         StoredFile storedFile = requireFile(fileId);
         String contentType = storedFile.getContentType();
         if (contentType == null || contentType.isBlank()) {
-            contentType = MediaTypeDetector.detect(storedFile.getContent());
+            contentType = MediaTypeDetector.detect(contentOf(storedFile));
         }
-        return new StoredFileContent(storedFile.getContent(), contentType);
+        return new StoredFileContent(contentOf(storedFile), contentType);
     }
 
     public StoredFileResponse delete(UUID fileId) {
         StoredFile existing = requireFile(fileId);
         StoredFileResponse response = toResponse(existing, "DELETED", true);
         storedFileRepository.delete(existing);
+        if (existing.getStorageKey() != null && contentStore != null) {
+            deleteQuietly(existing.getStorageKey());
+        }
         return response;
     }
 
@@ -205,8 +236,28 @@ public class FileStorageService {
         return cleanName;
     }
 
+    /** The file's bytes from wherever they live: object storage if it has a key, else the database. */
+    private byte[] contentOf(StoredFile storedFile) {
+        if (storedFile.getStorageKey() != null) {
+            if (contentStore == null) {
+                throw new IllegalStateException(
+                        "File is in object storage but app.storage.type is not s3: " + storedFile.getId());
+            }
+            return contentStore.get(storedFile.getStorageKey());
+        }
+        return storedFile.getContent();
+    }
+
+    private void deleteQuietly(String key) {
+        try {
+            contentStore.delete(key);
+        } catch (RuntimeException exception) {
+            log.warn("Could not delete stored object {}", key, exception);
+        }
+    }
+
     private StoredFileResponse toResponse(StoredFile storedFile, String status, boolean includeContent) {
-        byte[] content = includeContent ? storedFile.getContent() : null;
+        byte[] content = includeContent ? contentOf(storedFile) : null;
         return new StoredFileResponse(
                 storedFile.getId(),
                 storedFile.getOwnerId(),

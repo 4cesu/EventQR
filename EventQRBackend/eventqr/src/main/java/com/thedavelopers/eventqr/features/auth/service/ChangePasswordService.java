@@ -19,10 +19,14 @@ public class ChangePasswordService {
     private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final RefreshTokenService refreshTokenService;
+
     public ChangePasswordService(UserProfileRepository userProfileRepository,
-                                 PasswordEncoder passwordEncoder) {
+                                 PasswordEncoder passwordEncoder,
+                                 RefreshTokenService refreshTokenService) {
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public void changePassword(UUID userId, String currentPassword, String newPassword, String confirmPassword) {
@@ -41,5 +45,6 @@ public class ChangePasswordService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userProfileRepository.save(user);
+        refreshTokenService.revokeAllForUser(userId);
     }
 }

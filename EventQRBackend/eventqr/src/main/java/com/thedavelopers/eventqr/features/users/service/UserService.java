@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.thedavelopers.eventqr.features.auth.service.RefreshTokenService;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
@@ -41,11 +42,15 @@ public class UserService implements AttendeeDirectoryPort {
     private final PasswordEncoder passwordEncoder;
     private final UserTokenRevocationRepository userTokenRevocationRepository;
 
+    private final RefreshTokenService refreshTokenService;
+
     public UserService(UserProfileRepository userProfileRepository,
                        EventRegistrationRepository eventRegistrationRepository,
                        TransactionLogRepository transactionLogRepository,
                        PasswordEncoder passwordEncoder,
-                       UserTokenRevocationRepository userTokenRevocationRepository) {
+                       UserTokenRevocationRepository userTokenRevocationRepository,
+                       RefreshTokenService refreshTokenService) {
+        this.refreshTokenService = refreshTokenService;
         this.userProfileRepository = userProfileRepository;
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.transactionLogRepository = transactionLogRepository;
@@ -162,6 +167,8 @@ userProfile.setFullName(fullName.trim());
             throw new BadRequestException("Current password is incorrect");
         }
         userProfile.setPasswordHash(passwordEncoder.encode(newPassword));
+        // A changed password ends every other login: refresh tokens cannot outlive it.
+        refreshTokenService.revokeAllForUser(userId);
         return toResponse(userProfileRepository.save(userProfile));
     }
 

@@ -19,12 +19,10 @@ import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.google.gson.GsonBuilder
 import com.thedavelopers.eventqr.core.api.ApiConfig
-import com.thedavelopers.eventqr.core.api.AuthInterceptor
 import com.thedavelopers.eventqr.core.api.InstantTypeAdapter
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.core.api.dto.RewardStatus
-import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.organizer.BG
 import com.thedavelopers.eventqr.features.organizer.MUTED
@@ -54,7 +52,6 @@ import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.launch
 
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
@@ -821,9 +818,7 @@ private object OrganizerRewardsApiProvider {
             .registerTypeAdapter(Instant::class.java, InstantTypeAdapter)
             .setLenient()
             .create()
-        val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(SessionManager(context)))
-            .build()
+        val client = com.thedavelopers.eventqr.core.api.ApiClient.newHttpClient(context)
         return Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
             .client(client)

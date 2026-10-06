@@ -102,6 +102,9 @@ public class JwtService {
         Instant now = Instant.now();
         Instant expiresAt = now.plus(expiration);
         return Jwts.builder()
+                // Unique per token: without it two logins in the same second yield the identical
+                // string, so logging out and straight back in would hand back a revoked token.
+                .id(UUID.randomUUID().toString())
                 .subject(userId.toString())
                 .claim("userId", userId.toString())
                 .claim("email", email)
