@@ -1,14 +1,11 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import com.thedavelopers.eventqr.ui.components.EventCardHolder
 
 class AttendeeEventAdapter(
     private val onClick: (AttendeeEventResponse) -> Unit,
@@ -23,8 +20,7 @@ class AttendeeEventAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_attendee_event, parent, false)
-        return ViewHolder(view)
+        return ViewHolder(EventCardHolder(parent.context))
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -33,58 +29,24 @@ class AttendeeEventAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleView: TextView = itemView.findViewById(R.id.txtAttendeeEventTitle)
-        private val statusView: TextView = itemView.findViewById(R.id.txtAttendeeEventStatus)
-        private val dateTimeView: TextView = itemView.findViewById(R.id.txtAttendeeEventDateTime)
-        private val locationView: TextView = itemView.findViewById(R.id.txtAttendeeEventLocation)
-        private val dayView: TextView = itemView.findViewById(R.id.txtEventDay)
-        private val monthView: TextView = itemView.findViewById(R.id.txtEventMonth)
-        private val regCountView: TextView = itemView.findViewById(R.id.txtRegistrationCount)
-        private val regPercentView: TextView = itemView.findViewById(R.id.txtRegistrationPercent)
-        private val progressBar: android.widget.ProgressBar = itemView.findViewById(R.id.pbRegistration)
-        private val dateBadgeView: View = itemView.findViewById(R.id.layoutEventDate)
+    inner class ViewHolder(private val holder: EventCardHolder) :
+        RecyclerView.ViewHolder(holder.view) {
 
         fun bind(item: AttendeeEventResponse) {
             val status = EventStatusBadgeStyler.resolve(item.status, item.eventStartAt, item.eventEndAt)
-            val ctx = itemView.context
+            val date = EventCardPresenter.dateParts(item.eventStartAt)
 
-            titleView.text = item.title.ifBlank { "Untitled event" }
-
-            EventStatusBadgeStyler.bind(statusView, status)
-            dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(status))
-
-            if (item.eventStartAt != null) {
-                val zonedDateTime = item.eventStartAt.atZone(java.time.ZoneId.of("Asia/Manila"))
-                dayView.text = zonedDateTime.dayOfMonth.toString()
-                monthView.text = zonedDateTime.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH).uppercase()
-
-                val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH)
-                dateTimeView.text = zonedDateTime.format(timeFormatter)
-            } else {
-                dayView.text = "--"
-                monthView.text = "---"
-                dateTimeView.text = "-"
-            }
-
-            locationView.text = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
-
-            val capacity = item.capacity.coerceAtLeast(1)
-            val current = item.currentAttendeeCount
-            val percent = (current.toFloat() / capacity.toFloat() * 100).toInt().coerceIn(0, 100)
-
-            regCountView.text = "$current/$capacity registered"
-            regPercentView.text = "$percent%"
-            progressBar.progress = percent
-            progressBar.progressDrawable = ctx.getDrawable(
-                when (status) {
-                    EventStatus.ENDED -> R.drawable.pb_event_completed
-                    EventStatus.APPROVED -> R.drawable.pb_event_upcoming
-                    else -> R.drawable.pb_event_active
-                },
+            holder.update(
+                title = item.title,
+                status = EventStatusBadgeStyler.displayLabel(status),
+                day = date.day,
+                month = date.month,
+                time = date.time,
+                location = EventCardPresenter.location(item.location),
+                count = item.currentAttendeeCount,
+                capacity = EventCardPresenter.capacity(item.capacity),
+                onClick = { onClick(item) },
             )
-
-            itemView.setOnClickListener { onClick(item) }
         }
     }
 }
