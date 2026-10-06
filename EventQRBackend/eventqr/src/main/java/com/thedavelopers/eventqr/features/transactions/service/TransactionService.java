@@ -37,6 +37,7 @@ import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
@@ -149,6 +150,27 @@ public class TransactionService {
 
     @CacheEvict(cacheNames = "transaction-rules", key = "#request.eventId()")
     public TransactionResponse record(TransactionRequest request) {
+        UUID clientRequestId = request.clientRequestId();
+        if (clientRequestId == null) {
+            return recordNew(request);
+        }
+        // Retry of a scan the server may already have logged (e.g. the response was lost):
+        // return the original outcome, approved or rejected, without logging it again.
+        var existing = transactionLogRepository.findByClientRequestId(clientRequestId);
+        if (existing.isPresent()) {
+            if (!existing.get().getEventId().equals(request.eventId())) {
+                throw new BadRequestException("clientRequestId was already used for a different event");
+            }
+            return toResponse(existing.get());
+        }
+        TransactionResponse response = recordNew(request);
+        transactionLogRepository.findById(response.transactionId())
+                .ifPresent(saved -> saved.setClientRequestId(clientRequestId));
+        return response;
+    }
+
+    // Package-private so tests can exercise the idempotency wrapper without the full scan chain.
+    TransactionResponse recordNew(TransactionRequest request) {
         var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
         if (eventSnapshot.status() == EventStatus.ENDED) {
             throw new ForbiddenException("Event has ended. Scanning is disabled.");

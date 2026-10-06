@@ -51,6 +51,10 @@ public class TransactionLog extends BaseEntity {
     @Column(name = "reward_id")
     private UUID rewardId;
 
+    /** Client-generated idempotency key; a retried scan with the same key returns this row. */
+    @Column(name = "client_request_id")
+    private UUID clientRequestId;
+
     private Instant scannedAt;
 
     @Column(length = 2000)

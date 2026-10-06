@@ -16,6 +16,7 @@ import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionL
 public interface TransactionLogRepository extends JpaRepository<TransactionLog, UUID> {
 
     // List variants (preserved for existing service calls)
+    java.util.Optional<TransactionLog> findByClientRequestId(UUID clientRequestId);
     List<TransactionLog> findByEventId(UUID eventId);
     List<TransactionLog> findByEventIdAndScannedAtGreaterThanEqual(UUID eventId, Instant scannedAt);
     List<TransactionLog> findByEventIdOrderByScannedAtDesc(UUID eventId);

@@ -40,7 +40,15 @@ class ForgotPasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showConfirmation()
+                    if (result.throwable is java.io.IOException) {
+                        // Offline or timed out: the request never got an answer, so don't tell
+                        // the user an email is on its way.
+                        view?.showMessage(result.message)
+                    } else {
+                        // The server answered (even with an error): keep the neutral confirmation
+                        // so the screen doesn't reveal whether an account exists.
+                        view?.showConfirmation()
+                    }
                 }
                 NetworkResult.Loading -> Unit
                 null -> {

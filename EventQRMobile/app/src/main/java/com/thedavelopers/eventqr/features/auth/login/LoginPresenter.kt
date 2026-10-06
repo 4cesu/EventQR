@@ -36,7 +36,7 @@ class LoginPresenter(
         }
 
         if (!Validators.isValidPassword(passwordValue)) {
-            view?.showPasswordError("Password must be at least 6 characters")
+            view?.showPasswordError("Password must be at least 8 characters")
             valid = false
         } else {
             view?.showPasswordError(null)
