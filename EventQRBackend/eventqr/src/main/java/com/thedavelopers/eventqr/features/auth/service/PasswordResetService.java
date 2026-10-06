@@ -41,11 +41,15 @@ public class PasswordResetService {
     private final EmailGatewayService emailGatewayService;
     private final String frontendBaseUrl;
 
+    private final RefreshTokenService refreshTokenService;
+
     public PasswordResetService(PasswordResetTokenRepository passwordResetTokenRepository,
                                 UserProfileRepository userProfileRepository,
                                 PasswordEncoder passwordEncoder,
                                 EmailGatewayService emailGatewayService,
+                                RefreshTokenService refreshTokenService,
                                 @Value("${app.frontend-base-url}") String frontendBaseUrl) {
+        this.refreshTokenService = refreshTokenService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
@@ -119,6 +123,8 @@ public class PasswordResetService {
                 .orElseThrow(() -> new BadRequestException("User account not found"));
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userProfileRepository.save(user);
+        // Resetting a forgotten password is also how a stolen session gets cut off.
+        refreshTokenService.revokeAllForUser(user.getId());
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
     }

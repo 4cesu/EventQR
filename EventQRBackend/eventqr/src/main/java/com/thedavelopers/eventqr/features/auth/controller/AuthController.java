@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
+import com.thedavelopers.eventqr.features.auth.model.dto.LogoutRequest;
+import com.thedavelopers.eventqr.features.auth.model.dto.RefreshRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse;
 import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest;
@@ -92,9 +94,19 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Password has been changed", null));
     }
 
+    /** Public: the access token has typically expired, the refresh token is the credential. */
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@Valid @RequestBody RefreshRequest body) {
+        return ResponseEntity.ok(ApiResponse.success("Session refreshed", authService.refresh(body.refreshToken())));
+    }
+
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request,
+                                                    @RequestBody(required = false) LogoutRequest body) {
         jwtService.revoke(request.getHeader("Authorization"));
+        if (body != null) {
+            authService.endSession(body.refreshToken());
+        }
         return ResponseEntity.ok(ApiResponse.success("Logout processed", null));
     }
 

@@ -23,14 +23,17 @@ public class AuthService {
     private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthService(UserProfileRepository userProfileRepository, PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
+    @Transactional
     public LoginResponse login(LoginRequest request) {
         UserProfile userProfile = userProfileRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
@@ -43,8 +46,31 @@ public class AuthService {
         }
         assertUsableLogin(userProfile);
         String accessToken = jwtService.createToken(userProfile.getId(), userProfile.getEmail(), userProfile.getRole());
+        String refreshToken = refreshTokenService.issueForLogin(userProfile.getId());
         return new LoginResponse(accessToken, userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
-                userProfile.getRole(), "Login successful");
+                userProfile.getRole(), "Login successful", refreshToken);
+    }
+
+    /**
+     * Exchanges a refresh token for a new access token and a new refresh token. The role comes
+     * from the database, so role changes are picked up here too. Rotation must commit even when
+     * a reused token makes this throw, because that is when the session family gets revoked.
+     */
+    @Transactional(noRollbackFor = UnauthorizedException.class)
+    public LoginResponse refresh(String rawRefreshToken) {
+        RefreshTokenService.Rotated rotated = refreshTokenService.rotate(rawRefreshToken);
+        UserProfile userProfile = userProfileRepository.findById(rotated.userId())
+                .orElseThrow(() -> new UnauthorizedException("Invalid or expired session"));
+        assertUsableLogin(userProfile);
+        String accessToken = jwtService.createToken(userProfile.getId(), userProfile.getEmail(), userProfile.getRole());
+        return new LoginResponse(accessToken, userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
+                userProfile.getRole(), "Session refreshed", rotated.refreshToken());
+    }
+
+    /** Ends the login a refresh token belongs to, so it cannot be used to get new access tokens. */
+    @Transactional
+    public void endSession(String rawRefreshToken) {
+        refreshTokenService.revokeFamilyOf(rawRefreshToken);
     }
 
     /**

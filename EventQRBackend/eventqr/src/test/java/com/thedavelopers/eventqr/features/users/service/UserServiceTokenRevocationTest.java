@@ -45,7 +45,8 @@ class UserServiceTokenRevocationTest {
     @BeforeEach
     void setUp() {
         userService = new UserService(userProfileRepository, eventRegistrationRepository,
-                transactionLogRepository, passwordEncoder, userTokenRevocationRepository);
+                transactionLogRepository, passwordEncoder, userTokenRevocationRepository,
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.features.auth.service.RefreshTokenService.class));
     }
 
     private UserProfile activeUser(UUID userId) {

@@ -54,7 +54,8 @@ class UserServiceChangeRoleTest {
     @BeforeEach
     void setUp() {
         userService = new UserService(userProfileRepository, eventRegistrationRepository,
-                transactionLogRepository, passwordEncoder, userTokenRevocationRepository);
+                transactionLogRepository, passwordEncoder, userTokenRevocationRepository,
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.features.auth.service.RefreshTokenService.class));
         given(userProfileRepository.save(any(UserProfile.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
     }
