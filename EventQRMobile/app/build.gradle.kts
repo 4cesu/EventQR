@@ -23,9 +23,32 @@ android {
         )
     }
 
+    // Release signing comes from the environment (CI secrets) or ~/.gradle/gradle.properties,
+    // never from the repo. Without it, assembleRelease still builds an unsigned APK.
+    val releaseKeystore = providers.environmentVariable("EVENTQR_KEYSTORE_FILE")
+        .orElse(providers.gradleProperty("EVENTQR_KEYSTORE_FILE"))
+        .orNull
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("EVENTQR_KEYSTORE_PASSWORD")
+                    .orElse(providers.gradleProperty("EVENTQR_KEYSTORE_PASSWORD")).get()
+                keyAlias = providers.environmentVariable("EVENTQR_KEY_ALIAS")
+                    .orElse(providers.gradleProperty("EVENTQR_KEY_ALIAS")).get()
+                keyPassword = providers.environmentVariable("EVENTQR_KEY_PASSWORD")
+                    .orElse(providers.gradleProperty("EVENTQR_KEY_PASSWORD")).get()
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
