@@ -12,11 +12,12 @@ import com.thedavelopers.eventqr.shared.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,19 +32,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Test class for AttendeeController.
  */
-@WebMvcTest(AttendeeController.class)
+@ExtendWith(MockitoExtension.class)
 class AttendeeControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private RegistrationService registrationService;
 
-    @MockBean
+    @Mock
     private TransactionService transactionService;
 
-    @MockBean
+    @Mock
     private JwtService jwtService;
 
     private UUID testUserId;
@@ -51,6 +51,10 @@ class AttendeeControllerTest {
     @BeforeEach
     void setUp() {
         testUserId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        // Standalone setup: a @WebMvcTest slice would boot the full security filter
+        // chain and its unmocked dependencies, which this controller test doesn't need.
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                new AttendeeController(registrationService, transactionService, jwtService)).build();
     }
 
     @Test
@@ -84,16 +88,17 @@ TransactionResponse mockTransaction = new TransactionResponse(
                 .andExpect(jsonPath("$.data[0].eventTitle").value("Tech Conference 2026"))
                 .andExpect(jsonPath("$.data[0].transactionType").value("REGISTRATION"))
                 .andExpect(jsonPath("$.data[0].pointsDelta").value(10))
-                .andExpect(jsonPath("$.message").value("Transactions retrieved"));
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
-    void testMyRegistrations_Success() throws Exception {
+    void testMyEventStatus_Success() throws Exception {
         // Arrange
         String fakeToken = "Bearer fake-jwt-token";
+        UUID eventId = UUID.randomUUID();
         RegistrationResponse mockRegistration = new RegistrationResponse(
                 UUID.randomUUID(), // registrationId
-                UUID.randomUUID(), // eventId
+                eventId, // eventId
                 testUserId, // attendeeUserId
                 "attendee@eventqr.com", // attendeeEmail
                 "Jane Doe", // attendeeName
@@ -116,12 +121,11 @@ TransactionResponse mockTransaction = new TransactionResponse(
         given(registrationService.findByAttendeeUserId(testUserId)).willReturn(List.of(mockRegistration));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/attendees/me/registrations")
+        mockMvc.perform(get("/api/v1/attendees/me/events/{eventId}/status", eventId)
                         .header("Authorization", fakeToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].eventTitle").value("Tech Conference 2026"))
-                .andExpect(jsonPath("$.data[0].attendeeName").value("Jane Doe"))
-                .andExpect(jsonPath("$.data[0].status").value("REGISTERED"))
-                .andExpect(jsonPath("$.message").value("Registrations retrieved"));
+                .andExpect(jsonPath("$.data.eventTitle").value("Tech Conference 2026"))
+                .andExpect(jsonPath("$.data.attendeeName").value("Jane Doe"))
+                .andExpect(jsonPath("$.data.status").value("REGISTERED"));
     }
 }
