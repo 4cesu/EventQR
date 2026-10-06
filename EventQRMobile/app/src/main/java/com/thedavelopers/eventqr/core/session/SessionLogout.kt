@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.core.session
 
 import android.content.Context
 import com.thedavelopers.eventqr.core.api.ApiClient
+import com.thedavelopers.eventqr.features.auth.model.dto.LogoutRequest
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
@@ -21,7 +22,7 @@ object SessionLogout {
         if (sessionManager.hasUsableToken()) {
             withTimeoutOrNull(REVOKE_TIMEOUT_MS) {
                 try {
-                    ApiClient.getService(appContext).logout()
+                    ApiClient.getService(appContext).logout(LogoutRequest(sessionManager.getRefreshToken()))
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
