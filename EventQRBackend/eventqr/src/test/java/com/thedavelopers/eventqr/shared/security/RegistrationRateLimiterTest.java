@@ -53,7 +53,7 @@ class RegistrationRateLimiterTest {
     @BeforeEach
     void setUp() {
         clock = new TestClock();
-        limiter = new RegistrationRateLimiter(clock);
+        limiter = new RegistrationRateLimiter(clock, 10, 10);
         lenient().when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.9");
         lenient().when(request.getRemoteAddr()).thenReturn("10.0.0.1");
     }
@@ -111,5 +111,37 @@ class RegistrationRateLimiterTest {
         }
         // Alias 11th hits the email budget even though each alias string is distinct.
         assertThat(limiter.allow(request, "user+eleventh@gmail.com")).isFalse();
+    }
+
+    // ----- venue-sized limits (the production default is 60 per IP, 10 per email) -----
+
+    @Test
+    void aVenueSharingOneIpCanRegisterSixtyDifferentPeopleInAMinute() {
+        RegistrationRateLimiter venue = new RegistrationRateLimiter(clock, 60, 10);
+
+        for (int i = 0; i < 60; i++) {
+            assertThat(venue.allow(request, "guest" + i + "@example.com")).as("guest %s", i).isTrue();
+        }
+        assertThat(venue.allow(request, "guest61@example.com")).isFalse();
+    }
+
+    @Test
+    void theHigherIpLimitDoesNotLoosenThePerInboxLimit() {
+        RegistrationRateLimiter venue = new RegistrationRateLimiter(clock, 60, 10);
+
+        for (int i = 0; i < 10; i++) {
+            assertThat(venue.allow(request, "victim@example.com")).isTrue();
+        }
+        assertThat(venue.allow(request, "victim@example.com")).isFalse();
+        // other people on the same IP are unaffected
+        assertThat(venue.allow(request, "someone-else@example.com")).isTrue();
+    }
+
+    @Test
+    void aZeroOrNegativeSettingStillAllowsOneRequestInsteadOfBlockingEveryone() {
+        RegistrationRateLimiter misconfigured = new RegistrationRateLimiter(clock, 0, -5);
+
+        assertThat(misconfigured.allow(request, "a@example.com")).isTrue();
+        assertThat(misconfigured.allow(request, "b@example.com")).isFalse();
     }
 }

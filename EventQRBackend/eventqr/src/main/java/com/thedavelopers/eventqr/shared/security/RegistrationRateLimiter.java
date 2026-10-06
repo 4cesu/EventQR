@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
@@ -28,21 +30,32 @@ import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
 @Component
 public class RegistrationRateLimiter {
 
-    private static final int MAX_PER_IP = 10;
-    private static final int MAX_PER_EMAIL = 10;
     private static final long WINDOW_MS = 60_000L;
 
     private final Map<String, Deque<Long>> byIp = new ConcurrentHashMap<>();
     private final Map<String, Deque<Long>> byEmail = new ConcurrentHashMap<>();
     private final Clock clock;
+    private final int maxPerIp;
+    private final int maxPerEmail;
 
-    public RegistrationRateLimiter() {
-        this(Clock.systemUTC());
+    /**
+     * @param maxPerIp    registrations allowed per client IP per minute. Everyone on one venue Wi-Fi
+     *                    shares an IP, so this must cover a whole crowd signing up at once.
+     * @param maxPerEmail registrations allowed per (canonicalized) inbox per minute; this is what
+     *                    stops one victim being flooded with QR emails, so it stays small.
+     */
+    @Autowired
+    public RegistrationRateLimiter(@Value("${app.rate-limit.registration.per-ip:60}") int maxPerIp,
+                                   @Value("${app.rate-limit.registration.per-email:10}") int maxPerEmail) {
+        this(Clock.systemUTC(), maxPerIp, maxPerEmail);
     }
 
     /** Package-private constructor for tests that need clock control. */
-    RegistrationRateLimiter(Clock clock) {
+    RegistrationRateLimiter(Clock clock, int maxPerIp, int maxPerEmail) {
         this.clock = clock;
+        // A misconfigured 0 or negative value must not silently block every registration.
+        this.maxPerIp = Math.max(1, maxPerIp);
+        this.maxPerEmail = Math.max(1, maxPerEmail);
     }
 
     /**
@@ -52,10 +65,10 @@ public class RegistrationRateLimiter {
     public boolean allow(HttpServletRequest request, String email) {
         String ip = ClientIp.from(request);
         String canonicalEmail = email == null ? "" : EmailNormalizer.canonicalize(email);
-        if (!withinBudget(byIp, ip, MAX_PER_IP)) {
+        if (!withinBudget(byIp, ip, maxPerIp)) {
             return false;
         }
-        if (!canonicalEmail.isEmpty() && !withinBudget(byEmail, canonicalEmail, MAX_PER_EMAIL)) {
+        if (!canonicalEmail.isEmpty() && !withinBudget(byEmail, canonicalEmail, maxPerEmail)) {
             return false;
         }
         record(byIp, ip);
