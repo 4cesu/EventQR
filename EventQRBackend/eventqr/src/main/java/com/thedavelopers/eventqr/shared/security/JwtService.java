@@ -1,6 +1,10 @@
 package com.thedavelopers.eventqr.shared.security;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.Optional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -9,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +32,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private static final int MAX_REVOKED_TOKENS = 25_000;
+    private static final Duration NOT_REVOKED_TTL = Duration.ofSeconds(30);
 
     private final SecretKey secretKey;
     private final Duration expiration;
@@ -60,6 +66,23 @@ public class JwtService {
                 }
             })
             .build();
+
+    /**
+     * Short-lived "known not revoked" markers so the per-request denylist check does not hit
+     * the database every time. Bounds how long a logout made on another instance can be missed.
+     */
+    private final Cache<String, Boolean> notRevoked = Caffeine.newBuilder()
+            .maximumSize(MAX_REVOKED_TOKENS)
+            .expireAfterWrite(NOT_REVOKED_TTL)
+            .build();
+
+    /** Durable denylist; absent in plain unit tests, where only the in-memory cache is used. */
+    private RevokedTokenStore revokedTokenStore;
+
+    @Autowired(required = false)
+    void setRevokedTokenStore(RevokedTokenStore revokedTokenStore) {
+        this.revokedTokenStore = revokedTokenStore;
+    }
 
     public JwtService(@Value("${jwt.secret}") String secret,
                       @Value("${jwt.expiration-ms:86400000}") long expirationMs) {
@@ -111,6 +134,10 @@ public class JwtService {
             long ttlMillis = expiresAt.getTime() - System.currentTimeMillis();
             if (ttlMillis > 0) {
                 revokedTokens.put(token, ttlMillis);
+                notRevoked.invalidate(token);
+                if (revokedTokenStore != null) {
+                    revokedTokenStore.save(sha256(token), expiresAt.toInstant());
+                }
             }
         } catch (JwtException | IllegalArgumentException exception) {
             // Not a valid signed token: nothing to revoke.
@@ -120,7 +147,35 @@ public class JwtService {
     /** Returns true when the bearer token was revoked via {@link #revoke(String)}. */
     public boolean isRevoked(String authorizationHeader) {
         String token = extractToken(authorizationHeader);
-        return token != null && revokedTokens.getIfPresent(token) != null;
+        if (token == null) {
+            return false;
+        }
+        if (revokedTokens.getIfPresent(token) != null) {
+            return true;
+        }
+        if (revokedTokenStore == null || notRevoked.getIfPresent(token) != null) {
+            return false;
+        }
+        Optional<Instant> expiresAt = revokedTokenStore.findActive(sha256(token));
+        if (expiresAt.isPresent()) {
+            // Revoked on another instance or before a restart: remember it locally.
+            long ttlMillis = expiresAt.get().toEpochMilli() - System.currentTimeMillis();
+            if (ttlMillis > 0) {
+                revokedTokens.put(token, ttlMillis);
+            }
+            return true;
+        }
+        notRevoked.put(token, Boolean.TRUE);
+        return false;
+    }
+
+    private static String sha256(String token) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
     }
 
     /**

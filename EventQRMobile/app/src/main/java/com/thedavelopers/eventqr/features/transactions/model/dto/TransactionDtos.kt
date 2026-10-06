@@ -12,6 +12,9 @@ data class TransactionRequest(
     val shortId: String? = null,
     val staffUserId: UUID? = null,
     val notes: String? = null,
+    // Idempotency key: a retry of the same scan sends the same id and the server returns the
+    // original result instead of logging the attendee twice.
+    val clientRequestId: UUID? = null,
 )
 
 data class TransactionResponse(

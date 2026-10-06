@@ -38,7 +38,15 @@ private fun extractMessage(throwable: Throwable): String {
         }
         return throwable.message().ifBlank { "Request failed" }
     }
-    return throwable.message?.takeIf { it.isNotBlank() } ?: "Request failed"
+    return when (throwable) {
+        is java.net.UnknownHostException, is java.net.ConnectException ->
+            "Can't reach the server. Check your internet connection and try again."
+        is java.net.SocketTimeoutException ->
+            "The server took too long to respond. Please try again."
+        is java.io.IOException ->
+            "Network problem. Check your connection and try again."
+        else -> throwable.message?.takeIf { it.isNotBlank() } ?: "Request failed"
+    }
 }
 
 private fun parseErrorMessage(errorBody: String): String? {

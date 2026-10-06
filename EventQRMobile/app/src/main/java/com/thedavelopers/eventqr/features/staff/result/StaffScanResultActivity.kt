@@ -40,8 +40,20 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private var savingTransaction = false
 
+    // One scan-result screen is one scan. Reusing this id on every retry tap (and across a
+    // rotation) is what stops a timed-out-but-logged scan from being logged twice.
+    private lateinit var clientRequestId: UUID
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_CLIENT_REQUEST_ID, clientRequestId.toString())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        clientRequestId = savedInstanceState?.getString(STATE_CLIENT_REQUEST_ID)
+            ?.let { runCatching { UUID.fromString(it) }.getOrNull() }
+            ?: UUID.randomUUID()
         sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
             Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
@@ -182,6 +194,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                 scanPurposeId = parsedPurposeId,
                 qrValue = qrValue,
                 staffUserId = parsedStaffUserId,
+                clientRequestId = clientRequestId,
             )
             when (val result = repository.createTransaction(request, parsedPurposeCode)) {
                 is NetworkResult.Success -> {
@@ -370,5 +383,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
             putExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL, intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL))
             putExtra(StaffScreenExtras.EXTRA_EVENT_TITLE, intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE))
         })
+    }
+
+    private companion object {
+        const val STATE_CLIENT_REQUEST_ID = "client_request_id"
     }
 }

@@ -254,7 +254,8 @@ public class StaffController {
     }
 
     private TransactionRequest normalize(UUID eventId, TransactionRequest request) {
-        return new TransactionRequest(eventId, request.scanPurposeId(), request.qrValue(), request.shortId(), request.staffUserId(), request.notes());
+        return new TransactionRequest(eventId, request.scanPurposeId(), request.qrValue(), request.shortId(), request.staffUserId(), request.notes(),
+                request.clientRequestId());
     }
 
     private UUID currentUserId(HttpServletRequest request) {
