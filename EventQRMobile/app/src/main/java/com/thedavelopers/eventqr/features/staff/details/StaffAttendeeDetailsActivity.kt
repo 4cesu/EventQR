@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.details
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -59,6 +60,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_attendee_details)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         repository = StaffRepository(this)
         eventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID).orEmpty()
         attendeeId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID).orEmpty()

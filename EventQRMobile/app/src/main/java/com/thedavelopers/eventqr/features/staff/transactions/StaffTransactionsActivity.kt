@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -80,6 +81,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         }
 
         setContentView(R.layout.activity_staff_transaction_logs)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
         adapter = TransactionLogAdapter()

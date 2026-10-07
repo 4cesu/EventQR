@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -137,6 +138,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         }
 
         setContentView(R.layout.activity_staff_scanner)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         presenter = ScannerPresenter(this, StaffRepository(this))
         eventSpinner = findViewById(R.id.spnScannerEvent)

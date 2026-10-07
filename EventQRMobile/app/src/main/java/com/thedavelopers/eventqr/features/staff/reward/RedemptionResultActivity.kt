@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.reward
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.os.Bundle
@@ -158,10 +159,12 @@ class RedemptionResultActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
             setBackgroundResource(R.drawable.bg_header_surface_outline)
             setPadding(dp(8), 0, dp(16), 0)
+            minimumHeight = dp(56)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(56),
+                LinearLayout.LayoutParams.WRAP_CONTENT,
             )
+            applyEventQrTopInsetPadding()
 
             addView(ImageButton(this@RedemptionResultActivity).apply {
                 setImageResource(R.drawable.ic_back_chevron)

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.admin.logs
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
@@ -41,6 +42,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_audit_logs)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         val normalizedRole = RoleMapper.normalizeRole(SessionManager(this).getUserRole())
         if (normalizedRole != AccountRole.ADMIN.name && normalizedRole != AccountRole.SUPER_ADMIN.name) {

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.notifications
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.graphics.Color
 import android.os.Bundle
 import android.text.TextUtils
@@ -48,6 +49,7 @@ class NotificationManagementActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_organizer_notifications)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         val repo = OrganizerRepository(this)
         viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {

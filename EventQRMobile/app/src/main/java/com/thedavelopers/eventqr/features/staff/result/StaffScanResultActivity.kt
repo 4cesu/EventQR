@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.result
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -62,6 +63,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_scan_result)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         repository = StaffRepository(this)
         
         val isValid = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)

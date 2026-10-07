@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -48,6 +49,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_attendee_details)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         repository = OrganizerRepository(this)
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }

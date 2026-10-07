@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -385,6 +386,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
         setPadding(dp(20), dp(20), dp(20), dp(8))
+        applyEventQrTopInsetPadding()
     }
 
     val titleContainer = LinearLayout(this).apply {
@@ -532,6 +534,7 @@ internal fun AppCompatActivity.organizerShell(
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
         setPadding(dp(20), dp(20), dp(20), dp(8))
+        applyEventQrTopInsetPadding()
     }
 
     val titleContainer = LinearLayout(this).apply {
