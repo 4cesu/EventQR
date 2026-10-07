@@ -24,37 +24,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenBg
-import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenText
-import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenTextDark
 import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenBg
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenText
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenTextDark
 import com.thedavelopers.eventqr.ui.theme.StatusCompletedGrayBg
-import com.thedavelopers.eventqr.ui.theme.StatusCompletedGrayBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusCompletedGrayText
-import com.thedavelopers.eventqr.ui.theme.StatusCompletedGrayTextDark
 import com.thedavelopers.eventqr.ui.theme.StatusPendingAmberBg
-import com.thedavelopers.eventqr.ui.theme.StatusPendingAmberBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusPendingAmberText
-import com.thedavelopers.eventqr.ui.theme.StatusPendingAmberTextDark
 import com.thedavelopers.eventqr.ui.theme.StatusRegisteredPurpleBg
-import com.thedavelopers.eventqr.ui.theme.StatusRegisteredPurpleBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusRegisteredPurpleText
-import com.thedavelopers.eventqr.ui.theme.StatusRegisteredPurpleTextDark
 import com.thedavelopers.eventqr.ui.theme.StatusRejectedRedBg
-import com.thedavelopers.eventqr.ui.theme.StatusRejectedRedBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusRejectedRedText
-import com.thedavelopers.eventqr.ui.theme.StatusRejectedRedTextDark
 import java.util.Locale
-
-private const val DARK_SURFACE_LUMINANCE_THRESHOLD = 0.5f
 
 enum class EventBadgeStatus {
     PENDING,
@@ -94,24 +79,9 @@ private fun lightBadgePalette(status: EventBadgeStatus): BadgePalette = when (st
         BadgePalette(StatusCompletedGrayBg, StatusCompletedGrayText)
 }
 
-private fun darkBadgePalette(status: EventBadgeStatus): BadgePalette = when (status) {
-    EventBadgeStatus.PENDING, EventBadgeStatus.UPCOMING ->
-        BadgePalette(StatusPendingAmberBgDark, StatusPendingAmberTextDark)
-    EventBadgeStatus.APPROVED -> BadgePalette(StatusApprovedGreenBgDark, StatusApprovedGreenTextDark)
-    EventBadgeStatus.REJECTED, EventBadgeStatus.CANCELLED ->
-        BadgePalette(StatusRejectedRedBgDark, StatusRejectedRedTextDark)
-    EventBadgeStatus.ACTIVE -> BadgePalette(StatusActiveGreenBgDark, StatusActiveGreenTextDark)
-    EventBadgeStatus.COMPLETED -> BadgePalette(StatusCompletedGrayBgDark, StatusCompletedGrayTextDark)
-    EventBadgeStatus.REGISTERED ->
-        BadgePalette(StatusRegisteredPurpleBgDark, StatusRegisteredPurpleTextDark)
-    EventBadgeStatus.DRAFT, EventBadgeStatus.UNKNOWN ->
-        BadgePalette(StatusCompletedGrayBgDark, StatusCompletedGrayTextDark)
-}
-
 @Composable
 internal fun badgeStyle(status: EventBadgeStatus): BadgeStyle {
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < DARK_SURFACE_LUMINANCE_THRESHOLD
-    val palette = if (isDark) darkBadgePalette(status) else lightBadgePalette(status)
+    val palette = lightBadgePalette(status)
 
     return when (status) {
         EventBadgeStatus.PENDING -> BadgeStyle(

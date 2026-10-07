@@ -93,7 +93,7 @@ class EmptyStateViewComposeTest {
 
     private fun setEmptyState(actionLabel: String? = null, onActionClick: (() -> Unit)? = null) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EmptyStateView(
                     icon = Icons.Default.Info,
                     title = "No events yet",

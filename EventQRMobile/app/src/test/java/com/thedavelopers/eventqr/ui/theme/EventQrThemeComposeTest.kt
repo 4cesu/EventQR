@@ -1,7 +1,6 @@
 package com.thedavelopers.eventqr.ui.theme
 
 import android.app.Activity
-import android.content.res.Configuration
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
@@ -32,28 +31,8 @@ class EventQrThemeComposeTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun darkTheme_yieldsDifferentColorSchemeThanLightTheme() {
-        var light: ColorScheme? = null
-        var dark: ColorScheme? = null
-
-        composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
-                light = MaterialTheme.colorScheme
-                EventQrTheme(darkTheme = true) {
-                    dark = MaterialTheme.colorScheme
-                }
-            }
-        }
-        composeTestRule.waitForIdle()
-
-        assertNotEquals(requireNotNull(light), requireNotNull(dark))
-        assertEquals(DarkSurface, requireNotNull(dark).surface)
-        assertEquals(PaperWhite, requireNotNull(light).surface)
-    }
-
-    @Test
     fun lightColorScheme_mapsAuditedSemanticTokens() {
-        val light = composeTestRule.themeColorScheme(darkTheme = false) {}
+        val light = composeTestRule.themeColorScheme {}
 
         assertEquals(BrandPrimary, light.primary)
         assertEquals(TextOnPrimary, light.onPrimary)
@@ -71,16 +50,12 @@ class EventQrThemeComposeTest {
     }
 
     @Test
-    fun darkColorScheme_mapsAuditedSemanticTokens() {
-        val dark = composeTestRule.themeColorScheme(darkTheme = true) {}
+    @Config(qualifiers = "night")
+    fun systemDarkMode_yieldsLightColorScheme() {
+        val scheme = composeTestRule.themeColorScheme {}
 
-        assertEquals(DarkPrimary, dark.primary)
-        assertEquals(DarkBackground, dark.background)
-        assertEquals(DarkSurface, dark.surface)
-        assertEquals(DarkOnSurface, dark.onSurface)
-        assertEquals(DarkSurfaceVariant, dark.surfaceVariant)
-        assertEquals(DarkOnSurfaceVariant, dark.onSurfaceVariant)
-        assertEquals(DarkError, dark.error)
+        assertEquals(PaperWhite, scheme.surface)
+        assertEquals(BrandPrimary, scheme.primary)
     }
 
     @Test
@@ -90,16 +65,9 @@ class EventQrThemeComposeTest {
 
     @Test
     fun brandTertiary_isUsedForLightSchemeTertiaryRole() {
-        val light = composeTestRule.themeColorScheme(darkTheme = false) {}
+        val light = composeTestRule.themeColorScheme {}
 
         assertEquals(BrandTertiary, light.tertiary)
-    }
-
-    @Test
-    fun darkScheme_keepsItsOwnTertiaryRole() {
-        val dark = composeTestRule.themeColorScheme(darkTheme = true) {}
-
-        assertEquals(DarkTertiary, dark.tertiary)
     }
 
     @Test
@@ -128,15 +96,8 @@ class EventQrThemeComposeTest {
     }
 
     @Test
-    fun rowTheme_darkTheme_switchesColorScheme() {
-        val rowScheme = rowThemeColorScheme(darkTheme = true)
-
-        assertEquals(DarkSurface, rowScheme.surface)
-    }
-
-    @Test
     fun lightColorScheme_mapsTertiaryContainerToTheAmberFamily() {
-        val light = composeTestRule.themeColorScheme(darkTheme = false) {}
+        val light = composeTestRule.themeColorScheme {}
 
         assertEquals(StatusPendingAmberBg, light.tertiaryContainer)
         assertEquals(StatusPendingAmberText, light.onTertiaryContainer)
@@ -144,33 +105,21 @@ class EventQrThemeComposeTest {
     }
 
     @Test
-    fun darkColorScheme_mapsTertiaryContainerToTheAmberFamily() {
-        val dark = composeTestRule.themeColorScheme(darkTheme = true) {}
+    fun tertiaryContainerPair_isReadable() {
+        val light = lightColorScheme()
 
-        assertEquals(StatusPendingAmberBgDark, dark.tertiaryContainer)
-        assertEquals(StatusPendingAmberTextDark, dark.onTertiaryContainer)
+        val ratio = contrastRatio(light.onTertiaryContainer, light.tertiaryContainer)
+
+        assertTrue("light tertiary container contrast was $ratio", ratio >= MIN_TEXT_CONTRAST)
     }
 
     @Test
-    fun tertiaryContainerPair_isReadableInBothThemes() {
-        val (light, dark) = bothThemeColorSchemes()
+    fun primaryContainerPair_isReadable() {
+        val light = lightColorScheme()
 
-        val lightRatio = contrastRatio(light.onTertiaryContainer, light.tertiaryContainer)
-        val darkRatio = contrastRatio(dark.onTertiaryContainer, dark.tertiaryContainer)
+        val ratio = contrastRatio(light.onPrimaryContainer, light.primaryContainer)
 
-        assertTrue("light tertiary container contrast was $lightRatio", lightRatio >= MIN_TEXT_CONTRAST)
-        assertTrue("dark tertiary container contrast was $darkRatio", darkRatio >= MIN_TEXT_CONTRAST)
-    }
-
-    @Test
-    fun primaryContainerPair_isReadableInBothThemes() {
-        val (light, dark) = bothThemeColorSchemes()
-
-        val lightRatio = contrastRatio(light.onPrimaryContainer, light.primaryContainer)
-        val darkRatio = contrastRatio(dark.onPrimaryContainer, dark.primaryContainer)
-
-        assertTrue("light primary container contrast was $lightRatio", lightRatio >= MIN_TEXT_CONTRAST)
-        assertTrue("dark primary container contrast was $darkRatio", darkRatio >= MIN_TEXT_CONTRAST)
+        assertTrue("light primary container contrast was $ratio", ratio >= MIN_TEXT_CONTRAST)
     }
 
     @Test
@@ -192,95 +141,55 @@ class EventQrThemeComposeTest {
     }
 
     @Test
-    @Config(qualifiers = "notnight")
-    fun systemBarAppearance_lightTheme_setsLightBars() {
+    fun systemBarAppearance_setsDarkStatusBars() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
-        activity.applyEventQrSystemBarAppearance(darkTheme = false)
+        activity.applyEventQrSystemBarAppearance()
 
         val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        assertTrue(controller.isAppearanceLightStatusBars)
+        assertFalse(controller.isAppearanceLightStatusBars)
         assertTrue(controller.isAppearanceLightNavigationBars)
     }
 
     @Test
     @Config(qualifiers = "night")
-    fun systemBarAppearance_darkTheme_setsDarkBars() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-
-        activity.applyEventQrSystemBarAppearance(darkTheme = true)
-
-        val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        assertFalse(controller.isAppearanceLightStatusBars)
-        assertFalse(controller.isAppearanceLightNavigationBars)
-    }
-
-    @Test
-    @Config(qualifiers = "night")
-    fun systemBarAppearance_defaultsToSystemNightMode() {
+    fun systemBarAppearance_staysDarkInSystemNightMode() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
         activity.applyEventQrSystemBarAppearance()
 
         val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         assertFalse(controller.isAppearanceLightStatusBars)
+        assertTrue(controller.isAppearanceLightNavigationBars)
     }
 
     @Test
-    @Config(qualifiers = "notnight")
-    fun systemBarAppearance_defaultsToSystemDayMode() {
+    fun systemBarAppearance_darkStatusBarsRequested() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
-        activity.applyEventQrSystemBarAppearance()
+        activity.applyEventQrSystemBarAppearance(lightStatusBars = false)
+        activity.applyRequestedEventQrSystemBarAppearance()
 
         val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        assertTrue(controller.isAppearanceLightStatusBars)
+        assertFalse(controller.isAppearanceLightStatusBars)
+        assertTrue(controller.isAppearanceLightNavigationBars)
     }
 
-    @Test
-    @Config(qualifiers = "night")
-    fun nightModeDetection_followsUiModeNightYes() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-
-        assertEquals(Configuration.UI_MODE_NIGHT_YES, activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        assertTrue(invokeNightModeProbe(activity))
-    }
-
-    @Test
-    @Config(qualifiers = "notnight")
-    fun nightModeDetection_followsUiModeNightNo() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-
-        assertEquals(Configuration.UI_MODE_NIGHT_NO, activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        assertFalse(invokeNightModeProbe(activity))
-    }
-
-    private fun invokeNightModeProbe(activity: Activity): Boolean {
-        val method = Class.forName("com.thedavelopers.eventqr.ui.theme.ThemeKt")
-            .getDeclaredMethod("isEventQrNightMode", Activity::class.java)
-        method.isAccessible = true
-        return method.invoke(null, activity) as Boolean
-    }
-
-    private fun bothThemeColorSchemes(): Pair<ColorScheme, ColorScheme> {
-        var light: ColorScheme? = null
-        var dark: ColorScheme? = null
+    private fun lightColorScheme(): ColorScheme {
+        var captured: ColorScheme? = null
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
-                light = MaterialTheme.colorScheme
-                EventQrTheme(darkTheme = true) {
-                    dark = MaterialTheme.colorScheme
-                }
+            EventQrTheme {
+                captured = MaterialTheme.colorScheme
             }
         }
         composeTestRule.waitForIdle()
-        return requireNotNull(light) to requireNotNull(dark)
+        return requireNotNull(captured)
     }
 
-    private fun rowThemeColorScheme(darkTheme: Boolean = false): ColorScheme {
+    private fun rowThemeColorScheme(): ColorScheme {
         var captured: ColorScheme? = null
         composeTestRule.setContent {
-            EventQrRowTheme(darkTheme = darkTheme) {
+            EventQrRowTheme {
                 captured = MaterialTheme.colorScheme
             }
         }

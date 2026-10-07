@@ -80,7 +80,7 @@ class FilterChipRowComposeTest {
     @Test
     fun labelProvider_isUsedForChipLabels() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 FilterChipRow(
                     items = listOf(EventBadgeStatus.PENDING, EventBadgeStatus.ACTIVE),
                     selectedItem = EventBadgeStatus.PENDING,
@@ -103,7 +103,7 @@ class FilterChipRowComposeTest {
     @Test
     fun emptyItems_rendersNoChips() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 FilterChipRow(
                     items = emptyList<String>(),
                     selectedItem = "",
@@ -119,7 +119,7 @@ class FilterChipRowComposeTest {
     fun defaultLabelProvider_usesToString() {
         var selected: Int? = null
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 FilterChipRow(
                     items = listOf(7, 9),
                     selectedItem = 7,
@@ -149,7 +149,7 @@ class FilterChipRowComposeTest {
         onItemSelected: (String) -> Unit = {},
     ) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 FilterChipRow(
                     items = statuses,
                     selectedItem = selectedItem,

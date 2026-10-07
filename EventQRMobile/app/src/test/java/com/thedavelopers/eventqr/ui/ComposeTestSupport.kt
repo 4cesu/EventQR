@@ -9,13 +9,12 @@ import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 fun ComposeContentTestRule.themeColorScheme(
-    darkTheme: Boolean = false,
     spacing: EventQrSpacing = EventQrSpacing(),
     content: @Composable () -> Unit,
 ): ColorScheme {
     var captured: ColorScheme? = null
     setContent {
-        EventQrTheme(darkTheme = darkTheme, spacing = spacing) {
+        EventQrTheme(spacing = spacing) {
             captured = MaterialTheme.colorScheme
             content()
         }
@@ -25,12 +24,11 @@ fun ComposeContentTestRule.themeColorScheme(
 }
 
 fun ComposeContentTestRule.resolvedSpacing(
-    darkTheme: Boolean = false,
     spacing: EventQrSpacing = EventQrSpacing(),
 ): EventQrSpacing {
     var captured: EventQrSpacing? = null
     setContent {
-        EventQrTheme(darkTheme = darkTheme, spacing = spacing) {
+        EventQrTheme(spacing = spacing) {
             captured = LocalSpacing.current
         }
     }

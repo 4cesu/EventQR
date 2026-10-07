@@ -63,7 +63,7 @@ class EventQrTopAppBarComposeTest {
         var actionContentColor: Color? = null
 
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "Registrations",
                     titleContentColor = Color(0xFFAA0000),
@@ -83,7 +83,7 @@ class EventQrTopAppBarComposeTest {
         var navigationContentColor: Color? = null
 
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "Registrations",
                     titleContentColor = Color(0xFF00AA00),
@@ -104,7 +104,7 @@ class EventQrTopAppBarComposeTest {
         var actionContentColor: Color? = null
 
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "Registrations",
                     isBrandHeader = true,
@@ -126,7 +126,7 @@ class EventQrTopAppBarComposeTest {
         var actionContentColor: Color? = null
 
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "EventQR",
                     isBrandHeader = true,
@@ -146,7 +146,7 @@ class EventQrTopAppBarComposeTest {
         var actionContentColor: Color? = null
 
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "Registrations",
                     actions = {
@@ -181,7 +181,7 @@ class EventQrTopAppBarComposeTest {
     @Test
     fun customNavigationIcon_replacesBackIcon() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "Registrations",
                     onBackClick = {},
@@ -199,7 +199,7 @@ class EventQrTopAppBarComposeTest {
     @Test
     fun actionSlot_contentIsRendered() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = "Registrations",
                     actions = {
@@ -215,7 +215,7 @@ class EventQrTopAppBarComposeTest {
 
     private fun setBar(title: String, subtitle: String? = null, onBackClick: (() -> Unit)? = null) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrTopAppBar(
                     title = title,
                     subtitle = subtitle,
