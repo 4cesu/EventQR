@@ -49,19 +49,23 @@
     <LinearLayout
         android:id="@+id/btnPortalSignOut"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_sign_out_button"
         android:clickable="true"
+        android:contentDescription="Sign out"
+        android:elevation="0dp"
         android:focusable="true"
         android:gravity="center_vertical"
-        android:minHeight="56dp"
         android:orientation="horizontal"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingStart="14dp"
+        android:paddingTop="0dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="0dp">
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_logout"
             app:tint="@color/error" />
@@ -69,10 +73,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="12dp"
             android:fontFamily="sans-serif-medium"
-            android:text="Sign out"
+            android:text="Sign Out"
             android:textColor="@color/error"
-            android:textSize="16sp" />
+            android:textSize="15sp" />
     </LinearLayout>
 </LinearLayout>

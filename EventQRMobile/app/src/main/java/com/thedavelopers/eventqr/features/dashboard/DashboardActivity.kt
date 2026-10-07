@@ -41,6 +41,7 @@ import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingE
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.ui.components.EventCardHolder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
 
 open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
@@ -69,7 +70,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_dashboard)
-        applyEventQrSystemBarAppearance()
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.headerDashboard).applyEventQrTopInsetPadding()
         configureAttendeeBottomNav(AttendeeBottomNavItem.DASHBOARD)
 
         sessionManager = SessionManager(this)

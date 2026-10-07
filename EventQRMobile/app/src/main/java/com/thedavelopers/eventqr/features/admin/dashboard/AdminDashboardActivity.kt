@@ -26,6 +26,8 @@ import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
@@ -49,6 +51,8 @@ class AdminDashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_dashboard)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.headerDashboard).applyEventQrTopInsetPadding()
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)

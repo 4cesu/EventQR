@@ -212,7 +212,7 @@ class EventQrBottomNavBarComposeTest {
         onItemSelected: (String) -> Unit = {},
     ) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventQrBottomNavBar(
                     items = items,
                     selectedId = selectedId,

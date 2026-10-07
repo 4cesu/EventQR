@@ -11,12 +11,9 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenBg
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenBgDark
 import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenText
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenTextDark
 import kotlin.math.pow
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -35,7 +32,7 @@ class StatusBadgeComposeTest {
     @Test
     fun rendersDefaultLabelForEveryStatus() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventBadgeStatus.entries.forEach { status ->
                     StatusBadge(status = status)
                 }
@@ -61,7 +58,7 @@ class StatusBadgeComposeTest {
     @Test
     fun draftAndUnknown_renderDistinctLabelsFromPending() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 StatusBadge(status = EventBadgeStatus.DRAFT)
                 StatusBadge(status = EventBadgeStatus.UNKNOWN)
             }
@@ -83,7 +80,7 @@ class StatusBadgeComposeTest {
     @Test
     fun customLabel_appliesToEveryStatus() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventBadgeStatus.entries.forEach { status ->
                     StatusBadge(status = status, customLabel = status.name)
                 }
@@ -126,7 +123,7 @@ class StatusBadgeComposeTest {
     @Test
     fun pendingAndUpcoming_renderDistinctLabels() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 StatusBadge(status = EventBadgeStatus.PENDING)
                 StatusBadge(status = EventBadgeStatus.UPCOMING)
             }
@@ -139,7 +136,7 @@ class StatusBadgeComposeTest {
     @Test
     fun cancelledAndRejected_renderDistinctLabels() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 StatusBadge(status = EventBadgeStatus.REJECTED)
                 StatusBadge(status = EventBadgeStatus.CANCELLED)
             }
@@ -150,89 +147,34 @@ class StatusBadgeComposeTest {
     }
 
     @Test
-    fun darkTheme_usesDarkBadgeContainersNotTheLightPalette() {
-        val style = resolveStylesFor(darkTheme = true).getValue(EventBadgeStatus.APPROVED)
-
-        assertEquals(StatusApprovedGreenBgDark, style.backgroundColor)
-        assertEquals(StatusApprovedGreenTextDark, style.textColor)
-    }
-
-    @Test
-    fun lightTheme_usesLightBadgeContainers() {
-        val style = resolveStylesFor(darkTheme = false).getValue(EventBadgeStatus.APPROVED)
+    fun usesLightBadgeContainers() {
+        val style = resolveStyles().getValue(EventBadgeStatus.APPROVED)
 
         assertEquals(StatusApprovedGreenBg, style.backgroundColor)
         assertEquals(StatusApprovedGreenText, style.textColor)
     }
 
     @Test
-    fun darkTheme_neverFallsBackToLightBadgeColors() {
-        val (light, dark) = resolveStylesForBothThemes()
-
-        assertEquals(EventBadgeStatus.entries.toSet(), light.keys)
-        assertEquals(EventBadgeStatus.entries.toSet(), dark.keys)
-        EventBadgeStatus.entries.forEach { status ->
-            assertNotEquals(
-                "$status reused the light container",
-                light.getValue(status).backgroundColor,
-                dark.getValue(status).backgroundColor,
-            )
-            assertNotEquals(
-                "$status reused the light label color",
-                light.getValue(status).textColor,
-                dark.getValue(status).textColor,
-            )
-        }
-    }
-
-    @Test
-    fun darkTheme_badgeLabelContrastIsReadable() {
-        val dark = resolveStylesFor(darkTheme = true)
+    fun badgeLabelContrastIsReadable() {
+        val styles = resolveStyles()
 
         EventBadgeStatus.entries.forEach { status ->
-            val style = dark.getValue(status)
+            val style = styles.getValue(status)
             val contrast = contrastRatio(style.textColor, style.backgroundColor)
 
-            assertTrue("$status dark badge contrast was $contrast", contrast >= MIN_TEXT_CONTRAST)
+            assertTrue("$status badge contrast was $contrast", contrast >= MIN_TEXT_CONTRAST)
         }
     }
 
-    @Test
-    fun lightTheme_badgeLabelContrastIsReadable() {
-        val light = resolveStylesFor(darkTheme = false)
-
-        EventBadgeStatus.entries.forEach { status ->
-            val style = light.getValue(status)
-            val contrast = contrastRatio(style.textColor, style.backgroundColor)
-
-            assertTrue("$status light badge contrast was $contrast", contrast >= MIN_TEXT_CONTRAST)
-        }
-    }
-
-    private fun resolveStylesFor(darkTheme: Boolean): Map<EventBadgeStatus, BadgeStyle> {
+    private fun resolveStyles(): Map<EventBadgeStatus, BadgeStyle> {
         var captured: Map<EventBadgeStatus, BadgeStyle> = emptyMap()
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = darkTheme) {
+            EventQrTheme {
                 captured = EventBadgeStatus.entries.associateWith { badgeStyle(it) }
             }
         }
         composeTestRule.waitForIdle()
         return captured
-    }
-
-    private fun resolveStylesForBothThemes(): Pair<Map<EventBadgeStatus, BadgeStyle>, Map<EventBadgeStatus, BadgeStyle>> {
-        var light: Map<EventBadgeStatus, BadgeStyle> = emptyMap()
-        var dark: Map<EventBadgeStatus, BadgeStyle> = emptyMap()
-        composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
-                light = EventBadgeStatus.entries.associateWith { badgeStyle(it) }
-            }
-            EventQrTheme(darkTheme = true) {
-                dark = EventBadgeStatus.entries.associateWith { badgeStyle(it) }
-            }
-        }
-        composeTestRule.waitForIdle()
-        return light to dark
     }
 
     private fun contrastRatio(foreground: Color, background: Color): Float {
@@ -254,7 +196,7 @@ class StatusBadgeComposeTest {
 
     private fun setBadge(status: EventBadgeStatus, customLabel: String? = null, showIcon: Boolean = true) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 StatusBadge(status = status, customLabel = customLabel, showIcon = showIcon)
             }
         }

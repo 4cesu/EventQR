@@ -46,7 +46,7 @@ class EventCardComposeTest {
         trailingAction: (@Composable () -> Unit)? = null,
     ) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventCard(
                     title = title,
                     status = status,
@@ -250,7 +250,7 @@ class EventCardComposeTest {
     @Test
     fun everyStatus_rendersItsBadgeLabel() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventBadgeStatus.entries.forEach { status ->
                     EventCard(
                         title = "Card for ${status.name}",
@@ -291,7 +291,7 @@ class EventCardComposeTest {
     @Test
     fun adapterSuppliedHumanizedLabels_renderTheirOwnTextNotTheRawEnum() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventCard(
                     title = "Draft card",
                     status = parseBadgeStatus("DRAFT"),

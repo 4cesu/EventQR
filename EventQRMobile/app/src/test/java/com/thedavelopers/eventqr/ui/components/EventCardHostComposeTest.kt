@@ -162,7 +162,7 @@ class EventCardHostComposeTest {
 
     private fun setHost(state: EventCardState) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventCardHost(state)
             }
         }

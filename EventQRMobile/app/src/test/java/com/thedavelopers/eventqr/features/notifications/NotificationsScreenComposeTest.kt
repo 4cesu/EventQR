@@ -99,7 +99,7 @@ class NotificationsScreenComposeTest {
 
     private fun setCard(item: NotificationResponse, onClick: () -> Unit = {}) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 NotificationItemCard(item = item, onClick = onClick)
             }
         }

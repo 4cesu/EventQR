@@ -22,6 +22,8 @@ import com.thedavelopers.eventqr.features.staff.notifications.StaffNotifications
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 
 open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
     private lateinit var presenter: StaffDashboardPresenter
@@ -43,6 +45,8 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
 
         setContentView(R.layout.activity_staff_dashboard)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.headerDashboard).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
         presenter = StaffDashboardPresenter(this, repository)

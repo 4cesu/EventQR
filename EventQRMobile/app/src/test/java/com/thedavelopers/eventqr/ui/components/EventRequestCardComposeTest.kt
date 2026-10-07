@@ -61,7 +61,7 @@ class EventRequestCardComposeTest {
     @Test
     fun mapsAllRequestStatusesToBadgeLabels() {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventRequestStatus.entries.forEach { status ->
                     EventRequestCard(
                         request = request(eventName = "Request ${status.name}", status = status),
@@ -113,7 +113,7 @@ class EventRequestCardComposeTest {
         createdAt: Instant? = fixedInstant,
     ) {
         composeTestRule.setContent {
-            EventQrTheme(darkTheme = false) {
+            EventQrTheme {
                 EventRequestCard(
                     request = request(eventName = eventName, status = status, createdAt = createdAt),
                     onClick = {},
