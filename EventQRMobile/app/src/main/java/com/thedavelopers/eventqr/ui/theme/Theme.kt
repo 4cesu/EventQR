@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnAttach
 import androidx.core.view.updatePadding
 import com.thedavelopers.eventqr.R
 
@@ -114,5 +115,6 @@ fun View.applyEventQrTopInsetPadding() {
         insets
     }
     // Views attached after the first insets pass (e.g. headers built after a network call) would otherwise never get them.
-    ViewCompat.requestApplyInsets(this)
+    // requestApplyInsets is a no-op on a detached view, so it has to wait for attach.
+    if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
 }
