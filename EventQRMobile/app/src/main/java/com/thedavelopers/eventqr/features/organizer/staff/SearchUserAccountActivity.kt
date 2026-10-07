@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -57,6 +58,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
                 }
 
             setContentView(R.layout.activity_search_user_account)
+            findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
             activeStaffEmails.addAll(
                 intent.getStringArrayListExtra(EXTRA_ACTIVE_STAFF_EMAILS)
                     .orEmpty()

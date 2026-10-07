@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.admin.users
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -48,6 +49,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_account_management)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)

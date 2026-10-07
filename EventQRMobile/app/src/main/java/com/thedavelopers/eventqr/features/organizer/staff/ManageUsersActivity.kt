@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
@@ -57,6 +58,7 @@ open class ManageUsersActivity : AppCompatActivity() {
                 }
 
             setContentView(R.layout.activity_staff_assignment)
+            findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
             bindViews()
             setupList()
             bindActions()
