@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -43,6 +44,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search_attendees)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = OrganizerRepository(this)
 

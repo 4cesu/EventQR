@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.admin.users
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -44,6 +45,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_admin_account)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)

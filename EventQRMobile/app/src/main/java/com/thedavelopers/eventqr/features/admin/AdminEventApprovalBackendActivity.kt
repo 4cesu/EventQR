@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.admin
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -51,6 +52,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_event_requests)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
 
         repository = AdminRepository(this)

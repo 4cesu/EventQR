@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
@@ -79,6 +80,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
 
         setContentView(R.layout.activity_event_registrations)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
         presenter = EventRegistrationsPresenter(this, repository)

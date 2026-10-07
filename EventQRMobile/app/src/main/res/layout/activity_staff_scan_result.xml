@@ -8,8 +8,10 @@
 
     <!-- Top Bar -->
     <LinearLayout
+        android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
+        android:minHeight="56dp"
         android:background="@drawable/bg_header_surface_outline"
         android:gravity="center_vertical"
         android:orientation="horizontal"

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -49,6 +50,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_assigned_events)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
         repository = StaffRepository(this)
 
