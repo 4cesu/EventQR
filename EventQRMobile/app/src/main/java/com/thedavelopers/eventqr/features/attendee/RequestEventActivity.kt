@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
@@ -118,6 +119,7 @@ class RequestEventActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_request_event)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = AttendeeRepository(this)
         sessionManager = SessionManager(this)

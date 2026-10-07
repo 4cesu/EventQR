@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -35,6 +36,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_event_detail)
+        findViewById<View>(R.id.layoutTopBar).applyEventQrTopInsetPadding()
 
         repository = AttendeeRepository(this)
         presenter = EventDetailPresenter(this, repository)
