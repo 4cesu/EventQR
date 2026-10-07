@@ -7,8 +7,10 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
-        android:layout_height="58dp"
+        android:layout_height="wrap_content"
+        android:minHeight="58dp"
         android:background="@android:color/white"
         android:gravity="center_vertical"
         android:orientation="horizontal"

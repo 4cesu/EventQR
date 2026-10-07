@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -19,6 +20,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_reward_details)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         presenter = RewardsPresenter(this, AttendeeRepository(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()

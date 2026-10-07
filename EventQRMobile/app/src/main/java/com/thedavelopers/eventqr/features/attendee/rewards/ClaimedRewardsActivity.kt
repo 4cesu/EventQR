@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -31,6 +32,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_claimed_rewards)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         presenter = ClaimedRewardsPresenter(this, AttendeeRepository(this))
         adapter = com.thedavelopers.eventqr.features.rewards.ClaimedRewardAdapter()
