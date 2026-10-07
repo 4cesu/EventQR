@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -34,6 +35,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_my_event_requests)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
         repository = AttendeeRepository(this)
 

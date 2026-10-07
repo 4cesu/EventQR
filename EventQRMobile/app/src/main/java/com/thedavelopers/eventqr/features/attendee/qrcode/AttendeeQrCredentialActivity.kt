@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
@@ -43,6 +44,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qr_credential)
+        findViewById<View>(R.id.layoutQrCredentialContent).applyEventQrTopInsetPadding()
 
         presenter = QrCredentialPresenter(this, AttendeeRepository(this))
         qrImage = findViewById(R.id.imgQrCode)

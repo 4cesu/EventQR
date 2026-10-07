@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -47,6 +48,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_transaction_history)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
 
         presenter = TransactionHistoryPresenter(this, AttendeeRepository(this))
