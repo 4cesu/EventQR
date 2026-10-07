@@ -113,4 +113,6 @@ fun View.applyEventQrTopInsetPadding() {
         view.updatePadding(top = basePaddingTop + statusTop)
         insets
     }
+    // Views attached after the first insets pass (e.g. headers built after a network call) would otherwise never get them.
+    ViewCompat.requestApplyInsets(this)
 }
