@@ -14,9 +14,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.MigrationInfoService;
+import org.flywaydb.core.api.MigrationState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +71,7 @@ import com.thedavelopers.eventqr.shared.exceptions.GlobalExceptionHandler;
 import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort;
 
 /**
- * Real-Postgres coverage for what mocks cannot prove: Flyway applies every migration through V41 on an empty
+ * Real-Postgres coverage for what mocks cannot prove: Flyway applies every migration on the classpath on an empty
  * database (and Hibernate validates the mapping against it), the V40 trigger issues random EVQR- credentials, and
  * the scan-log row lock plus the V41 partial unique index let exactly one of two concurrent redemptions spend a scan.
  *
@@ -119,6 +124,8 @@ class RewardRedemptionPostgresTest {
     private PlatformTransactionManager transactionManager;
     @Autowired
     private DataSource dataSource;
+    @Autowired
+    private Flyway flyway;
 
     private TransactionTemplate tx;
     private JdbcTemplate jdbc;
@@ -133,10 +140,28 @@ class RewardRedemptionPostgresTest {
     }
 
     @Test
-    void flywayReachesV41AndTheRegistrationTriggerIssuesARandomQrValue() {
-        assertThat(jdbc.queryForObject(
-                "select max(version::int) from flyway_schema_history where success", Integer.class))
-                .isGreaterThanOrEqualTo(41);
+    void flywayAppliesEveryMigrationAndTheRegistrationTriggerIssuesARandomQrValue() {
+        MigrationInfoService info = flyway.info();
+        MigrationInfo[] all = info.all();
+        // Everything Flyway resolves must be applied cleanly; a PENDING/IGNORED/FAILED/FUTURE entry fails here.
+        assertThat(all).isNotEmpty()
+                .allSatisfy(migration -> assertThat(migration.getState()).isEqualTo(MigrationState.SUCCESS));
+        assertThat(info.applied()).hasSameSizeAs(all);
+        // Repeatables carry no version and sort last, so compare against the newest versioned entry instead.
+        MigrationInfo[] versioned = Stream.of(all).filter(MigrationInfo::isVersioned).toArray(MigrationInfo[]::new);
+        assertThat(info.current().getVersion()).isEqualTo(versioned[versioned.length - 1].getVersion());
+
+        // Fresh-build/production parity: the V17/V18 guards skip both objects in production, so this database must
+        // not have them either, and the repeatable migration that removes them must actually have run.
+        assertThat(jdbc.queryForObject("select count(*) from pg_constraint "
+                + "where conname = 'fk_point_transactions_source' and conrelid = 'public.point_transactions'::regclass",
+                Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select to_regclass('public.uq_txn_logs_approved_reg_purpose')", String.class))
+                .isNull();
+        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where version is null "
+                + "and description = 'align fresh schema with production' and success", Integer.class)).isEqualTo(1);
+
+        // The single-use scan guard is the one index that legitimately exists on fresh and production databases alike.
         assertThat(jdbc.queryForObject(
                 "select count(*) from pg_indexes where indexname = 'ux_reward_redemptions_scan_log_redeemed'",
                 Integer.class)).isEqualTo(1);
