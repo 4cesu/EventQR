@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
@@ -22,7 +21,6 @@ import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.attendee.RequestEventActivity
-import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.organizer.NAV_DASHBOARD
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
@@ -342,20 +340,16 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         value?.let(::formatCount) ?: getString(R.string.ui_organizer_value_unavailable)
 
     /**
-     * NEXT EVENT (§6.4): the earliest event that has not ended. The backend returns events
-     * unsorted and the saved selection may name a finished one, so the row is picked here by
-     * start time, with an undated event sorting last.
+     * NEXT EVENT (§6.4): the closest upcoming event only (not started yet). Active and ended
+     * events never show here; active ones have their own section. The backend returns events
+     * unsorted, so the row is picked here by earliest start time.
      */
-    private fun nextEventOf(events: List<OrganizerMvpEvent>): OrganizerMvpEvent? =
-        events
-            .filter {
-                EventStatusBadgeStyler.resolve(
-                    EventStatusBadgeStyler.fromLabel(it.status),
-                    it.eventStartAt,
-                    it.eventEndAt,
-                ) != EventStatus.ENDED
-            }
-            .minWithOrNull(compareBy(nullsLast()) { event: OrganizerMvpEvent -> event.eventStartAt })
+    private fun nextEventOf(events: List<OrganizerMvpEvent>): OrganizerMvpEvent? {
+        val now = java.time.Instant.now()
+        return events
+            .filter { it.eventStartAt?.isAfter(now) == true }
+            .minByOrNull { it.eventStartAt!! }
+    }
 
     /**
      * One event as a `list_row_date` (§5.5): neutral date block, title, time + venue, one status
