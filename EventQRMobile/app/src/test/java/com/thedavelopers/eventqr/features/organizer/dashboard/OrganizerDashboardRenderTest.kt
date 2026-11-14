@@ -1,9 +1,13 @@
 package com.thedavelopers.eventqr.features.organizer.dashboard
 
+import android.text.Spanned
+import android.text.style.UnderlineSpan
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
@@ -182,7 +186,46 @@ class OrganizerDashboardRenderTest {
         assertEquals(View.VISIBLE, emptyState.visibility)
         assertEquals(View.GONE, emptyState.findViewById<View>(R.id.emptyAction).visibility)
         assertEquals(View.VISIBLE, requestAction.visibility)
-        assertEquals("Request event", (requestAction as TextView).text.toString())
+        val requestLabelView = requestAction as TextView
+        assertEquals(activity.getString(R.string.ui_organizer_request_event), requestLabelView.text.toString())
+        // v1.42: the request action is a text section action, not a Button. The style's own
+        // ui_section_action_text selector (ui_primary at rest) and the underline carry the
+        // affordance, and both must survive a re-render.
+        assertTrue("Request event must not be a Button", requestLabelView !is Button)
+        assertEquals(
+            "Request event must inherit the section action's ui_primary ink",
+            ContextCompat.getColor(activity, R.color.ui_primary),
+            requestLabelView.currentTextColor,
+        )
+        val requestLabel = requestLabelView.text
+        assertTrue(
+            "Request event must be underlined",
+            requestLabel is Spanned &&
+                requestLabel.getSpans(0, requestLabel.length, UnderlineSpan::class.java)
+                    .isNotEmpty(),
+        )
+    }
+
+    @Test
+    fun theSeeAllAction_wearsTheSameSectionActionTreatmentAsRequestEvent() {
+        val activity = build()
+        val seeAll = activity.findViewById<TextView>(R.id.btnSeeAllEvents)
+
+        // v1.42: both row-level link actions are one treatment - the style's own ui_primary ink and
+        // an underline on the label - so See all never reads as a different control than the
+        // Request event action one section above it.
+        assertEquals(
+            "See all must inherit the section action's ui_primary ink",
+            ContextCompat.getColor(activity, R.color.ui_primary),
+            seeAll.currentTextColor,
+        )
+        val label = seeAll.text
+        assertEquals(activity.getString(R.string.ui_organizer_see_all), label.toString())
+        assertTrue(
+            "See all must be underlined",
+            label is Spanned &&
+                label.getSpans(0, label.length, UnderlineSpan::class.java).isNotEmpty(),
+        )
     }
 
     @Test
